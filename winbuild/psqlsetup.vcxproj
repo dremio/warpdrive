@@ -72,7 +72,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" >
 	<ANSI_VERSION>no</ANSI_VERSION>
-	<PG_BIN></PG_BIN>
+	<WD_BIN></WD_BIN>
 	<CALL_LIB></CALL_LIB>
 	<DELAY_LOAD_DLLS></DELAY_LOAD_DLLS>
   </PropertyGroup>
@@ -129,8 +129,8 @@
 
   <!-- Import Project="psqlodbc.Cpp.props" / -->
 
-  <PropertyGroup Condition="'$(PG_BIN)'!=''">
-    <ADD_DEFINES>$(ADD_DEFINES);PG_BIN="$(PG_BIN.Replace('\','\\'))"</ADD_DEFINES>
+  <PropertyGroup Condition="'$(WD_BIN)'!=''">
+    <ADD_DEFINES>$(ADD_DEFINES);WD_BIN="$(WD_BIN.Replace('\','\\'))"</ADD_DEFINES>
   </PropertyGroup>
 
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

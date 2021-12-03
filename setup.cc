@@ -13,7 +13,7 @@
  *-------
  */
 
-#include  "psqlodbc.h"
+#include  "wdodbc.h"
 #include  "pgenlist.h"
 #include  "loadlib.h"
 #include  "misc.h" // strncpy_null

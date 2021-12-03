@@ -13,7 +13,7 @@
  *-------
  */
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 #include "misc.h"
 
 #include <stdio.h>
@@ -29,17 +29,17 @@
 #include "qresult.h"
 #include "convert.h"
 #include "bind.h"
-#include "pgtypes.h"
+#include "wdtypes.h"
 #include "lobj.h"
 #include "pgapifunc.h"
 
 /*		Perform a Prepare on the SQL statement */
 RETCODE		SQL_API
-PGAPI_Prepare(HSTMT hstmt,
+WD_Prepare(HSTMT hstmt,
 			  const SQLCHAR * szSqlStr,
 			  SQLINTEGER cbSqlStr)
 {
-	CSTR func = "PGAPI_Prepare";
+	CSTR func = "WD_Prepare";
 	StatementClass *self = (StatementClass *) hstmt;
 	RETCODE	retval = SQL_SUCCESS;
 	BOOL	prepared;
@@ -85,7 +85,7 @@ PGAPI_Prepare(HSTMT hstmt,
 		case STMT_EXECUTING:
 			MYLOG(0, "**** STMT_EXECUTING, error!\n");
 
-			SC_set_error(self, STMT_SEQUENCE_ERROR, "PGAPI_Prepare(): The handle does not point to a statement that is ready to be executed", func);
+			SC_set_error(self, STMT_SEQUENCE_ERROR, "WD_Prepare(): The handle does not point to a statement that is ready to be executed", func);
 
 			retval = SQL_ERROR;
 			goto cleanup;
@@ -135,14 +135,14 @@ MYLOG(DETAIL_LOG_LEVEL, "leaving %d\n", retval);
 
 /*		Performs the equivalent of SQLPrepare, followed by SQLExecute. */
 RETCODE		SQL_API
-PGAPI_ExecDirect(HSTMT hstmt,
+WD_ExecDirect(HSTMT hstmt,
 				 const SQLCHAR * szSqlStr,
 				 SQLINTEGER cbSqlStr,
 				 UWORD flag)
 {
 	StatementClass *stmt = (StatementClass *) hstmt;
 	RETCODE		result;
-	CSTR func = "PGAPI_ExecDirect";
+	CSTR func = "WD_ExecDirect";
 	const ConnectionClass	*conn = SC_get_conn(stmt);
 
 	MYLOG(0, "entering...%x\n", flag);
@@ -186,9 +186,9 @@ MYLOG(DETAIL_LOG_LEVEL, "a2\n");
 		return SQL_ERROR;
 	}
 
-	MYLOG(0, "calling PGAPI_Execute...\n");
+	MYLOG(0, "calling WD_Execute...\n");
 
-	result = PGAPI_Execute(hstmt, flag);
+	result = WD_Execute(hstmt, flag);
 
 	MYLOG(0, "leaving %hd\n", result);
 	return result;
@@ -213,12 +213,12 @@ inquireHowToPrepare(const StatementClass *stmt)
 		SQLSMALLINT	num_params;
 
 		if (STMT_TYPE_DECLARE == stmt->statement_type &&
-		    PG_VERSION_LT(conn, 8.0))
+		    WD_VERSION_LT(conn, 8.0))
 		{
 			return PREPARE_BY_THE_DRIVER;
 		}
 		if (stmt->multi_statement < 0)
-			PGAPI_NumParams((StatementClass *) stmt, &num_params);
+			WD_NumParams((StatementClass *) stmt, &num_params);
 		if (stmt->multi_statement > 0)
 		{
 			/*
@@ -291,7 +291,7 @@ int HowToPrepareBeforeExec(StatementClass *stmt, BOOL checkOnly)
 	BOOL		bNeedsTrans = FALSE;
 
 	if (num_params < 0)
-		PGAPI_NumParams(stmt, &num_params);
+		WD_NumParams(stmt, &num_params);
 	how_to_prepare = decideHowToPrepare(stmt, checkOnly);
 	if (checkOnly)
 	{
@@ -327,20 +327,20 @@ int HowToPrepareBeforeExec(StatementClass *stmt, BOOL checkOnly)
 		int	param_number = -1;
 		ParameterInfoClass *apara;
 		ParameterImplClass *ipara;
-		OID	pgtype;
+		OID	wdtype;
 
 		while (TRUE)
 		{
 			SC_param_next(stmt, &param_number, &apara, &ipara);
 			if (!ipara || !apara)
 				break;
-			pgtype = PIC_get_pgtype(*ipara);
+			wdtype = PIC_get_wdtype(*ipara);
 			if (checkOnly)
 			{
 				switch (ipara->SQLType)
 				{
 					case SQL_LONGVARBINARY:
-						if (0 == pgtype)
+						if (0 == wdtype)
 						{
 							if (ci->bytea_as_longvarbinary &&
 							    0 != conn->lobj_type)
@@ -353,7 +353,7 @@ int HowToPrepareBeforeExec(StatementClass *stmt, BOOL checkOnly)
 						break;
 					case SQL_VARCHAR:
 						if (ci->drivers.bools_as_char &&
-						    PG_WIDTH_OF_BOOLS_AS_CHAR == ipara->column_size)
+						    WD_WIDTH_OF_BOOLS_AS_CHAR == ipara->column_size)
 							nCallParse = shouldParse;
 						break;
 				}
@@ -365,11 +365,11 @@ int HowToPrepareBeforeExec(StatementClass *stmt, BOOL checkOnly)
 				switch (ipara->SQLType)
 				{
 					case SQL_LONGVARBINARY:
-						if (conn->lobj_type == pgtype || PG_TYPE_OID == pgtype)
+						if (conn->lobj_type == wdtype || WD_TYPE_OID == wdtype)
 							bNeedsTrans = TRUE;
-						else if (PG_TYPE_BYTEA == pgtype)
+						else if (WD_TYPE_BYTEA == wdtype)
 							bBytea = TRUE;
-						else if (0 == pgtype)
+						else if (0 == wdtype)
 						{
 							if (ci->bytea_as_longvarbinary)
 								bBytea = TRUE;
@@ -665,7 +665,7 @@ MYLOG(DETAIL_LOG_LEVEL, "entering %p->external=%d\n", stmt, stmt->external);
 
 	if (!ci || ci->rollback_on_error < 0) /* default */
 	{
-		if (conn && PG_VERSION_GE(conn, 8.0))
+		if (conn && WD_VERSION_GE(conn, 8.0))
 			ret = 2; /* statement rollback */
 		else
 			ret = 1; /* transaction rollback */
@@ -673,7 +673,7 @@ MYLOG(DETAIL_LOG_LEVEL, "entering %p->external=%d\n", stmt, stmt->external);
 	else
 	{
 		ret = ci->rollback_on_error;
-		if (2 == ret && PG_VERSION_LT(conn, 8.0))
+		if (2 == ret && WD_VERSION_LT(conn, 8.0))
 			ret = 1;
 	}
 
@@ -881,7 +881,7 @@ SC_setInsertedTable(StatementClass *stmt, RETCODE retval)
 		return;
 	conn = SC_get_conn(stmt);
 #ifdef	NOT_USED /* give up the use of lastval() */
-	if (PG_VERSION_GE(conn, 8.1)) /* lastval() is available */
+	if (WD_VERSION_GE(conn, 8.1)) /* lastval() is available */
 		return;
 #endif /* NOT_USED */
 	/*if (!CC_fake_mss(conn))
@@ -922,9 +922,9 @@ SC_setInsertedTable(StatementClass *stmt, RETCODE retval)
 
 /*	Execute a prepared SQL statement */
 RETCODE		SQL_API
-PGAPI_Execute(HSTMT hstmt, UWORD flag)
+WD_Execute(HSTMT hstmt, UWORD flag)
 {
-	CSTR func = "PGAPI_Execute";
+	CSTR func = "WD_Execute";
 	StatementClass *stmt = (StatementClass *) hstmt;
 	RETCODE		retval = SQL_SUCCESS;
 	ConnectionClass	*conn;
@@ -1017,7 +1017,7 @@ PGAPI_Execute(HSTMT hstmt, UWORD flag)
 	ipdopts = SC_get_IPDF(stmt);
 	num_params = stmt->num_params;
 	if (num_params < 0)
-		PGAPI_NumParams(stmt, &num_params);
+		WD_NumParams(stmt, &num_params);
 	if (stmt->exec_current_row == start_row)
 	{
 		/*
@@ -1074,7 +1074,7 @@ MYLOG(0, "prepare=%d maybeBatch=%d exec_type=%d\n", stmt->prepare, maybeBatch, s
 		if (isSqlServr() &&
 		    stmt->external &&
 		    0 != stmt->prepare &&
-		    PG_VERSION_LT(conn, 8.4) &&
+		    WD_VERSION_LT(conn, 8.4) &&
 		    SC_can_parse_statement(stmt))
 			parse_sqlsvr(stmt);
 	}
@@ -1196,11 +1196,11 @@ MYLOG(0, "leaving %p retval=%d status=%d\n", stmt, retval, stmt->status);
 
 
 RETCODE		SQL_API
-PGAPI_Transact(HENV henv,
+WD_Transact(HENV henv,
 			   HDBC hdbc,
 			   SQLUSMALLINT fType)
 {
-	CSTR func = "PGAPI_Transact";
+	CSTR func = "WD_Transact";
 	ConnectionClass *conn;
 	char		ok;
 	int			lf;
@@ -1226,7 +1226,7 @@ PGAPI_Transact(HENV henv,
 			conn = conns[lf];
 
 			if (conn && CC_get_env(conn) == henv)
-				if (PGAPI_Transact(henv, (HDBC) conn, fType) != SQL_SUCCESS)
+				if (WD_Transact(henv, (HDBC) conn, fType) != SQL_SUCCESS)
 					return SQL_ERROR;
 		}
 		return SQL_SUCCESS;
@@ -1237,7 +1237,7 @@ PGAPI_Transact(HENV henv,
 	if (fType != SQL_COMMIT &&
 	    fType != SQL_ROLLBACK)
 	{
-		CC_set_error(conn, CONN_INVALID_ARGUMENT_NO, "PGAPI_Transact can only be called with SQL_COMMIT or SQL_ROLLBACK as parameter", func);
+		CC_set_error(conn, CONN_INVALID_ARGUMENT_NO, "WD_Transact can only be called with SQL_COMMIT or SQL_ROLLBACK as parameter", func);
 		return SQL_ERROR;
 	}
 
@@ -1260,9 +1260,9 @@ PGAPI_Transact(HENV henv,
 
 
 RETCODE		SQL_API
-PGAPI_Cancel(HSTMT hstmt)		/* Statement to cancel. */
+WD_Cancel(HSTMT hstmt)		/* Statement to cancel. */
 {
-	CSTR func = "PGAPI_Cancel";
+	CSTR func = "WD_Cancel";
 	StatementClass *stmt = (StatementClass *) hstmt, *estmt;
 	ConnectionClass *conn;
 	RETCODE		ret = SQL_SUCCESS;
@@ -1350,14 +1350,14 @@ PGAPI_Cancel(HSTMT hstmt)		/* Statement to cancel. */
  *	observing buffer limits and truncation.
  */
 RETCODE		SQL_API
-PGAPI_NativeSql(HDBC hdbc,
+WD_NativeSql(HDBC hdbc,
 				const SQLCHAR * szSqlStrIn,
 				SQLINTEGER cbSqlStrIn,
 				SQLCHAR * szSqlStr,
 				SQLINTEGER cbSqlStrMax,
 				SQLINTEGER * pcbSqlStr)
 {
-	CSTR func = "PGAPI_NativeSql";
+	CSTR func = "WD_NativeSql";
 	size_t		len = 0;
 	char	   *ptr;
 	ConnectionClass *conn = (ConnectionClass *) hdbc;
@@ -1401,10 +1401,10 @@ PGAPI_NativeSql(HDBC hdbc,
  *	Used in conjuction with SQLPutData.
  */
 RETCODE		SQL_API
-PGAPI_ParamData(HSTMT hstmt,
+WD_ParamData(HSTMT hstmt,
 				PTR * prgbValue)
 {
-	CSTR func = "PGAPI_ParamData";
+	CSTR func = "WD_ParamData";
 	StatementClass *stmt = (StatementClass *) hstmt, *estmt;
 	APDFields	*apdopts;
 	IPDFields	*ipdopts;
@@ -1476,7 +1476,7 @@ MYLOG(DETAIL_LOG_LEVEL, "ipdopts=%p\n", ipdopts);
 			goto cleanup;
 		}
 
-		if (retval = PGAPI_Execute(estmt, flag), SQL_NEED_DATA != retval)
+		if (retval = WD_Execute(estmt, flag), SQL_NEED_DATA != retval)
 		{
 			goto cleanup;
 		}
@@ -1490,7 +1490,7 @@ MYLOG(DETAIL_LOG_LEVEL, "ipdopts=%p\n", ipdopts);
 
 	num_p = estmt->num_params;
 	if (num_p < 0)
-		PGAPI_NumParams(estmt, &num_p);
+		WD_NumParams(estmt, &num_p);
 MYLOG(DETAIL_LOG_LEVEL, "i=%d allocated=%d num_p=%d\n", i, apdopts->allocated, num_p);
 	if (num_p > apdopts->allocated)
 		num_p = apdopts->allocated;
@@ -1538,11 +1538,11 @@ cleanup:
  *	Used in conjunction with SQLParamData.
  */
 RETCODE		SQL_API
-PGAPI_PutData(HSTMT hstmt,
+WD_PutData(HSTMT hstmt,
 			  PTR rgbValue,
 			  SQLLEN cbValue)
 {
-	CSTR func = "PGAPI_PutData";
+	CSTR func = "WD_PutData";
 	StatementClass *stmt = (StatementClass *) hstmt, *estmt;
 	ConnectionClass *conn;
 	RETCODE		retval = SQL_SUCCESS;
@@ -1625,13 +1625,13 @@ PGAPI_PutData(HSTMT hstmt,
 			putlen = ctype_length(ctype);
 	}
 	putbuf = rgbValue;
-	handling_lo = (PIC_dsp_pgtype(conn, *current_iparam) == conn->lobj_type);
+	handling_lo = (PIC_dsp_wdtype(conn, *current_iparam) == conn->lobj_type);
 	if (handling_lo && SQL_C_CHAR == ctype)
 	{
 		allocbuf = malloc(putlen / 2 + 1);
 		if (allocbuf)
 		{
-			pg_hex2bin(rgbValue, allocbuf, putlen);
+			WD_hex2bin(rgbValue, allocbuf, putlen);
 			putbuf = allocbuf;
 			putlen /= 2;
 		}
@@ -1646,7 +1646,7 @@ PGAPI_PutData(HSTMT hstmt,
 		current_pdata->EXEC_used = (SQLLEN *) malloc(sizeof(SQLLEN));
 		if (!current_pdata->EXEC_used)
 		{
-			SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Out of memory in PGAPI_PutData (1)", func);
+			SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Out of memory in WD_PutData (1)", func);
 			retval = SQL_ERROR;
 			goto cleanup;
 		}
@@ -1706,7 +1706,7 @@ PGAPI_PutData(HSTMT hstmt,
 			current_pdata->EXEC_buffer = malloc(putlen + 1);
 			if (!current_pdata->EXEC_buffer)
 			{
-				SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Out of memory in PGAPI_PutData (2)", func);
+				SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Out of memory in WD_PutData (2)", func);
 				retval = SQL_ERROR;
 				goto cleanup;
 			}
@@ -1744,7 +1744,7 @@ PGAPI_PutData(HSTMT hstmt,
 				buffer = realloc(current_pdata->EXEC_buffer, allocsize);
 				if (!buffer)
 				{
-					SC_set_error(stmt, STMT_NO_MEMORY_ERROR,"Out of memory in PGAPI_PutData (3)", func);
+					SC_set_error(stmt, STMT_NO_MEMORY_ERROR,"Out of memory in WD_PutData (3)", func);
 					retval = SQL_ERROR;
 					goto cleanup;
 				}

@@ -9,11 +9,11 @@
 #ifndef __STATEMENT_H__
 #define __STATEMENT_H__
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 #include <time.h>
 
 #include "pqexpbuffer.h"
-#include "pgtypes.h"
+#include "wdtypes.h"
 #include "bind.h"
 #include "descriptor.h"
 #include "tuple.h"
@@ -175,7 +175,7 @@ typedef enum {
 	LAST_EXEC
 } EXEC_TYPE;
 
-#define	PG_NUM_NORMAL_KEYS	2
+#define	WD_NUM_NORMAL_KEYS	2
 
 typedef	RETCODE	(*NeedDataCallfunc)(RETCODE, void *);
 typedef	struct
@@ -225,7 +225,7 @@ struct StatementClass_
 	STMT_Status status;
 	char	   *__error_message;
 	int			__error_number;
-	PG_ErrorInfo	*pgerror;
+	WD_ErrorInfo	*pgerror;
 
 	SQLLEN		currTuple;	/* current absolute row number (GetData,
 						 * SetPos, SQLFetch) */
@@ -259,7 +259,7 @@ struct StatementClass_
 	Int2		data_at_exec; /* Number of params needing SQLPutData */
 	Int2		current_exec_param;	/* The current parameter for
 						 * SQLPutData */
-	UDWORD		iflag;		/* PGAPI_AllocStmt parameter */
+	UDWORD		iflag;		/* WD_AllocStmt parameter */
 	PutDataInfo	pdata_info;
 	po_ind_t	parse_status;
 	po_ind_t	proc_return;
@@ -534,11 +534,11 @@ RETCODE		SC_pos_reload(StatementClass *self, SQLULEN index, UInt2 *, Int4);
 RETCODE		SC_pos_update(StatementClass *self, SQLSETPOSIROW irow, SQLULEN index, const KeySet *keyset);
 RETCODE		SC_pos_delete(StatementClass *self, SQLSETPOSIROW irow, SQLULEN index, const KeySet *keyset);
 RETCODE		SC_pos_refresh(StatementClass *self, SQLSETPOSIROW irow, SQLULEN index);
-RETCODE		SC_pos_fetch(StatementClass *self, const PG_BM *pg_bm);
+RETCODE		SC_pos_fetch(StatementClass *self, const WD_BM *WD_bm);
 RETCODE		SC_pos_add(StatementClass *self, SQLSETPOSIROW irow);
 RETCODE		SC_fetch_by_bookmark(StatementClass *self);
 int		SC_Create_bookmark(StatementClass *stmt, BindInfoClass *bookmark, Int4 row_pos, Int4 currTuple, const KeySet *keyset);
-PG_BM		SC_Resolve_bookmark(const ARDFields *opts, Int4 idx);
+WD_BM		SC_Resolve_bookmark(const ARDFields *opts, Int4 idx);
 int		SC_set_current_col(StatementClass *self, int col);
 void		SC_setInsertedTable(StatementClass *, RETCODE);
 void		SC_scanQueryAndCountParams(const char *, const ConnectionClass *,

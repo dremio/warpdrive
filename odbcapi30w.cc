@@ -12,7 +12,7 @@
  *-------
  */
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 #include "unicode_support.h"
 #include <stdio.h>
 #include <string.h>
@@ -37,7 +37,7 @@ SQLGetStmtAttrW(SQLHSTMT hstmt,
 	ENTER_STMT_CS((StatementClass *) hstmt);
 	SC_clear_error((StatementClass *) hstmt);
 	StartRollbackState(stmt);
-	ret = PGAPI_GetStmtAttr(hstmt, fAttribute, rgbValue,
+	ret = WD_GetStmtAttr(hstmt, fAttribute, rgbValue,
 		cbValueMax, pcbValue);
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS((StatementClass *) hstmt);
@@ -57,7 +57,7 @@ SQLSetStmtAttrW(SQLHSTMT hstmt,
 	ENTER_STMT_CS(stmt);
 	SC_clear_error(stmt);
 	StartRollbackState(stmt);
-	ret = PGAPI_SetStmtAttr(hstmt, fAttribute, rgbValue,
+	ret = WD_SetStmtAttr(hstmt, fAttribute, rgbValue,
 		cbValueMax);
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS(stmt);
@@ -77,7 +77,7 @@ SQLGetConnectAttrW(HDBC hdbc,
 	CC_examine_global_transaction((ConnectionClass *) hdbc);
 	ENTER_CONN_CS((ConnectionClass *) hdbc);
 	CC_clear_error((ConnectionClass *) hdbc);
-	ret = PGAPI_GetConnectAttr(hdbc, fAttribute, rgbValue,
+	ret = WD_GetConnectAttr(hdbc, fAttribute, rgbValue,
 		cbValueMax, pcbValue);
 	LEAVE_CONN_CS((ConnectionClass *) hdbc);
 	return ret;
@@ -97,7 +97,7 @@ SQLSetConnectAttrW(HDBC hdbc,
 	ENTER_CONN_CS(conn);
 	CC_clear_error(conn);
 	CC_set_in_unicode_driver(conn);
-	ret = PGAPI_SetConnectAttr(hdbc, fAttribute, rgbValue,
+	ret = WD_SetConnectAttr(hdbc, fAttribute, rgbValue,
 		cbValue);
 	LEAVE_CONN_CS(conn);
 	return ret;
@@ -140,7 +140,7 @@ SQLSetDescFieldW(SQLHDESC DescriptorHandle, SQLSMALLINT RecNumber,
 		uval = Value;
 		vallen = BufferLength;
 	}
-	ret = PGAPI_SetDescField(DescriptorHandle, RecNumber, FieldIdentifier,
+	ret = WD_SetDescField(DescriptorHandle, RecNumber, FieldIdentifier,
 				uval, (SQLINTEGER) vallen);
 	if (val_alloced)
 		free(uval);
@@ -181,7 +181,7 @@ SQLGetDescFieldW(SQLHDESC hdesc, SQLSMALLINT iRecord, SQLSMALLINT iField,
 					break;
 				}
 				rgbV = rgbVt;
-				ret = PGAPI_GetDescField(hdesc, iRecord, iField, rgbV, bMax, pcbV);
+				ret = WD_GetDescField(hdesc, iRecord, iField, rgbV, bMax, pcbV);
 				if (SQL_SUCCESS_WITH_INFO != ret || blen < bMax)
 					break;
 			}
@@ -203,7 +203,7 @@ SQLGetDescFieldW(SQLHDESC hdesc, SQLSMALLINT iRecord, SQLSMALLINT iField,
 			rgbV = rgbValue;
 			bMax = cbValueMax;
 			pcbV = pcbValue;
-			ret = PGAPI_GetDescField(hdesc, iRecord, iField, rgbV, bMax, pcbV);
+			ret = WD_GetDescField(hdesc, iRecord, iField, rgbV, bMax, pcbV);
 			break;
 	}
 
@@ -231,7 +231,7 @@ SQLGetDiagRecW(SQLSMALLINT fHandleType,
 		buflen = cbErrorMsgMax;
                 mtxt = malloc(buflen);
 	}
-	ret = PGAPI_GetDiagRec(fHandleType, handle, iRecord, (SQLCHAR *) qstr_ansi,
+	ret = WD_GetDiagRec(fHandleType, handle, iRecord, (SQLCHAR *) qstr_ansi,
 						   pfNativeError, (SQLCHAR *) mtxt, buflen, &tlen);
 	if (SQL_SUCCEEDED(ret))
 	{
@@ -314,7 +314,7 @@ SQLColAttributeW(SQLHSTMT	hstmt,
 					break;
 				}
 				rgbD = rgbDt;
-				ret = PGAPI_ColAttributes(hstmt, iCol, iField, rgbD,
+				ret = WD_ColAttributes(hstmt, iCol, iField, rgbD,
 					bMax, rgbL, pNumAttr);
 				if (SQL_SUCCESS_WITH_INFO != ret || blen < bMax)
 					break;
@@ -337,7 +337,7 @@ SQLColAttributeW(SQLHSTMT	hstmt,
 			rgbD = pCharAttr;
 			bMax = cbCharAttrMax;
 			rgbL = pcbCharAttr;
-			ret = PGAPI_ColAttributes(hstmt, iCol, iField, rgbD,
+			ret = WD_ColAttributes(hstmt, iCol, iField, rgbD,
 					bMax, rgbL, pNumAttr);
 			break;
 	}
@@ -383,7 +383,7 @@ SQLGetDiagFieldW(SQLSMALLINT	fHandleType,
 					return SQL_ERROR;
 				}
 				rgbD = rgbDt;
-				ret = PGAPI_GetDiagField(fHandleType, handle, iRecord, fDiagField, rgbD,
+				ret = WD_GetDiagField(fHandleType, handle, iRecord, fDiagField, rgbD,
 					bMax, rgbL);
 				if (SQL_SUCCESS_WITH_INFO != ret || blen < bMax)
 					break;
@@ -409,7 +409,7 @@ SQLGetDiagFieldW(SQLSMALLINT	fHandleType,
 			rgbD = rgbDiagInfo;
 			bMax = cbDiagInfoMax;
 			rgbL = pcbDiagInfo;
-			ret = PGAPI_GetDiagField(fHandleType, handle, iRecord, fDiagField, rgbD,
+			ret = WD_GetDiagField(fHandleType, handle, iRecord, fDiagField, rgbD,
 				bMax, rgbL);
 			break;
 	}

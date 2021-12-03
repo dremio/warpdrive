@@ -1,5 +1,5 @@
 /*-------
- * Module:			pgapi30.c
+ * Module:			wdapi30.c
  *
  * Description:		This module contains routines related to ODBC 3.0
  *			most of their implementations are temporary
@@ -8,13 +8,13 @@
  *
  * Classes:			n/a
  *
- * API functions:	PGAPI_ColAttribute, PGAPI_GetDiagRec,
-			PGAPI_GetConnectAttr, PGAPI_GetStmtAttr,
-			PGAPI_SetConnectAttr, PGAPI_SetStmtAttr
+ * API functions:	WD_ColAttribute, WD_GetDiagRec,
+			WD_GetConnectAttr, WD_GetStmtAttr,
+			WD_SetConnectAttr, WD_SetStmtAttr
  *-------
  */
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 #include "misc.h"
 
 #include <stdio.h>
@@ -33,7 +33,7 @@
 
 /*	SQLError -> SQLDiagRec */
 RETCODE		SQL_API
-PGAPI_GetDiagRec(SQLSMALLINT HandleType, SQLHANDLE Handle,
+WD_GetDiagRec(SQLSMALLINT HandleType, SQLHANDLE Handle,
 				 SQLSMALLINT RecNumber, SQLCHAR *Sqlstate,
 				 SQLINTEGER *NativeError, SQLCHAR *MessageText,
 				 SQLSMALLINT BufferLength, SQLSMALLINT *TextLength)
@@ -44,22 +44,22 @@ PGAPI_GetDiagRec(SQLSMALLINT HandleType, SQLHANDLE Handle,
 	switch (HandleType)
 	{
 		case SQL_HANDLE_ENV:
-			ret = PGAPI_EnvError(Handle, RecNumber, Sqlstate,
+			ret = WD_EnvError(Handle, RecNumber, Sqlstate,
 					NativeError, MessageText,
 					BufferLength, TextLength, 0);
 			break;
 		case SQL_HANDLE_DBC:
-			ret = PGAPI_ConnectError(Handle, RecNumber, Sqlstate,
+			ret = WD_ConnectError(Handle, RecNumber, Sqlstate,
 					NativeError, MessageText, BufferLength,
 					TextLength, 0);
 			break;
 		case SQL_HANDLE_STMT:
-			ret = PGAPI_StmtError(Handle, RecNumber, Sqlstate,
+			ret = WD_StmtError(Handle, RecNumber, Sqlstate,
 					NativeError, MessageText, BufferLength,
 					TextLength, 0);
 			break;
 		case SQL_HANDLE_DESC:
-			ret = PGAPI_DescError(Handle, RecNumber, Sqlstate,
+			ret = WD_DescError(Handle, RecNumber, Sqlstate,
 					NativeError,
 					MessageText, BufferLength,
 					TextLength, 0);
@@ -76,7 +76,7 @@ PGAPI_GetDiagRec(SQLSMALLINT HandleType, SQLHANDLE Handle,
  *
  */
 RETCODE		SQL_API
-PGAPI_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
+WD_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 				   SQLSMALLINT RecNumber, SQLSMALLINT DiagIdentifier,
 				   PTR DiagInfoPtr, SQLSMALLINT BufferLength,
 				   SQLSMALLINT *StringLengthPtr)
@@ -109,19 +109,19 @@ PGAPI_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 						ret = SQL_SUCCESS_WITH_INFO;
 					break;
 				case SQL_DIAG_MESSAGE_TEXT:
-					ret = PGAPI_EnvError(Handle, RecNumber,
+					ret = WD_EnvError(Handle, RecNumber,
 										 NULL, NULL, DiagInfoPtr,
 										 BufferLength, StringLengthPtr, 0);
 					break;
 				case SQL_DIAG_NATIVE:
 					rtnctype = SQL_C_LONG;
-					ret = PGAPI_EnvError(Handle, RecNumber,
+					ret = WD_EnvError(Handle, RecNumber,
 										 NULL, (SQLINTEGER *) DiagInfoPtr, NULL,
 										 0, NULL, 0);
 					break;
 				case SQL_DIAG_NUMBER:
 					rtnctype = SQL_C_LONG;
-					ret = PGAPI_EnvError(Handle, RecNumber,
+					ret = WD_EnvError(Handle, RecNumber,
 										 NULL, NULL, NULL,
 										 0, NULL, 0);
 					if (SQL_SUCCEEDED(ret))
@@ -131,7 +131,7 @@ PGAPI_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 					break;
 				case SQL_DIAG_SQLSTATE:
 					rtnlen = 5;
-					ret = PGAPI_EnvError(Handle, RecNumber,
+					ret = WD_EnvError(Handle, RecNumber,
 										 DiagInfoPtr, NULL, NULL,
 										 0, NULL, 0);
 					if (SQL_SUCCESS_WITH_INFO == ret)
@@ -174,13 +174,13 @@ PGAPI_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 						ret = SQL_SUCCESS_WITH_INFO;
 					break;
 				case SQL_DIAG_MESSAGE_TEXT:
-					ret = PGAPI_ConnectError(Handle, RecNumber,
+					ret = WD_ConnectError(Handle, RecNumber,
 											 NULL, NULL, DiagInfoPtr,
 											 BufferLength, StringLengthPtr, 0);
 					break;
 				case SQL_DIAG_NATIVE:
 					rtnctype = SQL_C_LONG;
-					ret = PGAPI_ConnectError(Handle, RecNumber,
+					ret = WD_ConnectError(Handle, RecNumber,
 											 NULL, (SQLINTEGER *) DiagInfoPtr, NULL,
 											 0, NULL, 0);
 					break;
@@ -190,7 +190,7 @@ PGAPI_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 					rtnctype = SQL_C_LONG;
 					{
 						SQLCHAR msg[SQL_MAX_MESSAGE_LENGTH + 1];
-						ret = PGAPI_ConnectError(Handle, 1,
+						ret = WD_ConnectError(Handle, 1,
 											 NULL, NULL, msg,
 											 sizeof(msg), &pcbErrm, 0);
 						MYLOG(0, "pcbErrm=%d\n", pcbErrm);
@@ -203,7 +203,7 @@ PGAPI_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 					break;
 				case SQL_DIAG_SQLSTATE:
 					rtnlen = 5;
-					ret = PGAPI_ConnectError(Handle, RecNumber,
+					ret = WD_ConnectError(Handle, RecNumber,
 											 DiagInfoPtr, NULL, NULL,
 											 0, NULL, 0);
 					if (SQL_SUCCESS_WITH_INFO == ret)
@@ -246,13 +246,13 @@ PGAPI_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 						ret = SQL_SUCCESS_WITH_INFO;
 					break;
 				case SQL_DIAG_MESSAGE_TEXT:
-					ret = PGAPI_StmtError(Handle, RecNumber,
+					ret = WD_StmtError(Handle, RecNumber,
 										  NULL, NULL, DiagInfoPtr,
 										  BufferLength, StringLengthPtr, 0);
 					break;
 				case SQL_DIAG_NATIVE:
 					rtnctype = SQL_C_LONG;
-					ret = PGAPI_StmtError(Handle, RecNumber,
+					ret = WD_StmtError(Handle, RecNumber,
 										  NULL, (SQLINTEGER *) DiagInfoPtr, NULL,
 										  0, NULL, 0);
 					break;
@@ -261,7 +261,7 @@ PGAPI_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 					*((SQLINTEGER *) DiagInfoPtr) = 0;
 					ret = SQL_NO_DATA_FOUND;
 					stmt = (StatementClass *) Handle;
-					rtn = PGAPI_StmtError(Handle, -1, NULL,
+					rtn = WD_StmtError(Handle, -1, NULL,
 						 NULL, NULL, 0, &pcbErrm, 0);
 					switch (rtn)
 					{
@@ -278,7 +278,7 @@ PGAPI_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 					break;
 				case SQL_DIAG_SQLSTATE:
 					rtnlen = 5;
-					ret = PGAPI_StmtError(Handle, RecNumber,
+					ret = WD_StmtError(Handle, RecNumber,
 										  DiagInfoPtr, NULL, NULL,
 										  0, NULL, 0);
 					if (SQL_SUCCESS_WITH_INFO == ret)
@@ -355,7 +355,7 @@ MYLOG(DETAIL_LOG_LEVEL, "rc=" FORMAT_LEN "\n", rc);
 					break;
 				case SQL_DIAG_SQLSTATE:
 					rtnlen = 5;
-					ret = PGAPI_DescError(Handle, RecNumber,
+					ret = WD_DescError(Handle, RecNumber,
 										  DiagInfoPtr, NULL, NULL,
 										  0, NULL, 0);
 					if (SQL_SUCCESS_WITH_INFO == ret)
@@ -400,7 +400,7 @@ MYLOG(DETAIL_LOG_LEVEL, "rc=" FORMAT_LEN "\n", rc);
 
 /*	SQLGetConnectOption -> SQLGetconnectAttr */
 RETCODE		SQL_API
-PGAPI_GetConnectAttr(HDBC ConnectionHandle,
+WD_GetConnectAttr(HDBC ConnectionHandle,
 					 SQLINTEGER Attribute, PTR Value,
 					 SQLINTEGER BufferLength, SQLINTEGER *StringLength)
 {
@@ -472,7 +472,7 @@ PGAPI_GetConnectAttr(HDBC ConnectionHandle,
 			*((SQLINTEGER *) Value) = conn->connInfo.ignore_timeout;
 			break;
 		default:
-			ret = PGAPI_GetConnectOption(ConnectionHandle, (UWORD) Attribute, Value, &len, BufferLength);
+			ret = WD_GetConnectOption(ConnectionHandle, (UWORD) Attribute, Value, &len, BufferLength);
 	}
 	if (StringLength)
 		*StringLength = len;
@@ -1376,7 +1376,7 @@ IRDGetField(DescriptorClass *desc, SQLSMALLINT RecNumber,
 		StatementClass	*stmt;
 
 		stmt = opts->stmt;
-		ret = PGAPI_ColAttributes(stmt, RecNumber,
+		ret = WD_ColAttributes(stmt, RecNumber,
 			FieldIdentifier, Value, (SQLSMALLINT) BufferLength,
 				&pcbL, &ival);
 		len = pcbL;
@@ -1556,11 +1556,11 @@ MYLOG(DETAIL_LOG_LEVEL, "RecN=%d allocated=%d\n", RecNumber, ipdopts->allocated)
 
 /*	SQLGetStmtOption -> SQLGetStmtAttr */
 RETCODE		SQL_API
-PGAPI_GetStmtAttr(HSTMT StatementHandle,
+WD_GetStmtAttr(HSTMT StatementHandle,
 				  SQLINTEGER Attribute, PTR Value,
 				  SQLINTEGER BufferLength, SQLINTEGER *StringLength)
 {
-	CSTR func = "PGAPI_GetStmtAttr";
+	CSTR func = "WD_GetStmtAttr";
 	StatementClass *stmt = (StatementClass *) StatementHandle;
 	RETCODE		ret = SQL_SUCCESS;
 	SQLINTEGER	len = 0;
@@ -1649,7 +1649,7 @@ PGAPI_GetStmtAttr(HSTMT StatementHandle,
 			SC_set_error(stmt, DESC_INVALID_OPTION_IDENTIFIER, "Unsupported statement option (Get)", func);
 			return SQL_ERROR;
 		default:
-			ret = PGAPI_GetStmtOption(StatementHandle, (SQLSMALLINT) Attribute, Value, &len, BufferLength);
+			ret = WD_GetStmtOption(StatementHandle, (SQLSMALLINT) Attribute, Value, &len, BufferLength);
 	}
 	if (ret == SQL_SUCCESS && StringLength)
 		*StringLength = len;
@@ -1658,11 +1658,11 @@ PGAPI_GetStmtAttr(HSTMT StatementHandle,
 
 /*	SQLSetConnectOption -> SQLSetConnectAttr */
 RETCODE		SQL_API
-PGAPI_SetConnectAttr(HDBC ConnectionHandle,
+WD_SetConnectAttr(HDBC ConnectionHandle,
 					 SQLINTEGER Attribute, PTR Value,
 					 SQLINTEGER StringLength)
 {
-	CSTR	func = "PGAPI_SetConnectAttr";
+	CSTR	func = "WD_SetConnectAttr";
 	ConnectionClass *conn = (ConnectionClass *) ConnectionHandle;
 	RETCODE	ret = SQL_SUCCESS;
 	BOOL	unsupported = FALSE;
@@ -1808,7 +1808,7 @@ PGAPI_SetConnectAttr(HDBC ConnectionHandle,
 			break;
 		default:
 			if (Attribute < 65536)
-				ret = PGAPI_SetConnectOption(ConnectionHandle, (SQLUSMALLINT) Attribute, (SQLLEN) Value);
+				ret = WD_SetConnectOption(ConnectionHandle, (SQLUSMALLINT) Attribute, (SQLLEN) Value);
 			else
 				unsupported = TRUE;
 	}
@@ -1824,12 +1824,12 @@ PGAPI_SetConnectAttr(HDBC ConnectionHandle,
 
 /*	new function */
 RETCODE		SQL_API
-PGAPI_GetDescField(SQLHDESC DescriptorHandle,
+WD_GetDescField(SQLHDESC DescriptorHandle,
 				   SQLSMALLINT RecNumber, SQLSMALLINT FieldIdentifier,
 				   PTR Value, SQLINTEGER BufferLength,
 				   SQLINTEGER *StringLength)
 {
-	CSTR func = "PGAPI_GetDescField";
+	CSTR func = "WD_GetDescField";
 	RETCODE		ret = SQL_SUCCESS;
 	DescriptorClass *desc = (DescriptorClass *) DescriptorHandle;
 
@@ -1875,11 +1875,11 @@ PGAPI_GetDescField(SQLHDESC DescriptorHandle,
 
 /*	new function */
 RETCODE		SQL_API
-PGAPI_SetDescField(SQLHDESC DescriptorHandle,
+WD_SetDescField(SQLHDESC DescriptorHandle,
 				   SQLSMALLINT RecNumber, SQLSMALLINT FieldIdentifier,
 				   PTR Value, SQLINTEGER BufferLength)
 {
-	CSTR func = "PGAPI_SetDescField";
+	CSTR func = "WD_SetDescField";
 	RETCODE		ret = SQL_SUCCESS;
 	DescriptorClass *desc = (DescriptorClass *) DescriptorHandle;
 
@@ -1926,12 +1926,12 @@ PGAPI_SetDescField(SQLHDESC DescriptorHandle,
 
 /*	SQLSet(Param/Scroll/Stmt)Option -> SQLSetStmtAttr */
 RETCODE		SQL_API
-PGAPI_SetStmtAttr(HSTMT StatementHandle,
+WD_SetStmtAttr(HSTMT StatementHandle,
 				  SQLINTEGER Attribute, PTR Value,
 				  SQLINTEGER StringLength)
 {
 	RETCODE	ret = SQL_SUCCESS;
-	CSTR func = "PGAPI_SetStmtAttr";
+	CSTR func = "WD_SetStmtAttr";
 	StatementClass *stmt = (StatementClass *) StatementHandle;
 
 	MYLOG(0, "entering Handle=%p " FORMAT_INTEGER "," FORMAT_ULEN "(%p)\n", StatementHandle, Attribute, (SQLULEN) Value, Value);
@@ -2017,12 +2017,12 @@ MYLOG(DETAIL_LOG_LEVEL, "set ard=%p\n", stmt->ard);
 			SC_get_ARDF(stmt)->size_of_rowset = CAST_UPTR(SQLULEN, Value);
 			break;
 		default:
-			return PGAPI_SetStmtOption(StatementHandle, (SQLUSMALLINT) Attribute, (SQLULEN) Value);
+			return WD_SetStmtOption(StatementHandle, (SQLUSMALLINT) Attribute, (SQLULEN) Value);
 	}
 	return ret;
 }
 
-/*	SQL_NEED_DATA callback for PGAPI_BulkOperations */
+/*	SQL_NEED_DATA callback for WD_BulkOperations */
 typedef struct
 {
 	StatementClass	*stmt;
@@ -2043,7 +2043,7 @@ RETCODE	bulk_ope_callback(RETCODE retcode, void *para)
 	ConnectionClass	*conn;
 	QResultClass	*res;
 	IRDFields	*irdflds;
-	PG_BM		pg_bm;
+	WD_BM		WD_bm;
 
 	if (s->need_data_callback)
 	{
@@ -2061,9 +2061,9 @@ RETCODE	bulk_ope_callback(RETCODE retcode, void *para)
 	{
 		if (SQL_ADD != s->operation)
 		{
-			pg_bm = SC_Resolve_bookmark(s->opts, s->idx);
-			QR_get_last_bookmark(res, s->idx, &pg_bm.keys);
-			global_idx = pg_bm.index;
+			WD_bm = SC_Resolve_bookmark(s->opts, s->idx);
+			QR_get_last_bookmark(res, s->idx, &WD_bm.keys);
+			global_idx = WD_bm.index;
 		}
 		/* Note opts->row_operation_ptr is ignored */
 		switch (s->operation)
@@ -2072,10 +2072,10 @@ RETCODE	bulk_ope_callback(RETCODE retcode, void *para)
 				ret = SC_pos_add(s->stmt, (UWORD) s->idx);
 				break;
 			case SQL_UPDATE_BY_BOOKMARK:
-				ret = SC_pos_update(s->stmt, (UWORD) s->idx, global_idx, &(pg_bm.keys));
+				ret = SC_pos_update(s->stmt, (UWORD) s->idx, global_idx, &(WD_bm.keys));
 				break;
 			case SQL_DELETE_BY_BOOKMARK:
-				ret = SC_pos_delete(s->stmt, (UWORD) s->idx, global_idx, &(pg_bm.keys));
+				ret = SC_pos_delete(s->stmt, (UWORD) s->idx, global_idx, &(WD_bm.keys));
 				break;
 		}
 		if (SQL_NEED_DATA == ret)
@@ -2107,9 +2107,9 @@ RETCODE	bulk_ope_callback(RETCODE retcode, void *para)
 }
 
 RETCODE	SQL_API
-PGAPI_BulkOperations(HSTMT hstmt, SQLSMALLINT operationX)
+WD_BulkOperations(HSTMT hstmt, SQLSMALLINT operationX)
 {
-	CSTR func = "PGAPI_BulkOperations";
+	CSTR func = "WD_BulkOperations";
 	bop_cdata	s;
 	RETCODE		ret;
 	ConnectionClass	*conn;

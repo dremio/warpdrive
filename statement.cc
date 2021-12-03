@@ -178,10 +178,10 @@ static void SC_set_error_if_not_set(StatementClass *self, int errornumber, const
 
 
 RETCODE		SQL_API
-PGAPI_AllocStmt(HDBC hdbc,
+WD_AllocStmt(HDBC hdbc,
 				HSTMT * phstmt, UDWORD flag)
 {
-	CSTR func = "PGAPI_AllocStmt";
+	CSTR func = "WD_AllocStmt";
 	ConnectionClass *conn = (ConnectionClass *) hdbc;
 	StatementClass *stmt;
 	ARDFields	*ardopts;
@@ -239,10 +239,10 @@ PGAPI_AllocStmt(HDBC hdbc,
 
 
 RETCODE		SQL_API
-PGAPI_FreeStmt(HSTMT hstmt,
+WD_FreeStmt(HSTMT hstmt,
 			   SQLUSMALLINT fOption)
 {
-	CSTR func = "PGAPI_FreeStmt";
+	CSTR func = "WD_FreeStmt";
 	StatementClass *stmt = (StatementClass *) hstmt;
 
 	MYLOG(0, "entering...hstmt=%p, fOption=%hi\n", hstmt, fOption);
@@ -290,7 +290,7 @@ PGAPI_FreeStmt(HSTMT hstmt,
 
 		if (stmt->execute_delegate)
 		{
-			PGAPI_FreeStmt(stmt->execute_delegate, SQL_DROP);
+			WD_FreeStmt(stmt->execute_delegate, SQL_DROP);
 			stmt->execute_delegate = NULL;
 		}
 		if (stmt->execute_parent)
@@ -309,7 +309,7 @@ PGAPI_FreeStmt(HSTMT hstmt,
 		stmt->transition_status = STMT_TRANSITION_ALLOCATED;
 		if (stmt->execute_delegate)
 		{
-			PGAPI_FreeStmt(stmt->execute_delegate, SQL_DROP);
+			WD_FreeStmt(stmt->execute_delegate, SQL_DROP);
 			stmt->execute_delegate = NULL;
 		}
 		if (!SC_recycle_statement(stmt))
@@ -322,7 +322,7 @@ PGAPI_FreeStmt(HSTMT hstmt,
 		SC_free_params(stmt, STMT_FREE_PARAMS_ALL);
 	else
 	{
-		SC_set_error(stmt, STMT_OPTION_OUT_OF_RANGE_ERROR, "Invalid option passed to PGAPI_FreeStmt.", func);
+		SC_set_error(stmt, STMT_OPTION_OUT_OF_RANGE_ERROR, "Invalid option passed to WD_FreeStmt.", func);
 		return SQL_ERROR;
 	}
 
@@ -1038,7 +1038,7 @@ SC_scanQueryAndCountParams(const char *query, const ConnectionClass *conn,
 		}
 		else if (in_line_comment)
 		{
-			if (PG_LINEFEED == tchar)
+			if (WD_LINEFEED == tchar)
 				in_line_comment = FALSE;
 		}
 		else if (comment_level > 0)
@@ -1291,8 +1291,8 @@ static const struct
 	{ STMT_COMMUNICATION_ERROR, "08S01", "08S01" }
 };
 
-static PG_ErrorInfo *
-SC_create_errorinfo(const StatementClass *self, PG_ErrorInfo *pgerror_fail_safe)
+static WD_ErrorInfo *
+SC_create_errorinfo(const StatementClass *self, WD_ErrorInfo *pgerror_fail_safe)
 {
 	QResultClass *res = SC_get_ExecdOrParsed(self);
 	ConnectionClass *conn = SC_get_conn(self);
@@ -1302,7 +1302,7 @@ SC_create_errorinfo(const StatementClass *self, PG_ErrorInfo *pgerror_fail_safe)
 	BOOL		looponce, loopend;
 	char		msg[4096], *wmsg;
 	char		*ermsg = NULL, *sqlstate = NULL;
-	PG_ErrorInfo	*pgerror;
+	WD_ErrorInfo	*pgerror;
 
 	if (self->pgerror)
 		return self->pgerror;
@@ -1440,7 +1440,7 @@ void SC_reset_delegate(RETCODE retcode, StatementClass *stmt)
 
 	if (!delegate)
 		return;
-	PGAPI_FreeStmt(delegate, SQL_DROP);
+	WD_FreeStmt(delegate, SQL_DROP);
 }
 
 void
@@ -1564,7 +1564,7 @@ MYLOG(DETAIL_LOG_LEVEL, "entering %p->%p check=%i\n", from ,self, check);
 void
 SC_full_error_copy(StatementClass *self, const StatementClass *from, BOOL allres)
 {
-	PG_ErrorInfo		*pgerror;
+	WD_ErrorInfo		*pgerror;
 
 MYLOG(DETAIL_LOG_LEVEL, "entering %p->%p\n", from ,self);
 	if (!from)		return;	/* for safety */
@@ -1599,7 +1599,7 @@ MYLOG(DETAIL_LOG_LEVEL, "entering %p->%p\n", from ,self);
 
 /* Returns the next SQL error information. */
 RETCODE		SQL_API
-PGAPI_StmtError(SQLHSTMT	hstmt,
+WD_StmtError(SQLHSTMT	hstmt,
 				SQLSMALLINT RecNumber,
 				SQLCHAR * szSqlState,
 				SQLINTEGER * pfNativeError,
@@ -1609,7 +1609,7 @@ PGAPI_StmtError(SQLHSTMT	hstmt,
 				UWORD flag)
 {
 	/* CC: return an error of a hdesc  */
-	PG_ErrorInfo		*pgerror, error;
+	WD_ErrorInfo		*pgerror, error;
 	StatementClass *stmt = (StatementClass *) hstmt;
 	int errnum = SC_get_errornumber(stmt);
 
@@ -2283,7 +2283,7 @@ MYLOG(DETAIL_LOG_LEVEL, "!!SC_fetch return =%d\n", ret);
 							}
 						}
 						apara = apdopts->parameters + i;
-						ret = PGAPI_GetData(hstmt, icol + 1, apara->CType, apara->buffer + offset, apara->buflen, apara->used ? LENADDR_SHIFT(apara->used, offset) : NULL);
+						ret = WD_GetData(hstmt, icol + 1, apara->CType, apara->buffer + offset, apara->buflen, apara->used ? LENADDR_SHIFT(apara->used, offset) : NULL);
 						if (!SQL_SUCCEEDED(ret))
 						{
 							SC_set_error(self, STMT_EXEC_ERROR, "GetData to Procedure return failed.", func);
@@ -2310,7 +2310,7 @@ MYLOG(DETAIL_LOG_LEVEL, "!!SC_fetch return =%d\n", ret);
 			for (i = 0; i < numcols; i++)
 			{
 				MYLOG(DETAIL_LOG_LEVEL, "!!! numfield=%d field_type=%u\n", numcols, QR_get_field_type(rhold.first, i));
-				if (PG_TYPE_REFCURSOR == QR_get_field_type(rhold.first, i))
+				if (WD_TYPE_REFCURSOR == QR_get_field_type(rhold.first, i))
 				{
 					if (!CC_is_in_trans(conn))
 					{
@@ -2861,9 +2861,9 @@ MYLOG(0, "sta_pidx=%d end_pidx=%d num_p=%d\n", sta_pidx, end_pidx, num_params);
 			if (i < ipdopts->allocated)
 			{
 				if (SQL_PARAM_OUTPUT == ipdopts->parameters[i].paramType)
-					paramTypes[j++] = PG_TYPE_VOID;
+					paramTypes[j++] = WD_TYPE_VOID;
 				else
-					paramTypes[j++] = sqltype_to_bind_pgtype(conn,
+					paramTypes[j++] = sqltype_to_bind_wdtype(conn,
 															 ipdopts->parameters[i].SQLType);
 			}
 			else
@@ -3018,8 +3018,8 @@ MYLOG(DETAIL_LOG_LEVEL, "num_params=%d info=%d\n", stmt->num_params, num_p);
 		oid = PQparamtype(pgres, i);
 		paramType = ipdopts->parameters[pidx].paramType;
 		if (SQL_PARAM_OUTPUT != paramType ||
-			PG_TYPE_VOID != oid)
-			PIC_set_pgtype(ipdopts->parameters[pidx], oid);
+			WD_TYPE_VOID != oid)
+			PIC_set_wdtype(ipdopts->parameters[pidx], oid);
 	}
 
 	/* Extract Portal information */
@@ -3049,8 +3049,8 @@ MYLOG(DETAIL_LOG_LEVEL, "num_params=%d info=%d\n", stmt->num_params, num_p);
 				if (SQL_PARAM_OUTPUT == paramType ||
 					SQL_PARAM_INPUT_OUTPUT == paramType)
 				{
-					MYLOG(DETAIL_LOG_LEVEL, "!![%d].PGType %u->%u\n", i, PIC_get_pgtype(ipdopts->parameters[i]), CI_get_oid(QR_get_fields(res), cidx));
-					PIC_set_pgtype(ipdopts->parameters[i], CI_get_oid(QR_get_fields(res), cidx));
+					MYLOG(DETAIL_LOG_LEVEL, "!![%d].wdtype %u->%u\n", i, PIC_get_wdtype(ipdopts->parameters[i]), CI_get_oid(QR_get_fields(res), cidx));
+					PIC_set_wdtype(ipdopts->parameters[i], CI_get_oid(QR_get_fields(res), cidx));
 					cidx++;
 				}
 			}
@@ -3214,19 +3214,19 @@ SC_set_errorinfo(StatementClass *self, QResultClass *res, int errkind)
  *	(row number + CTID + OID), they are useful in declare/fetch mode.
  */
 
-PG_BM	SC_Resolve_bookmark(const ARDFields *opts, Int4 idx)
+WD_BM	SC_Resolve_bookmark(const ARDFields *opts, Int4 idx)
 {
 	BindInfoClass	*bookmark;
 	SQLLEN		*used;
 	SQLULEN		offset;
 	SQLUINTEGER	bind_size;
 	size_t	cpylen = sizeof(Int4);
-	PG_BM	pg_bm;
+	WD_BM	WD_bm;
 
 	bookmark = opts->bookmark;
 	offset = opts->row_offset_ptr ? *(opts->row_offset_ptr) : 0;
 	bind_size = opts->bind_size;
-	memset(&pg_bm, 0, sizeof(pg_bm));
+	memset(&WD_bm, 0, sizeof(WD_bm));
 	if (used = bookmark->used, used != NULL)
 	{
 		used = LENADDR_SHIFT(used, offset);
@@ -3234,17 +3234,17 @@ PG_BM	SC_Resolve_bookmark(const ARDFields *opts, Int4 idx)
 			used = LENADDR_SHIFT(used, idx * bind_size);
 		else
 			used = LENADDR_SHIFT(used, idx * sizeof(SQLLEN));
-		if (*used >= sizeof(pg_bm))
-			cpylen = sizeof(pg_bm);
+		if (*used >= sizeof(WD_bm))
+			cpylen = sizeof(WD_bm);
 		else if (*used >= 12)
 			cpylen = 12;
 		MYLOG(0, "used=" FORMAT_LEN " cpylen=" FORMAT_SIZE_T "\n", *used, cpylen);
 	}
-	memcpy(&pg_bm, CALC_BOOKMARK_ADDR(bookmark, offset, bind_size, idx), cpylen);
-MYLOG(0, "index=%d block=%d off=%d\n", pg_bm.index, pg_bm.keys.blocknum, pg_bm.keys.offset);
-	pg_bm.index = SC_resolve_int4_bookmark(pg_bm.index);
+	memcpy(&WD_bm, CALC_BOOKMARK_ADDR(bookmark, offset, bind_size, idx), cpylen);
+MYLOG(0, "index=%d block=%d off=%d\n", WD_bm.index, WD_bm.keys.blocknum, WD_bm.keys.offset);
+	WD_bm.index = SC_resolve_int4_bookmark(WD_bm.index);
 
-	return pg_bm;
+	return WD_bm;
 }
 
 int	SC_Create_bookmark(StatementClass *self, BindInfoClass *bookmark, Int4 bind_row, Int4 currTuple, const KeySet *keyset)
@@ -3253,20 +3253,20 @@ int	SC_Create_bookmark(StatementClass *self, BindInfoClass *bookmark, Int4 bind_
 	SQLUINTEGER	bind_size = opts->bind_size;
 	SQLULEN		offset = opts->row_offset_ptr ? *opts->row_offset_ptr : 0;
 	size_t		cvtlen = sizeof(Int4);
-	PG_BM		pg_bm;
+	WD_BM		WD_bm;
 
 MYLOG(0, "entering type=%d buflen=" FORMAT_LEN " buf=%p\n", bookmark->returntype, bookmark->buflen, bookmark->buffer);
-	memset(&pg_bm, 0, sizeof(pg_bm));
+	memset(&WD_bm, 0, sizeof(WD_bm));
 	if (SQL_C_BOOKMARK == bookmark->returntype)
 		;
-	else if (bookmark->buflen >= sizeof(pg_bm))
-		cvtlen = sizeof(pg_bm);
+	else if (bookmark->buflen >= sizeof(WD_bm))
+		cvtlen = sizeof(WD_bm);
 	else if (bookmark->buflen >= 12)
 		cvtlen = 12;
-	pg_bm.index = SC_make_int4_bookmark(currTuple);
+	WD_bm.index = SC_make_int4_bookmark(currTuple);
 	if (keyset)
-		pg_bm.keys  = *keyset;
-	memcpy(CALC_BOOKMARK_ADDR(bookmark, offset, bind_size, bind_row), &pg_bm, cvtlen);
+		WD_bm.keys  = *keyset;
+	memcpy(CALC_BOOKMARK_ADDR(bookmark, offset, bind_size, bind_row), &WD_bm, cvtlen);
 	if (bookmark->used)
 	{
 		SQLLEN *used = LENADDR_SHIFT(bookmark->used, offset);
@@ -3277,7 +3277,7 @@ MYLOG(0, "entering type=%d buflen=" FORMAT_LEN " buf=%p\n", bookmark->returntype
 			used = LENADDR_SHIFT(used, bind_row * sizeof(SQLLEN));
 		*used = cvtlen;
 	}
-MYLOG(0, "leaving cvtlen=" FORMAT_SIZE_T " ix(bl,of)=%d(%d,%d)\n", cvtlen, pg_bm.index, pg_bm.keys.blocknum, pg_bm.keys.offset);
+MYLOG(0, "leaving cvtlen=" FORMAT_SIZE_T " ix(bl,of)=%d(%d,%d)\n", cvtlen, WD_bm.index, WD_bm.keys.blocknum, WD_bm.keys.offset);
 
 	return COPY_OK;
 }

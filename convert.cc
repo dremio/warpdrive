@@ -41,7 +41,7 @@
 #include "statement.h"
 #include "qresult.h"
 #include "bind.h"
-#include "pgtypes.h"
+#include "wdtypes.h"
 #include "lobj.h"
 #include "connection.h"
 #include "catfunc.h"
@@ -203,9 +203,9 @@ static size_t convert_from_pgbinary(const char *value, char *rgbValue, SQLLEN cb
 static int convert_lo(StatementClass *stmt, const void *value, SQLSMALLINT fCType,
 	 PTR rgbValue, SQLLEN cbValueMax, SQLLEN *pcbValue);
 static int conv_from_octal(const char *s);
-static SQLLEN pg_bin2hex(const char *src, char *dst, SQLLEN length);
+static SQLLEN WD_bin2hex(const char *src, char *dst, SQLLEN length);
 #ifdef	UNICODE_SUPPORT
-static SQLLEN pg_bin2whex(const char *src, SQLWCHAR *dst, SQLLEN length);
+static SQLLEN WD_bin2whex(const char *src, SQLWCHAR *dst, SQLLEN length);
 #endif /* UNICODE_SUPPORT */
 
 /*---------
@@ -213,16 +213,16 @@ static SQLLEN pg_bin2whex(const char *src, SQLWCHAR *dst, SQLLEN length);
  *
  *			field_type		fCType				Output
  *			----------		------				----------
- *			PG_TYPE_DATE	SQL_C_DEFAULT		SQL_C_DATE
- *			PG_TYPE_DATE	SQL_C_DATE			SQL_C_DATE
- *			PG_TYPE_DATE	SQL_C_TIMESTAMP		SQL_C_TIMESTAMP		(time = 0 (midnight))
- *			PG_TYPE_TIME	SQL_C_DEFAULT		SQL_C_TIME
- *			PG_TYPE_TIME	SQL_C_TIME			SQL_C_TIME
- *			PG_TYPE_TIME	SQL_C_TIMESTAMP		SQL_C_TIMESTAMP		(date = current date)
- *			PG_TYPE_ABSTIME SQL_C_DEFAULT		SQL_C_TIMESTAMP
- *			PG_TYPE_ABSTIME SQL_C_DATE			SQL_C_DATE			(time is truncated)
- *			PG_TYPE_ABSTIME SQL_C_TIME			SQL_C_TIME			(date is truncated)
- *			PG_TYPE_ABSTIME SQL_C_TIMESTAMP		SQL_C_TIMESTAMP
+ *			WD_TYPE_DATE	SQL_C_DEFAULT		SQL_C_DATE
+ *			WD_TYPE_DATE	SQL_C_DATE			SQL_C_DATE
+ *			WD_TYPE_DATE	SQL_C_TIMESTAMP		SQL_C_TIMESTAMP		(time = 0 (midnight))
+ *			WD_TYPE_TIME	SQL_C_DEFAULT		SQL_C_TIME
+ *			WD_TYPE_TIME	SQL_C_TIME			SQL_C_TIME
+ *			WD_TYPE_TIME	SQL_C_TIMESTAMP		SQL_C_TIMESTAMP		(date = current date)
+ *			WD_TYPE_ABSTIME SQL_C_DEFAULT		SQL_C_TIMESTAMP
+ *			WD_TYPE_ABSTIME SQL_C_DATE			SQL_C_DATE			(time is truncated)
+ *			WD_TYPE_ABSTIME SQL_C_TIME			SQL_C_TIME			(date is truncated)
+ *			WD_TYPE_ABSTIME SQL_C_TIMESTAMP		SQL_C_TIMESTAMP
  *---------
  */
 
@@ -937,7 +937,7 @@ setup_getdataclass(SQLLEN * const length_return, const char ** const ptr_return,
 	BOOL	hybrid = FALSE;
 #endif /* UNICODE_SUPPORT */
 
-	if (PG_TYPE_BYTEA == field_type)
+	if (WD_TYPE_BYTEA == field_type)
 	{
 		if (SQL_C_BINARY == fCType)
 			bytea_process_kind = BYTEA_PROCESS_BINARY;
@@ -953,18 +953,18 @@ setup_getdataclass(SQLLEN * const length_return, const char ** const ptr_return,
 		if (get_convtype() > 0) /* coversion between the current locale is available */
 		{
 			BOOL	wcs_debug = conn->connInfo.wcs_debug;
-			BOOL	same_encoding = (conn->ccsc == pg_CS_code(conn->locale_encoding));
+			BOOL	same_encoding = (conn->ccsc == WD_CS_code(conn->locale_encoding));
 			BOOL	is_utf8 = (UTF8 == conn->ccsc);
 
 			switch (field_type)
 			{
-				case PG_TYPE_UNKNOWN:
-				case PG_TYPE_BPCHAR:
-				case PG_TYPE_VARCHAR:
-				case PG_TYPE_TEXT:
-				case PG_TYPE_BPCHARARRAY:
-				case PG_TYPE_VARCHARARRAY:
-				case PG_TYPE_TEXTARRAY:
+				case WD_TYPE_UNKNOWN:
+				case WD_TYPE_BPCHAR:
+				case WD_TYPE_VARCHAR:
+				case WD_TYPE_TEXT:
+				case WD_TYPE_BPCHARARRAY:
+				case WD_TYPE_VARCHARARRAY:
+				case WD_TYPE_TEXTARRAY:
 					if (SQL_C_CHAR == fCType || SQL_C_BINARY == fCType)
 						localize_needed = (!same_encoding || wcs_debug);
 					if (SQL_C_WCHAR == fCType)
@@ -1051,7 +1051,7 @@ setup_getdataclass(SQLLEN * const length_return, const char ** const ptr_return,
 			if (BYTEA_PROCESS_ESCAPE == bytea_process_kind)
 			{
 				len = convert_from_pgbinary(neut_str, pgdc->ttlbuf, pgdc->ttlbuflen);
-				len = pg_bin2whex(pgdc->ttlbuf, (SQLWCHAR *) pgdc->ttlbuf, len);
+				len = WD_bin2whex(pgdc->ttlbuf, (SQLWCHAR *) pgdc->ttlbuf, len);
 			}
 			else
 			{
@@ -1086,7 +1086,7 @@ setup_getdataclass(SQLLEN * const length_return, const char ** const ptr_return,
 		{
 			len = convert_from_pgbinary(neut_str, pgdc->ttlbuf, pgdc->ttlbuflen);
 			if (BYTEA_PROCESS_ESCAPE == bytea_process_kind)
-				len = pg_bin2hex(pgdc->ttlbuf, pgdc->ttlbuf, len);
+				len = WD_bin2hex(pgdc->ttlbuf, pgdc->ttlbuf, len);
 		}
 		else
 			convert_linefeeds(neut_str, pgdc->ttlbuf, pgdc->ttlbuflen, lf_conv, &changed);
@@ -1142,9 +1142,9 @@ convert_text_field_to_sql_c(GetDataInfo * const gdata, const int current_col,
 
 	switch (field_type)
 	{
-		case PG_TYPE_FLOAT4:
-		case PG_TYPE_FLOAT8:
-		case PG_TYPE_NUMERIC:
+		case WD_TYPE_FLOAT4:
+		case WD_TYPE_FLOAT8:
+		case WD_TYPE_NUMERIC:
 			set_client_decimal_point((char *) neut_str);
 			break;
 	}
@@ -1333,9 +1333,9 @@ copy_and_convert_field(StatementClass *stmt,
 MYLOG(0, "null_cvt_date_string=%d\n", conn->connInfo.cvt_null_date_string);
 		/* a speicial handling for FOXPRO NULL -> NULL_STRING */
 		if (conn->connInfo.cvt_null_date_string > 0 &&
-		    (PG_TYPE_DATE == field_type ||
-		     PG_TYPE_DATETIME == field_type ||
-		     PG_TYPE_TIMESTAMP_NO_TMZONE == field_type) &&
+		    (WD_TYPE_DATE == field_type ||
+		     WD_TYPE_DATETIME == field_type ||
+		     WD_TYPE_TIMESTAMP_NO_TMZONE == field_type) &&
 		    (SQL_C_CHAR == fCType ||
 #ifdef	UNICODE_SUPPORT
 		     SQL_C_WCHAR == fCType ||
@@ -1413,13 +1413,13 @@ MYLOG(0, "null_cvt_date_string=%d\n", conn->connInfo.cvt_null_date_string);
 	{
 			/*
 			 * $$$ need to add parsing for date/time/timestamp strings in
-			 * PG_TYPE_CHAR,VARCHAR $$$
+			 * WD_TYPE_CHAR,VARCHAR $$$
 			 */
-		case PG_TYPE_DATE:
+		case WD_TYPE_DATE:
 			sscanf(value, "%4d-%2d-%2d", &std_time.y, &std_time.m, &std_time.d);
 			break;
 
-		case PG_TYPE_TIME:
+		case WD_TYPE_TIME:
 			{
 
 				BOOL	bZone = FALSE;	/* time zone stuff is unreliable */
@@ -1428,10 +1428,10 @@ MYLOG(0, "null_cvt_date_string=%d\n", conn->connInfo.cvt_null_date_string);
 			}
 			break;
 
-		case PG_TYPE_ABSTIME:
-		case PG_TYPE_DATETIME:
-		case PG_TYPE_TIMESTAMP_NO_TMZONE:
-		case PG_TYPE_TIMESTAMP:
+		case WD_TYPE_ABSTIME:
+		case WD_TYPE_DATETIME:
+		case WD_TYPE_TIMESTAMP_NO_TMZONE:
+		case WD_TYPE_TIMESTAMP:
 			std_time.fr = 0;
 			std_time.infinity = 0;
 			if (strnicmp(value, INFINITY_STRING, 8) == 0)
@@ -1457,7 +1457,7 @@ MYLOG(0, "null_cvt_date_string=%d\n", conn->connInfo.cvt_null_date_string);
 			}
 			if (strnicmp(value, "invalid", 7) != 0)
 			{
-				BOOL		bZone = field_type != PG_TYPE_TIMESTAMP_NO_TMZONE;
+				BOOL		bZone = field_type != WD_TYPE_TIMESTAMP_NO_TMZONE;
 				int			zone;
 
 				/*
@@ -1490,7 +1490,7 @@ MYLOG(DETAIL_LOG_LEVEL, "2stime fr=%d\n", std_time.fr);
 			}
 			break;
 
-		case PG_TYPE_BOOL:
+		case WD_TYPE_BOOL:
 			{					/* change T/F to 1/0 */
 				const ConnInfo *ci = &(conn->connInfo);
 
@@ -1514,7 +1514,7 @@ MYLOG(DETAIL_LOG_LEVEL, "2stime fr=%d\n", std_time.fr);
 			break;
 
 			/* This is for internal use by SQLStatistics() */
-		case PG_TYPE_INT2VECTOR:
+		case WD_TYPE_INT2VECTOR:
 			if (SQL_C_DEFAULT == fCType)
 			{
 				int	i, nval, maxc;
@@ -1567,7 +1567,7 @@ MYLOG(DETAIL_LOG_LEVEL, "2stime fr=%d\n", std_time.fr);
 			 * This is a large object OID, which is used to store
 			 * LONGVARBINARY objects.
 			 */
-		case PG_TYPE_LO_UNDEFINED:
+		case WD_TYPE_LO_UNDEFINED:
 
 			return convert_lo(stmt, value, fCType, rgbValueBindRow, cbValueMax, pcbValueBindRow);
 
@@ -1577,7 +1577,7 @@ MYLOG(DETAIL_LOG_LEVEL, "2stime fr=%d\n", std_time.fr);
 		default:
 
 			if (field_type == stmt->hdbc->lobj_type	/* hack until permanent type available */
-			   || (PG_TYPE_OID == field_type && SQL_C_BINARY == fCType && conn->lo_is_domain)
+			   || (WD_TYPE_OID == field_type && SQL_C_BINARY == fCType && conn->lo_is_domain)
 			   )
 				return convert_lo(stmt, value, fCType, rgbValueBindRow, cbValueMax, pcbValueBindRow);
 	}
@@ -1585,7 +1585,7 @@ MYLOG(DETAIL_LOG_LEVEL, "2stime fr=%d\n", std_time.fr);
 	/* Change default into something useable */
 	if (fCType == SQL_C_DEFAULT)
 	{
-		fCType = pgtype_attr_to_ctype(conn, field_type, atttypmod);
+		fCType = wdtype_attr_to_ctype(conn, field_type, atttypmod);
 #ifdef	UNICODE_SUPPORT
 		if (fCType == SQL_C_WCHAR
 		    && CC_default_is_c(conn))
@@ -1608,16 +1608,16 @@ MYLOG(DETAIL_LOG_LEVEL, "2stime fr=%d\n", std_time.fr);
 		case SQL_C_BINARY:
 			switch (field_type)
 			{
-				case PG_TYPE_UNKNOWN:
-				case PG_TYPE_BPCHAR:
-				case PG_TYPE_VARCHAR:
-				case PG_TYPE_TEXT:
-				case PG_TYPE_XML:
-				case PG_TYPE_BPCHARARRAY:
-				case PG_TYPE_VARCHARARRAY:
-				case PG_TYPE_TEXTARRAY:
-				case PG_TYPE_XMLARRAY:
-				case PG_TYPE_BYTEA:
+				case WD_TYPE_UNKNOWN:
+				case WD_TYPE_BPCHAR:
+				case WD_TYPE_VARCHAR:
+				case WD_TYPE_TEXT:
+				case WD_TYPE_XML:
+				case WD_TYPE_BPCHARARRAY:
+				case WD_TYPE_VARCHARARRAY:
+				case WD_TYPE_TEXTARRAY:
+				case WD_TYPE_XMLARRAY:
+				case WD_TYPE_BYTEA:
 					text_bin_handling = TRUE;
 					break;
 			}
@@ -1638,11 +1638,11 @@ MYLOG(DETAIL_LOG_LEVEL, "2stime fr=%d\n", std_time.fr);
 		 */
 		switch (field_type)
 		{
-			case PG_TYPE_DATE:
+			case WD_TYPE_DATE:
 				len = SPRINTF_FIXED(midtemp, "%.4d-%.2d-%.2d", std_time.y, std_time.m, std_time.d);
 				break;
 
-			case PG_TYPE_TIME:
+			case WD_TYPE_TIME:
 				len = SPRINTF_FIXED(midtemp, "%.2d:%.2d:%.2d", std_time.hh, std_time.mm, std_time.ss);
 				if (std_time.fr > 0)
 				{
@@ -1653,20 +1653,20 @@ MYLOG(DETAIL_LOG_LEVEL, "2stime fr=%d\n", std_time.fr);
 				}
 				break;
 
-			case PG_TYPE_ABSTIME:
-			case PG_TYPE_DATETIME:
-			case PG_TYPE_TIMESTAMP_NO_TMZONE:
-			case PG_TYPE_TIMESTAMP:
+			case WD_TYPE_ABSTIME:
+			case WD_TYPE_DATETIME:
+			case WD_TYPE_TIMESTAMP_NO_TMZONE:
+			case WD_TYPE_TIMESTAMP:
 				len = stime2timestamp(&std_time, midtemp, midsize, FALSE,
 									  (int) (midsize - 19 - 2) );
 				break;
 
-			case PG_TYPE_UUID:
+			case WD_TYPE_UUID:
 				len = strlen(neut_str);
 				for (i = 0; i < len && i < midsize - 2; i++)
 					midtemp[i] = toupper((UCHAR) neut_str[i]);
 				midtemp[i] = '\0';
-				MYLOG(0, "PG_TYPE_UUID: rgbValueBindRow = '%s'\n", rgbValueBindRow);
+				MYLOG(0, "WD_TYPE_UUID: rgbValueBindRow = '%s'\n", rgbValueBindRow);
 				break;
 
 				/*
@@ -1682,7 +1682,7 @@ MYLOG(DETAIL_LOG_LEVEL, "2stime fr=%d\n", std_time.fr);
 				 * essentially no limit on the large object used to store
 				 * those.
 				 */
-			case PG_TYPE_BYTEA:/* convert binary data to hex strings
+			case WD_TYPE_BYTEA:/* convert binary data to hex strings
 								 * (i.e, 255 = "FF") */
 
 			default:
@@ -1701,7 +1701,7 @@ MYLOG(DETAIL_LOG_LEVEL, "2stime fr=%d\n", std_time.fr);
 		 * But to convert to numeric types, it is necessary to get rid of
 		 * those.
 		 */
-		if (field_type == PG_TYPE_MONEY)
+		if (field_type == WD_TYPE_MONEY)
 		{
 			if (convert_money(neut_str, midtemp, sizeof(midtemp)))
 				neut_str = midtemp;
@@ -1915,7 +1915,7 @@ MYLOG(DETAIL_LOG_LEVEL, "2stime fr=%d\n", std_time.fr);
 #endif /* ODBCINT64 */
 			case SQL_C_BINARY:
 				/* The following is for SQL_C_VARBOOKMARK */
-				if (PG_TYPE_INT4 == field_type)
+				if (WD_TYPE_INT4 == field_type)
 				{
 					UInt4	ival = ATOI32U(neut_str);
 
@@ -1930,7 +1930,7 @@ MYLOG(DETAIL_LOG_LEVEL, "SQL_C_VARBOOKMARK value=%d\n", ival);
 					else
 						return COPY_RESULT_TRUNCATED;
 				}
-				else if (PG_TYPE_UUID == field_type)
+				else if (WD_TYPE_UUID == field_type)
 				{
 					int rtn = char2guid(neut_str, &g);
 
@@ -2173,9 +2173,9 @@ QB_initialize(QueryBuild *qb, size_t size, StatementClass *stmt, ResolveParamMod
 		qb->flags |= FLGB_CONVERT_LF;
 	qb->ccsc = qb->conn->ccsc;
 	if (CC_get_escape(qb->conn) &&
-	    PG_VERSION_GE(qb->conn, 8.1))
+	    WD_VERSION_GE(qb->conn, 8.1))
 		qb->flags |= FLGB_LITERAL_EXTENSION;
-	if (PG_VERSION_GE(qb->conn, 9.0))
+	if (WD_VERSION_GE(qb->conn, 9.0))
 		qb->flags |= FLGB_HEX_BIN_FORMAT;
 
 	newsize = INIT_MIN_ALLOC;
@@ -2282,7 +2282,7 @@ static int
 inner_process_tokens(QueryParse *qp, QueryBuild *qb);
 static int
 ResolveOneParam(QueryBuild *qb, QueryParse *qp, BOOL *isnull, BOOL *usebinary,
-				Oid *pgType);
+				Oid *wdtype);
 static int
 processParameters(QueryParse *qp, QueryBuild *qb,
 	size_t *output_count, SQLLEN param_pos[][2]);
@@ -3091,7 +3091,7 @@ MYLOG(DETAIL_LOG_LEVEL, "type=" FORMAT_UINTEGER " concur=" FORMAT_UINTEGER "\n",
 #ifdef NOT_USED	/* this seems problematic */
 	else if (0 == (qp->flags & (FLGP_SELECT_FOR_UPDATE_OR_SHARE | FLGP_SELECT_FOR_READONLY)) &&
 		 0 == stmt->multi_statement &&
-		 PG_VERSION_GE(conn, 8.3))
+		 WD_VERSION_GE(conn, 8.3))
 	{
 		BOOL	semi_colon_found = FALSE;
 		const UCHAR *ptr = NULL, semi_colon = ';';
@@ -3651,7 +3651,7 @@ inner_process_tokens(QueryParse *qp, QueryBuild *qb)
 	}
 	else if (QP_is_in(qp, QP_IN_LINE_COMMENT)) /* line comment check */
 	{
-		if (PG_LINEFEED == oldchar)
+		if (WD_LINEFEED == oldchar)
 			QP_exit(qp, QP_IN_LINE_COMMENT);
 		CVT_APPEND_CHAR(qb, oldchar);
 		return SQL_SUCCESS;
@@ -3670,9 +3670,9 @@ inner_process_tokens(QueryParse *qp, QueryBuild *qb)
 	 */
 	/* Squeeze carriage-return/linefeed pairs to linefeed only */
 	if (lf_conv &&
-		 PG_CARRIAGE_RETURN == oldchar &&
+		 WD_CARRIAGE_RETURN == oldchar &&
 		 qp->opos + 1 < qp->stmt_len &&
-		 PG_LINEFEED == qp->statement[qp->opos + 1])
+		 WD_LINEFEED == qp->statement[qp->opos + 1])
 		return SQL_SUCCESS;
 
 	/*
@@ -3710,7 +3710,7 @@ inner_process_tokens(QueryParse *qp, QueryBuild *qb)
 		COL_INFO	*coli;
 
 #ifdef	NOT_USED  /* lastval() isn't always appropriate */
-		if (PG_VERSION_GE(conn, 8.1))
+		if (WD_VERSION_GE(conn, 8.1))
 		{
 			CVT_APPEND_STR(qb, "lastval()");
 			converted = TRUE;
@@ -3756,7 +3756,7 @@ inner_process_tokens(QueryParse *qp, QueryBuild *qb)
 						char relcnv[128];
 						const char *column_name = (const char *) QR_get_value_backend_text(coli->result, i, COLUMNS_COLUMN_NAME);
 
-						CVT_APPEND_STR(qb, "currval(pg_get_serial_sequence('");
+						CVT_APPEND_STR(qb, "currval(WD_get_serial_sequence('");
 						if (NAME_IS_VALID(conn->schemaIns))
 						{
 							CVT_APPEND_STR(qb, identifierEscape((const SQLCHAR *) SAFE_NAME(conn->schemaIns), SQL_NTS, conn, relcnv, sizeof(relcnv), TRUE));
@@ -4035,7 +4035,7 @@ build_libpq_bind_params(StatementClass *stmt,
 	num_params = stmt->num_params;
 	if (num_params < 0)
 	{
-		PGAPI_NumParams(stmt, &num_p);
+		WD_NumParams(stmt, &num_p);
 		num_params = num_p;
 	}
 	if (ipdopts->allocated < num_params)
@@ -4086,7 +4086,7 @@ MYLOG(DETAIL_LOG_LEVEL, "num_p=%d\n", num_p);
 		BOOL	isnull;
 		BOOL	isbinary;
 		char	*val_copy;
-		OID	pgType;
+		OID	wdtype;
 
 		/*
 		 * Now build the parameter values.
@@ -4094,7 +4094,7 @@ MYLOG(DETAIL_LOG_LEVEL, "num_p=%d\n", num_p);
 		for (i = 0, pno = 0; i < stmt->num_params; i++)
 		{
 			qb.npos = 0;
-			retval = ResolveOneParam(&qb, NULL, &isnull, &isbinary, &pgType);
+			retval = ResolveOneParam(&qb, NULL, &isnull, &isbinary, &wdtype);
 			if (SQL_ERROR == retval)
 			{
 				QB_replace_SC_error(stmt, &qb, func);
@@ -4102,7 +4102,7 @@ MYLOG(DETAIL_LOG_LEVEL, "num_p=%d\n", num_p);
 				goto cleanup;
 			}
 
-			MYLOG(DETAIL_LOG_LEVEL, "%dth parameter type oid is %u\n", i, PIC_dsp_pgtype(conn, parameters[i]));
+			MYLOG(DETAIL_LOG_LEVEL, "%dth parameter type oid is %u\n", i, PIC_dsp_wdtype(conn, parameters[i]));
 
 			if (i < qb.proc_return)
 				continue;
@@ -4110,7 +4110,7 @@ MYLOG(DETAIL_LOG_LEVEL, "num_p=%d\n", num_p);
 			{
 				if (discard_output)
 					continue;
-				(*paramTypes)[pno] = PG_TYPE_VOID;
+				(*paramTypes)[pno] = WD_TYPE_VOID;
 				(*paramValues)[pno] = NULL;
 				(*paramLengths)[pno] = 0;
 				(*paramFormats)[pno] = 0;
@@ -4125,7 +4125,7 @@ MYLOG(DETAIL_LOG_LEVEL, "num_p=%d\n", num_p);
 				memcpy(val_copy, qb.query_statement, qb.npos);
 				val_copy[qb.npos] = '\0';
 
-				(*paramTypes)[pno] = pgType;
+				(*paramTypes)[pno] = wdtype;
 				(*paramValues)[pno] = val_copy;
 				if (qb.npos > INT_MAX)
 					goto cleanup;
@@ -4133,7 +4133,7 @@ MYLOG(DETAIL_LOG_LEVEL, "num_p=%d\n", num_p);
 			}
 			else
 			{
-				(*paramTypes)[pno] = pgType;
+				(*paramTypes)[pno] = wdtype;
 				(*paramValues)[pno] = NULL;
 				(*paramLengths)[pno] = 0;
 			}
@@ -4437,12 +4437,12 @@ handle_lu_onvert_error(QueryBuild *qb, int flag, char *buffer, SQLLEN paralen)
  * *isnull is set to TRUE if it was NULL.
  * *isbinary is set to TRUE, if the binary output format was used. (binary
  *   output is only produced if the FLGB_BINARY_AS_POSSIBLE flag is set)
- * *pgType is set to the PostgreSQL type OID that should be used when binding
+ * *wdtype is set to the PostgreSQL type OID that should be used when binding
  * (or 0, to let the server decide)
  */
 static int
 ResolveOneParam(QueryBuild *qb, QueryParse *qp, BOOL *isnull, BOOL *isbinary,
-				OID *pgType)
+				OID *wdtype)
 {
 	ConnectionClass *conn = qb->conn;
 	const APDFields *apdopts = qb->apdopts;
@@ -4452,8 +4452,8 @@ ResolveOneParam(QueryBuild *qb, QueryParse *qp, BOOL *isnull, BOOL *isbinary,
 	int			param_number;
 	char		param_string[150],
 				tmp[256];
-	char		cbuf[PG_NUMERIC_MAX_PRECISION * 2]; /* seems big enough to handle the data in this function */
-	OID			param_pgtype;
+	char		cbuf[WD_NUMERIC_MAX_PRECISION * 2]; /* seems big enough to handle the data in this function */
+	OID			param_wdtype;
 	SQLSMALLINT	param_ctype, param_sqltype;
 	SIMPLE_TIME	st;
 	struct tm	*tim;
@@ -4482,7 +4482,7 @@ ResolveOneParam(QueryBuild *qb, QueryParse *qp, BOOL *isnull, BOOL *isbinary,
 
 	*isnull = FALSE;
 	*isbinary = FALSE;
-	*pgType = 0;
+	*wdtype = 0;
 
 	outputDiscard = (0 != (qb->flags & FLGB_DISCARD_OUTPUT));
 	valueOutput = (qb->param_mode != RPM_FAKE_PARAMS &&
@@ -4512,7 +4512,7 @@ MYLOG(DETAIL_LOG_LEVEL, "para:%d(%d,%d)\n", param_number, ipdopts->allocated, ap
 		return SQL_ERROR;
 	}
 
-MYLOG(DETAIL_LOG_LEVEL, "ipara=%p paramName=%s paramType=%d %d proc_return=%d\n", ipara, ipara ? PRINT_NAME(ipara->paramName) : PRINT_NULL, ipara ? ipara->paramType : -1, PG_VERSION_LT(conn, 8.1), qb->proc_return);
+MYLOG(DETAIL_LOG_LEVEL, "ipara=%p paramName=%s paramType=%d %d proc_return=%d\n", ipara, ipara ? PRINT_NAME(ipara->paramName) : PRINT_NULL, ipara ? ipara->paramType : -1, WD_VERSION_LT(conn, 8.1), qb->proc_return);
 	if (param_number < qb->proc_return)
 	{
 		if (ipara && SQL_PARAM_OUTPUT != ipara->paramType)
@@ -4526,7 +4526,7 @@ MYLOG(DETAIL_LOG_LEVEL, "ipara=%p paramName=%s paramType=%d %d proc_return=%d\n"
 	}
 	if (ipara && SQL_PARAM_OUTPUT == ipara->paramType)
 	{
-		if (PG_VERSION_LT(conn, 8.1))
+		if (WD_VERSION_LT(conn, 8.1))
 		{
 			qb->errormsg = "Output parameter isn't available before 8.1 version";
 			qb->errornumber = STMT_INTERNAL_ERROR;
@@ -4656,22 +4656,22 @@ MYLOG(DETAIL_LOG_LEVEL, "ipara=%p paramName=%s paramType=%d %d proc_return=%d\n"
 
 	param_ctype = apara->CType;
 	param_sqltype = ipara->SQLType;
-	param_pgtype = PIC_dsp_pgtype(qb->conn, *ipara);
+	param_wdtype = PIC_dsp_wdtype(qb->conn, *ipara);
 
-	/* XXX: should we use param_pgtype here instead? */
-	*pgType = sqltype_to_bind_pgtype(conn, param_sqltype);
+	/* XXX: should we use param_wdtype here instead? */
+	*wdtype = sqltype_to_bind_wdtype(conn, param_sqltype);
 
 	if (0 == param_sqltype) /* calling SQLSetStmtAttr(.., SQL_ATTR_APP_PARAM_DES, an ARD of another statement) may cause this */
 	{
-		if (0 != param_pgtype)
+		if (0 != param_wdtype)
 		{
-			param_sqltype = pgtype_attr_to_concise_type(conn, param_pgtype, PG_ATP_UNSET, PG_ADT_UNSET, PG_UNKNOWNS_UNSET);
-			MYLOG(0, "convert from pgtype(%u) to sqltype(%d)\n", param_pgtype, param_sqltype);
+			param_sqltype = wdtype_attr_to_concise_type(conn, param_wdtype, WD_ATP_UNSET, WD_ADT_UNSET, WD_UNKNOWNS_UNSET);
+			MYLOG(0, "convert from wdtype(%u) to sqltype(%d)\n", param_wdtype, param_sqltype);
 		}
 	}
 
-	MYLOG(0, "from(fcType)=%d, to(fSqlType)=%d(%u), *pgType=%u\n",
-		  param_ctype, param_sqltype, param_pgtype, *pgType);
+	MYLOG(0, "from(fcType)=%d, to(fSqlType)=%d(%u), *wdtype=%u\n",
+		  param_ctype, param_sqltype, param_wdtype, *wdtype);
 
 	/* Handle NULL parameter data */
 	if (SQL_PARAM_OUTPUT == ipara->paramType
@@ -4729,7 +4729,7 @@ MYLOG(DETAIL_LOG_LEVEL, "ipara=%p paramName=%s paramType=%d %d proc_return=%d\n"
 	{
 		BOOL	wcs_debug = conn->connInfo.wcs_debug;
 		BOOL	is_utf8 = (UTF8 == conn->ccsc);
-		BOOL	same_encoding = (conn->ccsc == pg_CS_code(conn->locale_encoding));
+		BOOL	same_encoding = (conn->ccsc == WD_CS_code(conn->locale_encoding));
 
 		switch (param_ctype)
 		{
@@ -4793,7 +4793,7 @@ MYLOG(0, " C_WCHAR=%d contents=%s(" FORMAT_LEN ")\n", param_ctype, buffer, used)
 			if (_finite(dbv))
 #endif /* WIN32 */
 			{
-				SPRINTF_FIXED(param_string, "%.*g", PG_DOUBLE_DIGITS, dbv);
+				SPRINTF_FIXED(param_string, "%.*g", WD_DOUBLE_DIGITS, dbv);
 				set_server_decimal_point(param_string, SQL_NTS);
 			}
 #ifdef	WIN32
@@ -4812,7 +4812,7 @@ MYLOG(0, " C_WCHAR=%d contents=%s(" FORMAT_LEN ")\n", param_ctype, buffer, used)
 			if (_finite(flv))
 #endif /* WIN32 */
 			{
-				SPRINTF_FIXED(param_string, "%.*g", PG_REAL_DIGITS, flv);
+				SPRINTF_FIXED(param_string, "%.*g", WD_REAL_DIGITS, flv);
 				set_server_decimal_point(param_string, SQL_NTS);
 			}
 #ifdef	WIN32
@@ -5007,11 +5007,11 @@ MYLOG(0, " C_WCHAR=%d contents=%s(" FORMAT_LEN ")\n", param_ctype, buffer, used)
 	 */
 
 	/* Special handling NULL string For FOXPRO */
-MYLOG(0, "cvt_null_date_string=%d pgtype=%d send_buf=%p\n", conn->connInfo.cvt_null_date_string, param_pgtype, send_buf);
+MYLOG(0, "cvt_null_date_string=%d wdtype=%d send_buf=%p\n", conn->connInfo.cvt_null_date_string, param_wdtype, send_buf);
 	if (conn->connInfo.cvt_null_date_string > 0 &&
-	    (PG_TYPE_DATE == param_pgtype ||
-	     PG_TYPE_DATETIME == param_pgtype ||
-	     PG_TYPE_TIMESTAMP_NO_TMZONE == param_pgtype) &&
+	    (WD_TYPE_DATE == param_wdtype ||
+	     WD_TYPE_DATETIME == param_wdtype ||
+	     WD_TYPE_TIMESTAMP_NO_TMZONE == param_wdtype) &&
 	    NULL != send_buf &&
 	    (
 		(SQL_C_CHAR == param_ctype && '\0' == send_buf[0])
@@ -5064,9 +5064,9 @@ MYLOG(0, "cvt_null_date_string=%d pgtype=%d send_buf=%p\n", conn->connInfo.cvt_n
 		case SQL_BIT:
 
 			/* Special handling for some column types */
-			switch (param_pgtype)
+			switch (param_wdtype)
 			{
-				case PG_TYPE_BOOL:
+				case WD_TYPE_BOOL:
 					/*
 					 * consider True is -1 case.
 					 *
@@ -5080,9 +5080,9 @@ MYLOG(0, "cvt_null_date_string=%d pgtype=%d send_buf=%p\n", conn->connInfo.cvt_n
 						used = 1;
 					}
 					break;
-				case PG_TYPE_FLOAT4:
-				case PG_TYPE_FLOAT8:
-				case PG_TYPE_NUMERIC:
+				case WD_TYPE_FLOAT4:
+				case WD_TYPE_FLOAT8:
+				case WD_TYPE_NUMERIC:
 					if (NULL != send_buf)
 						set_server_decimal_point((char *) send_buf, used);
 					break;
@@ -5174,7 +5174,7 @@ MYLOG(0, "cvt_null_date_string=%d pgtype=%d send_buf=%p\n", conn->connInfo.cvt_n
 					allocbuf = malloc(used / 2 + 1);
 					if (allocbuf)
 					{
-						pg_hex2bin(send_buf, allocbuf, used);
+						WD_hex2bin(send_buf, allocbuf, used);
 						send_buf = allocbuf;
 						used /= 2;
 					}
@@ -5184,7 +5184,7 @@ MYLOG(0, "cvt_null_date_string=%d pgtype=%d send_buf=%p\n", conn->connInfo.cvt_n
 					qb->errornumber = STMT_EXEC_ERROR;
 					goto cleanup;
 			}
-			if (param_pgtype == PG_TYPE_BYTEA)
+			if (param_wdtype == WD_TYPE_BYTEA)
 			{
 				if (0 != (qb->flags & FLGB_BINARY_AS_POSSIBLE))
 				{
@@ -5201,9 +5201,9 @@ MYLOG(0, "cvt_null_date_string=%d pgtype=%d send_buf=%p\n", conn->connInfo.cvt_n
 				}
 				break;
 			}
-			if (PG_TYPE_OID == param_pgtype && conn->lo_is_domain)
+			if (WD_TYPE_OID == param_wdtype && conn->lo_is_domain)
 				;
-			else if (param_pgtype != conn->lobj_type)
+			else if (param_wdtype != conn->lobj_type)
 			{
 				qb->errormsg = "Could not convert binary other than LO type";
 				qb->errornumber = STMT_EXEC_ERROR;
@@ -6051,7 +6051,7 @@ convert_linefeeds(const char *si, char *dst, size_t max, BOOL convlf, BOOL *chan
 		if (convlf && si[i] == '\n')
 		{
 			/* Only add the carriage-return if needed */
-			if (i > 0 && PG_CARRIAGE_RETURN == si[i - 1])
+			if (i > 0 && WD_CARRIAGE_RETURN == si[i - 1])
 			{
 				if (dst)
 					dst[out++] = si[i];
@@ -6063,7 +6063,7 @@ convert_linefeeds(const char *si, char *dst, size_t max, BOOL convlf, BOOL *chan
 
 			if (dst)
 			{
-				dst[out++] = PG_CARRIAGE_RETURN;
+				dst[out++] = WD_CARRIAGE_RETURN;
 				dst[out++] = '\n';
 			}
 			else
@@ -6133,8 +6133,8 @@ convert_special_chars(QueryBuild *qb, const char *si, size_t used)
 			continue;
 		}
 		if (convlf &&	/* CR/LF -> LF */
-		    PG_CARRIAGE_RETURN == tchar &&
-		    PG_LINEFEED == si[i + 1])
+		    WD_CARRIAGE_RETURN == tchar &&
+		    WD_LINEFEED == si[i + 1])
 			continue;
 		else if (double_special && /* double special chars ? */
 			 (tchar == LITERAL_QUOTE ||
@@ -6189,7 +6189,7 @@ convert_from_pgbinary(const char *value, char *rgbValue, SQLLEN cbValueMax)
 				{
 					ilen -= i;
 					if (rgbValue)
-						pg_hex2bin(value + i, rgbValue + o, ilen);
+						WD_hex2bin(value + i, rgbValue + o, ilen);
 					o += ilen / 2;
 				}
 				break;
@@ -6278,7 +6278,7 @@ convert_to_pgbinary(const char *in, char *out, size_t len, QueryBuild *qb)
 			out[o++] = escape_in_literal;
 		out[o++] = '\\';
 		out[o++] = 'x';
-		o += pg_bin2hex(in, out + o, len);
+		o += WD_bin2hex(in, out + o, len);
 		return o;
 	}
 	for (i = 0; i < len; i++)
@@ -6349,14 +6349,14 @@ static const char *hextbl = "0123456789ABCDEF";
 }
 #ifdef	UNICODE_SUPPORT
 static SQLLEN
-pg_bin2whex def_bin2hex(SQLWCHAR)
+WD_bin2whex def_bin2hex(SQLWCHAR)
 #endif /* UNICODE_SUPPORT */
 
 static SQLLEN
-pg_bin2hex def_bin2hex(char)
+WD_bin2hex def_bin2hex(char)
 
 SQLLEN
-pg_hex2bin(const char *src, char *dst, SQLLEN length)
+WD_hex2bin(const char *src, char *dst, SQLLEN length)
 {
 	UCHAR		chr;
 	const char *src_wk;
@@ -6399,10 +6399,10 @@ pg_hex2bin(const char *src, char *dst, SQLLEN length)
  *		decides not to continue reading.
  *
  *	CURRENTLY, ONLY LONGVARBINARY is handled, since that is the only
- *	data type currently mapped to a PG_TYPE_LO.  But, if any other types
- *	are desired to map to a large object (PG_TYPE_LO), then that would
+ *	data type currently mapped to a WD_TYPE_LO.  But, if any other types
+ *	are desired to map to a large object (WD_TYPE_LO), then that would
  *	need to be handled here.  For example, LONGVARCHAR could possibly be
- *	mapped to PG_TYPE_LO someday, instead of PG_TYPE_TEXT as it is now.
+ *	mapped to WD_TYPE_LO someday, instead of WD_TYPE_TEXT as it is now.
  *-------
  */
 static int
@@ -6517,7 +6517,7 @@ convert_lo(StatementClass *stmt, const void *value, SQLSMALLINT fCType, PTR rgbV
 	}
 
 	if (factor > 1)
-		pg_bin2hex((char *) rgbValue, (char *) rgbValue, retval);
+		WD_bin2hex((char *) rgbValue, (char *) rgbValue, retval);
 	if (retval < left64)
 		result = COPY_RESULT_TRUNCATED;
 	else

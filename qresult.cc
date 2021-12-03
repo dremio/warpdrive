@@ -209,7 +209,7 @@ QR_Constructor(void)
 		rv->cursTuple = -1;
 		rv->move_offset = 0;
 		rv->num_fields = 0;
-		rv->num_key_fields = PG_NUM_NORMAL_KEYS; /* CTID + OID */
+		rv->num_key_fields = WD_NUM_NORMAL_KEYS; /* CTID + OID */
 		rv->tupleField = NULL;
 		rv->cursor_name = NULL;
 		rv->aborted = FALSE;
@@ -621,10 +621,10 @@ QR_from_PGresult(QResultClass *self, StatementClass *stmt, ConnectionClass *conn
 		/* Subtract the header length */
 		switch (new_adtid)
 		{
-			case PG_TYPE_DATETIME:
-			case PG_TYPE_TIMESTAMP_NO_TMZONE:
-			case PG_TYPE_TIME:
-			case PG_TYPE_TIME_WITH_TMZONE:
+			case WD_TYPE_DATETIME:
+			case WD_TYPE_TIMESTAMP_NO_TMZONE:
+			case WD_TYPE_TIME:
+			case WD_TYPE_TIME_WITH_TMZONE:
 				break;
 			default:
 				new_atttypmod -= 4;
@@ -656,8 +656,8 @@ QR_from_PGresult(QResultClass *self, StatementClass *stmt, ConnectionClass *conn
 					if (SQL_PARAM_OUTPUT == paramType ||
 						SQL_PARAM_INPUT_OUTPUT == paramType)
 					{
-MYLOG(DETAIL_LOG_LEVEL, "[%d].PGType %u->%u\n", i, PIC_get_pgtype(ipdopts->parameters[i]), CI_get_oid(QR_get_fields(self), cidx));
-						PIC_set_pgtype(ipdopts->parameters[i], CI_get_oid(QR_get_fields(self), cidx));
+MYLOG(DETAIL_LOG_LEVEL, "[%d].wdtype %u->%u\n", i, PIC_get_wdtype(ipdopts->parameters[i]), CI_get_oid(QR_get_fields(self), cidx));
+						PIC_set_wdtype(ipdopts->parameters[i], CI_get_oid(QR_get_fields(self), cidx));
 						cidx++;
 					}
 				}

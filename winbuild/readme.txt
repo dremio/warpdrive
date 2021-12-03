@@ -141,5 +141,5 @@
 Troubleshooting:
 
      Some documentation on dealing with Windows SDK installation issues
-     can be found on the related pg_build_win page:
-     https://github.com/2ndQuadrant/pg_build_win#troubleshooting
+     can be found on the related WD_build_win page:
+     https://github.com/2ndQuadrant/WD_build_win#troubleshooting

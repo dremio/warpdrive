@@ -10,7 +10,7 @@
 #define __LOBJ_H__
 
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 
 struct lo_arg
 {

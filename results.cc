@@ -15,7 +15,7 @@
  *-------
  */
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 
 #include <string.h>
 #include "misc.h"
@@ -26,7 +26,7 @@
 #include "bind.h"
 #include "qresult.h"
 #include "convert.h"
-#include "pgtypes.h"
+#include "wdtypes.h"
 
 #include <stdio.h>
 #include <limits.h>
@@ -34,15 +34,15 @@
 #include "pgapifunc.h"
 
 /*	Helper macro */
-#define getEffectiveOid(conn, fi) pg_true_type((conn), (fi)->columntype, FI_type(fi))
+#define getEffectiveOid(conn, fi) WD_true_type((conn), (fi)->columntype, FI_type(fi))
 #define	NULL_IF_NULL(a) ((a) ? ((const char *)(a)) : "(null)")
 
 
 RETCODE		SQL_API
-PGAPI_RowCount(HSTMT hstmt,
+WD_RowCount(HSTMT hstmt,
 			   SQLLEN * pcrow)
 {
-	CSTR func = "PGAPI_RowCount";
+	CSTR func = "WD_RowCount";
 	StatementClass *stmt = (StatementClass *) hstmt;
 	QResultClass *res;
 
@@ -141,10 +141,10 @@ MYLOG(DETAIL_LOG_LEVEL, "nfields=%d\n", irdflds->nfields);
  *	attached to "hstmt".
  */
 RETCODE		SQL_API
-PGAPI_NumResultCols(HSTMT hstmt,
+WD_NumResultCols(HSTMT hstmt,
 					SQLSMALLINT * pccol)
 {
-	CSTR func = "PGAPI_NumResultCols";
+	CSTR func = "WD_NumResultCols";
 	StatementClass *stmt = (StatementClass *) hstmt;
 	QResultClass *result;
 	char		parse_ok;
@@ -207,7 +207,7 @@ cleanup:
  *	information about.
  */
 RETCODE		SQL_API
-PGAPI_DescribeCol(HSTMT hstmt,
+WD_DescribeCol(HSTMT hstmt,
 				  SQLUSMALLINT icol,
 				  SQLCHAR * szColName,
 				  SQLSMALLINT cbColNameMax,
@@ -217,7 +217,7 @@ PGAPI_DescribeCol(HSTMT hstmt,
 				  SQLSMALLINT * pibScale,
 				  SQLSMALLINT * pfNullable)
 {
-	CSTR func = "PGAPI_DescribeCol";
+	CSTR func = "WD_DescribeCol";
 
 	/* gets all the information about a specific column */
 	StatementClass *stmt = (StatementClass *) hstmt;
@@ -362,8 +362,8 @@ MYLOG(DETAIL_LOG_LEVEL, "answering bookmark info\n");
 		}
 		else
 		{
-			column_size = pgtype_column_size(stmt, fieldtype, icol, unknown_sizes);
-			decimal_digits = pgtype_decimal_digits(stmt, fieldtype, icol);
+			column_size = wdtype_column_size(stmt, fieldtype, icol, unknown_sizes);
+			decimal_digits = wdtype_decimal_digits(stmt, fieldtype, icol);
 		}
 
 		MYLOG(0, "PARSE: fieldtype=%u, col_name='%s', column_size=" FORMAT_LEN "\n", fieldtype, NULL_IF_NULL(col_name), column_size);
@@ -373,8 +373,8 @@ MYLOG(DETAIL_LOG_LEVEL, "answering bookmark info\n");
 		col_name = QR_get_fieldname(res, icol);
 		fieldtype = QR_get_field_type(res, icol);
 
-		column_size = pgtype_column_size(stmt, fieldtype, icol, unknown_sizes);
-		decimal_digits = pgtype_decimal_digits(stmt, fieldtype, icol);
+		column_size = wdtype_column_size(stmt, fieldtype, icol, unknown_sizes);
+		decimal_digits = wdtype_decimal_digits(stmt, fieldtype, icol);
 	}
 
 	MYLOG(0, "col %d fieldname = '%s'\n", icol, NULL_IF_NULL(col_name));
@@ -410,7 +410,7 @@ MYLOG(DETAIL_LOG_LEVEL, "answering bookmark info\n");
 	 */
 	if (pfSqlType)
 	{
-		*pfSqlType = pgtype_to_concise_type(stmt, fieldtype, icol, unknown_sizes);
+		*pfSqlType = wdtype_to_concise_type(stmt, fieldtype, icol, unknown_sizes);
 
 		MYLOG(0, "col %d *pfSqlType = %d\n", icol, *pfSqlType);
 	}
@@ -448,7 +448,7 @@ MYLOG(DETAIL_LOG_LEVEL, "answering bookmark info\n");
 		if (SC_has_outer_join(stmt))
 			*pfNullable = TRUE;
 		else
-			*pfNullable = fi ? fi->nullable : pgtype_nullable(conn, fieldtype);
+			*pfNullable = fi ? fi->nullable : wdtype_nullable(conn, fieldtype);
 
 		MYLOG(0, "col %d  *pfNullable = %d\n", icol, *pfNullable);
 	}
@@ -462,7 +462,7 @@ cleanup:
 
 /*		Returns result column descriptor information for a result set. */
 RETCODE		SQL_API
-PGAPI_ColAttributes(HSTMT hstmt,
+WD_ColAttributes(HSTMT hstmt,
 					SQLUSMALLINT icol,
 					SQLUSMALLINT fDescType,
 					PTR rgbDesc,
@@ -470,7 +470,7 @@ PGAPI_ColAttributes(HSTMT hstmt,
 					SQLSMALLINT * pcbDesc,
 					SQLLEN * pfDesc)
 {
-	CSTR func = "PGAPI_ColAttributes";
+	CSTR func = "WD_ColAttributes";
 	StatementClass *stmt = (StatementClass *) hstmt;
 	IRDFields	*irdflds;
 	OID		field_type = 0;
@@ -647,14 +647,14 @@ MYLOG(DETAIL_LOG_LEVEL, "answering bookmark info\n");
 	    -2 == QR_get_fieldsize(res, col_idx))
 		unknown_sizes = UNKNOWNS_AS_LONGEST;
 
-	column_size = (USE_FI(fi, unknown_sizes) && fi->column_size > 0) ? fi->column_size : pgtype_column_size(stmt, field_type, col_idx, unknown_sizes);
+	column_size = (USE_FI(fi, unknown_sizes) && fi->column_size > 0) ? fi->column_size : wdtype_column_size(stmt, field_type, col_idx, unknown_sizes);
 	switch (fDescType)
 	{
 		case SQL_COLUMN_AUTO_INCREMENT: /* == SQL_DESC_AUTO_UNIQUE_VALUE */
 			if (fi && fi->auto_increment)
 				value = TRUE;
 			else
-				value = pgtype_auto_increment(conn, field_type);
+				value = wdtype_auto_increment(conn, field_type);
 			if (value == -1)	/* non-numeric becomes FALSE (ODBC Doc) */
 				value = FALSE;
 			MYLOG(0, "AUTO_INCREMENT=" FORMAT_LEN "\n", value);
@@ -662,7 +662,7 @@ MYLOG(DETAIL_LOG_LEVEL, "answering bookmark info\n");
 			break;
 
 		case SQL_COLUMN_CASE_SENSITIVE: /* == SQL_DESC_CASE_SENSITIVE */
-			value = pgtype_case_sensitive(conn, field_type);
+			value = wdtype_case_sensitive(conn, field_type);
 			break;
 
 			/*
@@ -671,7 +671,7 @@ MYLOG(DETAIL_LOG_LEVEL, "answering bookmark info\n");
 			 * case SQL_COLUMN_COUNT:
 			 */
 		case SQL_COLUMN_DISPLAY_SIZE: /* == SQL_DESC_DISPLAY_SIZE */
-			value = (USE_FI(fi, unknown_sizes) && 0 != fi->display_size) ? fi->display_size : pgtype_display_size(stmt, field_type, col_idx, unknown_sizes);
+			value = (USE_FI(fi, unknown_sizes) && 0 != fi->display_size) ? fi->display_size : wdtype_display_size(stmt, field_type, col_idx, unknown_sizes);
 
 			MYLOG(0, "col %d, display_size= " FORMAT_LEN "\n", col_idx, value);
 
@@ -699,7 +699,7 @@ MYLOG(DETAIL_LOG_LEVEL, "answering bookmark info\n");
 			break;
 
 		case SQL_COLUMN_LENGTH:
-			value = (USE_FI(fi, unknown_sizes) && fi->length > 0) ? fi->length : pgtype_buffer_length(stmt, field_type, col_idx, unknown_sizes);
+			value = (USE_FI(fi, unknown_sizes) && fi->length > 0) ? fi->length : wdtype_buffer_length(stmt, field_type, col_idx, unknown_sizes);
 			if (0 > value)
 			/* if (-1 == value)  I'm not sure which is right */
 				value = 0;
@@ -708,7 +708,7 @@ MYLOG(DETAIL_LOG_LEVEL, "answering bookmark info\n");
 			break;
 
 		case SQL_COLUMN_MONEY: /* == SQL_DESC_FIXED_PREC_SCALE */
-			value = pgtype_money(conn, field_type);
+			value = wdtype_money(conn, field_type);
 MYLOG(DETAIL_LOG_LEVEL, "COLUMN_MONEY=" FORMAT_LEN "\n", value);
 			break;
 
@@ -716,7 +716,7 @@ MYLOG(DETAIL_LOG_LEVEL, "COLUMN_MONEY=" FORMAT_LEN "\n", value);
 			if (SC_has_outer_join(stmt))
 				value = TRUE;
 			else
-				value = fi ? fi->nullable : pgtype_nullable(conn, field_type);
+				value = fi ? fi->nullable : wdtype_nullable(conn, field_type);
 MYLOG(DETAIL_LOG_LEVEL, "COLUMN_NULLABLE=" FORMAT_LEN "\n", value);
 			break;
 
@@ -738,14 +738,14 @@ MYLOG(DETAIL_LOG_LEVEL, "COLUMN_NULLABLE=" FORMAT_LEN "\n", value);
 			break;
 
 		case SQL_COLUMN_SCALE: /* in 2.x */
-			value = pgtype_decimal_digits(stmt, field_type, col_idx);
+			value = wdtype_decimal_digits(stmt, field_type, col_idx);
 MYLOG(DETAIL_LOG_LEVEL, "COLUMN_SCALE=" FORMAT_LEN "\n", value);
 			if (value < 0)
 				value = 0;
 			break;
 
 		case SQL_COLUMN_SEARCHABLE: /* == SQL_DESC_SEARCHABLE */
-			value = pgtype_searchable(conn, field_type);
+			value = wdtype_searchable(conn, field_type);
 			break;
 
 		case SQL_COLUMN_TABLE_NAME: /* == SQL_DESC_TABLE_NAME */
@@ -755,16 +755,16 @@ MYLOG(DETAIL_LOG_LEVEL, "COLUMN_SCALE=" FORMAT_LEN "\n", value);
 			break;
 
 		case SQL_COLUMN_TYPE: /* == SQL_DESC_CONCISE_TYPE */
-			value = pgtype_to_concise_type(stmt, field_type, col_idx, unknown_sizes);
+			value = wdtype_to_concise_type(stmt, field_type, col_idx, unknown_sizes);
 			MYLOG(0, "COLUMN_TYPE=" FORMAT_LEN "\n", value);
 			break;
 
 		case SQL_COLUMN_TYPE_NAME: /* == SQL_DESC_TYPE_NAME */
-			p = pgtype_to_name(stmt, field_type, col_idx, fi && fi->auto_increment);
+			p = wdtype_to_name(stmt, field_type, col_idx, fi && fi->auto_increment);
 			break;
 
 		case SQL_COLUMN_UNSIGNED: /* == SQL_DESC_UNSINGED */
-			value = pgtype_unsigned(conn, field_type);
+			value = wdtype_unsigned(conn, field_type);
 			if (value == -1)	/* non-numeric becomes TRUE (ODBC Doc) */
 				value = SQL_TRUE;
 
@@ -775,7 +775,7 @@ MYLOG(DETAIL_LOG_LEVEL, "COLUMN_SCALE=" FORMAT_LEN "\n", value);
 			/*
 			 * Neither Access or Borland care about this.
 			 *
-			 * if (field_type == PG_TYPE_OID) pfDesc = SQL_ATTR_READONLY;
+			 * if (field_type == WD_TYPE_OID) pfDesc = SQL_ATTR_READONLY;
 			 * else
 			 */
 			if (!stmt_updatable)
@@ -807,45 +807,45 @@ MYLOG(DETAIL_LOG_LEVEL, "COLUMN_SCALE=" FORMAT_LEN "\n", value);
 			MYLOG(0, "BASE_TABLE_NAME = '%s'\n", p);
 			break;
 		case SQL_DESC_LENGTH: /* different from SQL_COLUMN_LENGTH */
-			value = (fi && column_size > 0) ? column_size : pgtype_desclength(stmt, field_type, col_idx, unknown_sizes);
+			value = (fi && column_size > 0) ? column_size : wdtype_desclength(stmt, field_type, col_idx, unknown_sizes);
 			if (-1 == value)
 				value = 0;
 
 			MYLOG(0, "col %d, desc_length = " FORMAT_LEN "\n", col_idx, value);
 			break;
 		case SQL_DESC_OCTET_LENGTH:
-			value = (USE_FI(fi, unknown_sizes) && fi->length > 0) ? fi->length : pgtype_attr_transfer_octet_length(conn, field_type, column_size, unknown_sizes);
+			value = (USE_FI(fi, unknown_sizes) && fi->length > 0) ? fi->length : wdtype_attr_transfer_octet_length(conn, field_type, column_size, unknown_sizes);
 			if (-1 == value)
 				value = 0;
 			MYLOG(0, "col %d, octet_length = " FORMAT_LEN "\n", col_idx, value);
 			break;
 		case SQL_DESC_PRECISION: /* different from SQL_COLUMN_PRECISION */
 			if (value = FI_precision(fi), value <= 0)
-				value = pgtype_precision(stmt, field_type, col_idx, unknown_sizes);
+				value = wdtype_precision(stmt, field_type, col_idx, unknown_sizes);
 			if (value < 0)
 				value = 0;
 
 			MYLOG(0, "col %d, desc_precision = " FORMAT_LEN "\n", col_idx, value);
 			break;
 		case SQL_DESC_SCALE: /* different from SQL_COLUMN_SCALE */
-			value = pgtype_scale(stmt, field_type, col_idx);
+			value = wdtype_scale(stmt, field_type, col_idx);
 			if (value < 0)
 				value = 0;
 			break;
 		case SQL_DESC_LOCAL_TYPE_NAME:
-			p = pgtype_to_name(stmt, field_type, col_idx, fi && fi->auto_increment);
+			p = wdtype_to_name(stmt, field_type, col_idx, fi && fi->auto_increment);
 			break;
 		case SQL_DESC_TYPE:
-			value = pgtype_to_sqldesctype(stmt, field_type, col_idx, unknown_sizes);
+			value = wdtype_to_sqldesctype(stmt, field_type, col_idx, unknown_sizes);
 			break;
 		case SQL_DESC_NUM_PREC_RADIX:
-			value = pgtype_radix(conn, field_type);
+			value = wdtype_radix(conn, field_type);
 			break;
 		case SQL_DESC_LITERAL_PREFIX:
-			p = pgtype_literal_prefix(conn, field_type);
+			p = wdtype_literal_prefix(conn, field_type);
 			break;
 		case SQL_DESC_LITERAL_SUFFIX:
-			p = pgtype_literal_suffix(conn, field_type);
+			p = wdtype_literal_suffix(conn, field_type);
 			break;
 		case SQL_DESC_UNNAMED:
 			value = (fi && NAME_IS_NULL(fi->column_name) && NAME_IS_NULL(fi->column_alias)) ? SQL_UNNAMED : SQL_NAMED;
@@ -904,14 +904,14 @@ MYLOG(DETAIL_LOG_LEVEL, "COLUMN_SCALE=" FORMAT_LEN "\n", value);
 
 /*	Returns result data for a single column in the current row. */
 RETCODE		SQL_API
-PGAPI_GetData(HSTMT hstmt,
+WD_GetData(HSTMT hstmt,
 			  SQLUSMALLINT icol,
 			  SQLSMALLINT fCType,
 			  PTR rgbValue,
 			  SQLLEN cbValueMax,
 			  SQLLEN * pcbValue)
 {
-	CSTR func = "PGAPI_GetData";
+	CSTR func = "WD_GetData";
 	QResultClass *res;
 	StatementClass *stmt = (StatementClass *) hstmt;
 	UInt2		num_cols;
@@ -1146,9 +1146,9 @@ MYLOG(DETAIL_LOG_LEVEL, "leaving %d\n", result);
  *		advances the cursor.
  */
 RETCODE		SQL_API
-PGAPI_Fetch(HSTMT hstmt)
+WD_Fetch(HSTMT hstmt)
 {
-	CSTR func = "PGAPI_Fetch";
+	CSTR func = "WD_Fetch";
 	StatementClass *stmt = (StatementClass *) hstmt;
 	ARDFields	*opts;
 	QResultClass *res;
@@ -1167,7 +1167,7 @@ PGAPI_Fetch(HSTMT hstmt)
 
 	if (!(res = SC_get_Curres(stmt)))
 	{
-		SC_set_error(stmt, STMT_INVALID_CURSOR_STATE_ERROR, "Null statement result in PGAPI_Fetch.", func);
+		SC_set_error(stmt, STMT_INVALID_CURSOR_STATE_ERROR, "Null statement result in WD_Fetch.", func);
 		return SQL_ERROR;
 	}
 
@@ -1175,7 +1175,7 @@ PGAPI_Fetch(HSTMT hstmt)
 	opts = SC_get_ARDF(stmt);
 	if ((bookmark = opts->bookmark) && bookmark->buffer)
 	{
-		SC_set_error(stmt, STMT_COLNUM_ERROR, "Not allowed to bind a bookmark column when using PGAPI_Fetch", func);
+		SC_set_error(stmt, STMT_COLNUM_ERROR, "Not allowed to bind a bookmark column when using WD_Fetch", func);
 		return SQL_ERROR;
 	}
 
@@ -1405,7 +1405,7 @@ MYLOG(DETAIL_LOG_LEVEL, "RETURN_EOF\n"); \
 
 /*	This fetchs a block of data (rowset). */
 RETCODE		SQL_API
-PGAPI_ExtendedFetch(HSTMT hstmt,
+WD_ExtendedFetch(HSTMT hstmt,
 					SQLUSMALLINT fFetchType,
 					SQLLEN irow,
 					SQLULEN * pcrow,
@@ -1413,7 +1413,7 @@ PGAPI_ExtendedFetch(HSTMT hstmt,
 					SQLLEN bookmark_offset,
 					SQLLEN rowsetSize)
 {
-	CSTR func = "PGAPI_ExtendedFetch";
+	CSTR func = "WD_ExtendedFetch";
 	StatementClass *stmt = (StatementClass *) hstmt;
 	ARDFields	*opts;
 	QResultClass *res;
@@ -1441,7 +1441,7 @@ PGAPI_ExtendedFetch(HSTMT hstmt,
 	{
 		if (fFetchType != SQL_FETCH_NEXT)
 		{
-			SC_set_error(stmt, STMT_FETCH_OUT_OF_RANGE, "The fetch type for PGAPI_ExtendedFetch isn't allowed with ForwardOnly cursor.", func);
+			SC_set_error(stmt, STMT_FETCH_OUT_OF_RANGE, "The fetch type for WD_ExtendedFetch isn't allowed with ForwardOnly cursor.", func);
 			return SQL_ERROR;
 		}
 	}
@@ -1450,7 +1450,7 @@ PGAPI_ExtendedFetch(HSTMT hstmt,
 
 	if (!(res = SC_get_Curres(stmt)))
 	{
-		SC_set_error(stmt, STMT_INVALID_CURSOR_STATE_ERROR, "Null statement result in PGAPI_ExtendedFetch.", func);
+		SC_set_error(stmt, STMT_INVALID_CURSOR_STATE_ERROR, "Null statement result in WD_ExtendedFetch.", func);
 		return SQL_ERROR;
 	}
 
@@ -1746,7 +1746,7 @@ MYLOG(DETAIL_LOG_LEVEL, "num_tuples=" FORMAT_LEN "\n", num_tuples);
 			break;
 
 		default:
-			SC_set_error(stmt, STMT_FETCH_OUT_OF_RANGE, "Unsupported PGAPI_ExtendedFetch Direction", func);
+			SC_set_error(stmt, STMT_FETCH_OUT_OF_RANGE, "Unsupported WD_ExtendedFetch Direction", func);
 			return SQL_ERROR;
 	}
 
@@ -1974,7 +1974,7 @@ cleanup:
  */
 /* CC: return SQL_NO_DATA_FOUND since we do not support multiple result sets */
 RETCODE		SQL_API
-PGAPI_MoreResults(HSTMT hstmt)
+WD_MoreResults(HSTMT hstmt)
 {
 	StatementClass	*stmt = (StatementClass *) hstmt;
 	QResultClass	*res;
@@ -1993,7 +1993,7 @@ PGAPI_MoreResults(HSTMT hstmt)
 		int errnum = 0, curerr;
 
 		if (stmt->multi_statement < 0)
-			PGAPI_NumParams(stmt, &num_p);
+			WD_NumParams(stmt, &num_p);
 		if (stmt->multi_statement > 0)
 		{
 			const char *cmdstr;
@@ -2029,7 +2029,7 @@ PGAPI_MoreResults(HSTMT hstmt)
 	}
 	else
 	{
-		PGAPI_FreeStmt(hstmt, SQL_CLOSE);
+		WD_FreeStmt(hstmt, SQL_CLOSE);
 		ret = SQL_NO_DATA_FOUND;
 	}
 	MYLOG(0, "leaving %d\n", ret);
@@ -2204,7 +2204,7 @@ ti_quote(StatementClass *stmt, OID tableoid, char *buf, int buf_size)
 		QResultClass	*res;
 		char	*ret = "";
 
-		SPRINTF_FIXED(query, "select relname, nspname from pg_class c, pg_namespace n where c.oid=%u and c.relnamespace=n.oid", tableoid);
+		SPRINTF_FIXED(query, "select relname, nspname from WD_class c, WD_namespace n where c.oid=%u and c.relnamespace=n.oid", tableoid);
 		res = CC_send_query(SC_get_conn(stmt), query, NULL, READ_ONLY_QUERY, stmt);
 		if (QR_command_maybe_successful(res) &&
 		    QR_get_num_cached_tuples(res) == 1)
@@ -3928,7 +3928,7 @@ pos_update_callback(RETCODE retcode, void *para)
 MYLOG(DETAIL_LOG_LEVEL, "irow_update ret=%d,%d\n", ret, SC_get_errornumber(s->qstmt));
 		if (ret != SQL_SUCCESS)
 			SC_error_copy(s->stmt, s->qstmt, TRUE);
-		PGAPI_FreeStmt(s->qstmt, SQL_DROP);
+		WD_FreeStmt(s->qstmt, SQL_DROP);
 		s->qstmt = NULL;
 	}
 	s->updyes = FALSE;
@@ -4098,7 +4098,7 @@ SC_pos_update(StatementClass *stmt,
 			appendPQExpBuffer(&updstr, " and ");
 			appendPQExpBuffer(&updstr, bestqual, oid);
 		}
-		if (PG_VERSION_GE(conn, 8.2))
+		if (WD_VERSION_GE(conn, 8.2))
 		{
 			appendPQExpBuffer(&updstr, " returning ctid");
 			if (bestitem)
@@ -4108,7 +4108,7 @@ SC_pos_update(StatementClass *stmt,
 			}
 		}
 		MYLOG(0, "updstr=%s\n", updstr.data);
-		if (PGAPI_AllocStmt(conn, &hstmt, 0) != SQL_SUCCESS)
+		if (WD_AllocStmt(conn, &hstmt, 0) != SQL_SUCCESS)
 		{
 			SC_set_error(s.stmt, STMT_NO_MEMORY_ERROR, "internal AllocStmt error", func);
 			goto cleanup;
@@ -4134,13 +4134,13 @@ SC_pos_update(StatementClass *stmt,
 				{
 					/* fieldtype = QR_get_field_type(s.res, i); */
 					fieldtype = getEffectiveOid(conn, fi[i]);
-					PIC_set_pgtype(ipdopts->parameters[j], fieldtype);
-					PGAPI_BindParameter(hstmt,
+					PIC_set_wdtype(ipdopts->parameters[j], fieldtype);
+					WD_BindParameter(hstmt,
 						(SQLUSMALLINT) ++j,
 						SQL_PARAM_INPUT,
 						bindings[i].returntype,
-						pgtype_to_concise_type(s.stmt, fieldtype, i, unknown_sizes),
-																fi[i]->column_size > 0 ? fi[i]->column_size : pgtype_column_size(s.stmt, fieldtype, i, unknown_sizes),
+						wdtype_to_concise_type(s.stmt, fieldtype, i, unknown_sizes),
+																fi[i]->column_size > 0 ? fi[i]->column_size : wdtype_column_size(s.stmt, fieldtype, i, unknown_sizes),
 						(SQLSMALLINT) fi[i]->decimal_digits,
 						bindings[i].buffer,
 						bindings[i].buflen,
@@ -4155,7 +4155,7 @@ SC_pos_update(StatementClass *stmt,
 			SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Out of memory in SC_pos_updatet()", func);
 			goto cleanup;
 		}
-		ret = PGAPI_ExecDirect(hstmt, (SQLCHAR *) updstr.data, SQL_NTS, 0);
+		ret = WD_ExecDirect(hstmt, (SQLCHAR *) updstr.data, SQL_NTS, 0);
 		if (ret == SQL_NEED_DATA)
 		{
 			pup_cdata *cbdata = (pup_cdata *) malloc(sizeof(pup_cdata));
@@ -4455,7 +4455,7 @@ pos_add_callback(RETCODE retcode, void *para)
 	SC_setInsertedTable(s->qstmt, ret);
 	if (ret != SQL_SUCCESS)
 		SC_error_copy(s->stmt, s->qstmt, TRUE);
-	PGAPI_FreeStmt((HSTMT) s->qstmt, SQL_DROP);
+	WD_FreeStmt((HSTMT) s->qstmt, SQL_DROP);
 	s->qstmt = NULL;
 	if (SQL_SUCCESS == ret && s->res->keyset)
 	{
@@ -4541,7 +4541,7 @@ SC_pos_add(StatementClass *stmt,
 	num_cols = s.irdflds->nfields;
 	conn = SC_get_conn(s.stmt);
 
-	if (PGAPI_AllocStmt(conn, &hstmt, 0) != SQL_SUCCESS)
+	if (WD_AllocStmt(conn, &hstmt, 0) != SQL_SUCCESS)
 	{
 		SC_set_error(s.stmt, STMT_NO_MEMORY_ERROR, "internal AllocStmt error", func);
 		return SQL_ERROR;
@@ -4584,13 +4584,13 @@ SC_pos_add(StatementClass *stmt,
 				else
 					appendPQExpBuffer(&addstr,
 								 "\"%s\"", GET_NAME(fi[i]->column_name));
-				PIC_set_pgtype(ipdopts->parameters[add_cols], fieldtype);
-				PGAPI_BindParameter(hstmt,
+				PIC_set_wdtype(ipdopts->parameters[add_cols], fieldtype);
+				WD_BindParameter(hstmt,
 					(SQLUSMALLINT) ++add_cols,
 					SQL_PARAM_INPUT,
 					bindings[i].returntype,
-					pgtype_to_concise_type(s.stmt, fieldtype, i, unknown_sizes),
-															fi[i]->column_size > 0 ? fi[i]->column_size : pgtype_column_size(s.stmt, fieldtype, i, unknown_sizes),
+					wdtype_to_concise_type(s.stmt, fieldtype, i, unknown_sizes),
+															fi[i]->column_size > 0 ? fi[i]->column_size : wdtype_column_size(s.stmt, fieldtype, i, unknown_sizes),
 					(SQLSMALLINT) fi[i]->decimal_digits,
 					bindings[i].buffer,
 					bindings[i].buflen,
@@ -4613,7 +4613,7 @@ SC_pos_add(StatementClass *stmt,
 				appendPQExpBuffer(&addstr, "?");
 		}
 		appendPQExpBuffer(&addstr, ")");
-		if (PG_VERSION_GE(conn, 8.2))
+		if (WD_VERSION_GE(conn, 8.2))
 		{
 			TABLE_INFO	*ti = stmt->ti[0];
 			const char *bestitem = GET_NAME(ti->bestitem);
@@ -4634,7 +4634,7 @@ SC_pos_add(StatementClass *stmt,
 		MYLOG(0, "addstr=%s\n", addstr.data);
 		s.qstmt->exec_start_row = s.qstmt->exec_end_row = s.irow;
 		s.updyes = TRUE;
-		ret = PGAPI_ExecDirect(hstmt, (SQLCHAR *) addstr.data, SQL_NTS, 0);
+		ret = WD_ExecDirect(hstmt, (SQLCHAR *) addstr.data, SQL_NTS, 0);
 		if (ret == SQL_NEED_DATA)
 		{
 			padd_cdata *cbdata = (padd_cdata *) malloc(sizeof(padd_cdata));
@@ -4729,7 +4729,7 @@ SC_pos_refresh(StatementClass *stmt, SQLSETPOSIROW irow , SQLULEN global_ridx)
 	return SQL_SUCCESS;
 }
 
-/*	SQL_NEED_DATA callback for PGAPI_SetPos */
+/*	SQL_NEED_DATA callback for WD_SetPos */
 typedef struct
 {
 	BOOL		need_data_callback, auto_commit_needed;
@@ -4868,12 +4868,12 @@ RETCODE spos_callback(RETCODE retcode, void *para)
  *	This will be useful (so far) only when using SQLGetData after SQLExtendedFetch.
  */
 RETCODE		SQL_API
-PGAPI_SetPos(HSTMT hstmt,
+WD_SetPos(HSTMT hstmt,
 			 SQLSETPOSIROW irow,
 			 SQLUSMALLINT fOption,
 			 SQLUSMALLINT fLock)
 {
-	CSTR func = "PGAPI_SetPos";
+	CSTR func = "WD_SetPos";
 	RETCODE	ret;
 	ConnectionClass	*conn;
 	SQLLEN		rowsetSize;
@@ -4901,13 +4901,13 @@ PGAPI_SetPos(HSTMT hstmt,
 		;
 	else if (s.fOption != SQL_POSITION && s.fOption != SQL_REFRESH)
 	{
-		SC_set_error(s.stmt, STMT_NOT_IMPLEMENTED_ERROR, "Only SQL_POSITION/REFRESH is supported for PGAPI_SetPos", func);
+		SC_set_error(s.stmt, STMT_NOT_IMPLEMENTED_ERROR, "Only SQL_POSITION/REFRESH is supported for WD_SetPos", func);
 		return SQL_ERROR;
 	}
 
 	if (!(s.res = SC_get_Curres(s.stmt)))
 	{
-		SC_set_error(s.stmt, STMT_INVALID_CURSOR_STATE_ERROR, "Null statement result in PGAPI_SetPos.", func);
+		SC_set_error(s.stmt, STMT_INVALID_CURSOR_STATE_ERROR, "Null statement result in WD_SetPos.", func);
 		return SQL_ERROR;
 	}
 
@@ -4970,12 +4970,12 @@ MYLOG(0, "num_cols=%d gdatainfo=%d\n", QR_NumPublicResultCols(s.res), gdata_allo
 
 /*		Sets options that control the behavior of cursors. */
 RETCODE		SQL_API
-PGAPI_SetScrollOptions(HSTMT hstmt,
+WD_SetScrollOptions(HSTMT hstmt,
 					   SQLUSMALLINT fConcurrency,
 					   SQLLEN crowKeyset,
 					   SQLUSMALLINT crowRowset)
 {
-	CSTR func = "PGAPI_SetScrollOptions";
+	CSTR func = "WD_SetScrollOptions";
 	StatementClass *stmt = (StatementClass *) hstmt;
 
 	MYLOG(0, "entering fConcurrency=%d crowKeyset=" FORMAT_LEN " crowRowset=%d\n",
@@ -4988,11 +4988,11 @@ PGAPI_SetScrollOptions(HSTMT hstmt,
 
 /*	Set the cursor name on a statement handle */
 RETCODE		SQL_API
-PGAPI_SetCursorName(HSTMT hstmt,
+WD_SetCursorName(HSTMT hstmt,
 					const SQLCHAR * szCursor,
 					SQLSMALLINT cbCursor)
 {
-	CSTR func = "PGAPI_SetCursorName";
+	CSTR func = "WD_SetCursorName";
 	StatementClass *stmt = (StatementClass *) hstmt;
 
 	MYLOG(0, "entering hstmt=%p, szCursor=%p, cbCursorMax=%d\n", hstmt, szCursor, cbCursor);
@@ -5010,12 +5010,12 @@ PGAPI_SetCursorName(HSTMT hstmt,
 
 /*	Return the cursor name for a statement handle */
 RETCODE		SQL_API
-PGAPI_GetCursorName(HSTMT hstmt,
+WD_GetCursorName(HSTMT hstmt,
 					SQLCHAR * szCursor,
 					SQLSMALLINT cbCursorMax,
 					SQLSMALLINT * pcbCursor)
 {
-	CSTR func = "PGAPI_GetCursorName";
+	CSTR func = "WD_GetCursorName";
 	StatementClass *stmt = (StatementClass *) hstmt;
 	size_t		len = 0;
 	RETCODE		result;
@@ -5092,7 +5092,7 @@ SC_fetch_by_bookmark(StatementClass *stmt)
 		SC_set_error(stmt, STMT_INVALID_OPTION_IDENTIFIER, "the statement is read-only", __FUNCTION__);
 		return SQL_ERROR;
 	}
-	if (ret = PGAPI_AllocStmt(SC_get_conn(stmt), &hstmt, 0), !SQL_SUCCEEDED(ret))
+	if (ret = WD_AllocStmt(SC_get_conn(stmt), &hstmt, 0), !SQL_SUCCEEDED(ret))
 	{
 		SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "internal AllocStmt error", __FUNCTION__);
 		return ret;
@@ -5101,22 +5101,22 @@ SC_fetch_by_bookmark(StatementClass *stmt)
 	SC_MALLOC_gexit_with_error(tidbuf, char, size_of_rowset * tidbuflen, stmt, "Couldn't allocate memory for tidbuf bind.", (ret = SQL_ERROR));
 	for (i = 0; i < size_of_rowset; i++)
 	{
-		PG_BM	pg_bm;
+		WD_BM	WD_bm;
 		SQLLEN	bidx;
 
-		pg_bm = SC_Resolve_bookmark(opts, i);
-		bidx = pg_bm.index;
+		WD_bm = SC_Resolve_bookmark(opts, i);
+		bidx = WD_bm.index;
 
 MYLOG(0, "i=%d bidx=" FORMAT_LEN " cached=" FORMAT_ULEN "\n", i, bidx, res->num_cached_keys);
 		kres_ridx = GIdx2KResIdx(bidx, stmt, res);
 		if (kres_ridx < 0 || kres_ridx >= res->num_cached_keys)
 		{
-			if (pg_bm.keys.offset > 0)
+			if (WD_bm.keys.offset > 0)
 			{
-				QR_get_last_bookmark(res, bidx, &pg_bm.keys);
-				blocknum = pg_bm.keys.blocknum;
-				offset = pg_bm.keys.offset;
-				oidint = pg_bm.keys.oid;
+				QR_get_last_bookmark(res, bidx, &WD_bm.keys);
+				blocknum = WD_bm.keys.blocknum;
+				offset = WD_bm.keys.offset;
+				oidint = WD_bm.keys.oid;
 			}
 			else
 			{
@@ -5138,21 +5138,21 @@ MYLOG(0, "i=%d bidx=" FORMAT_LEN " cached=" FORMAT_ULEN "\n", i, bidx, res->num_
 		snprintf(tidbuf + i * tidbuflen, tidbuflen, "(%u,%u)", blocknum, offset);
 		MYLOG(0, "!!!! tidbuf=%s\n", tidbuf + i * tidbuflen);
 	}
-	if (!SQL_SUCCEEDED(PGAPI_BindParameter(hstmt, 1, SQL_PARAM_INPUT,
+	if (!SQL_SUCCEEDED(WD_BindParameter(hstmt, 1, SQL_PARAM_INPUT,
 			SQL_C_CHAR, SQL_CHAR, tidbuflen, 0,
 			tidbuf, tidbuflen, NULL)))
 		goto cleanup;
 	apdf = SC_get_APDF((StatementClass *) hstmt);
 	apdf->paramset_size = size_of_rowset;
-	if (!SQL_SUCCEEDED(PGAPI_GetStmtAttr(stmt, SQL_ATTR_APP_ROW_DESC, (SQLPOINTER) &hdesc, SQL_IS_POINTER, NULL)))
+	if (!SQL_SUCCEEDED(WD_GetStmtAttr(stmt, SQL_ATTR_APP_ROW_DESC, (SQLPOINTER) &hdesc, SQL_IS_POINTER, NULL)))
 		goto cleanup;
-	if (!SQL_SUCCEEDED(PGAPI_SetStmtAttr(hstmt, SQL_ATTR_APP_ROW_DESC, (SQLPOINTER) hdesc, SQL_IS_POINTER)))
+	if (!SQL_SUCCEEDED(WD_SetStmtAttr(hstmt, SQL_ATTR_APP_ROW_DESC, (SQLPOINTER) hdesc, SQL_IS_POINTER)))
 		goto cleanup;
 
 	lodlen = strlen(stmt->load_statement) + 15;
 	SC_MALLOC_gexit_with_error(query, char, lodlen, stmt, "Couldn't allocate memory for query buf.", (ret = SQL_ERROR));
 	snprintf(query, lodlen, "%s where ctid=?", stmt->load_statement);
-	if (!SQL_SUCCEEDED(ret = PGAPI_ExecDirect(hstmt, (SQLCHAR *) query, SQL_NTS, PODBC_RDONLY)))
+	if (!SQL_SUCCEEDED(ret = WD_ExecDirect(hstmt, (SQLCHAR *) query, SQL_NTS, PODBC_RDONLY)))
 		goto cleanup;
 	/*
 	 * Combine multiple results into one
@@ -5188,15 +5188,15 @@ MYLOG(0, "i=%d bidx=" FORMAT_LEN " cached=" FORMAT_ULEN "\n", i, bidx, res->num_
 	/* Fetch and fill bind info */
 	cRow = 0;
 	opts->bookmark = NULL;
-	ret = PGAPI_ExtendedFetch(fstmt, SQL_FETCH_NEXT, 0,
+	ret = WD_ExtendedFetch(fstmt, SQL_FETCH_NEXT, 0,
 		&cRow, NULL, 0, size_of_rowset);
 	MYLOG(0, "cRow=" FORMAT_ULEN "\n", cRow);
 
 cleanup:
 	if (NULL != hstmt)
 	{
-		PGAPI_SetStmtAttr(hstmt, SQL_ATTR_APP_ROW_DESC, (SQLPOINTER) NULL, SQL_IS_POINTER);
-		PGAPI_FreeStmt(hstmt, SQL_DROP);
+		WD_SetStmtAttr(hstmt, SQL_ATTR_APP_ROW_DESC, (SQLPOINTER) NULL, SQL_IS_POINTER);
+		WD_FreeStmt(hstmt, SQL_DROP);
 	}
 	opts->bookmark = bookmark_orig;
 	if (NULL != tidbuf)

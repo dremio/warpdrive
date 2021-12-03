@@ -1,5 +1,5 @@
 #undef	_MEMORY_DEBUG_
-#include	"psqlodbc.h"
+#include	"wdodbc.h"
 
 #ifdef	WIN32
 #ifdef	_DEBUG

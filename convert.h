@@ -9,7 +9,7 @@
 #ifndef __CONVERT_H__
 #define __CONVERT_H__
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -31,7 +31,7 @@ int	copy_and_convert_field(StatementClass *stmt,
 			PTR rgbValue, SQLLEN cbValueMax, SQLLEN *pcbValue, SQLLEN *pIndicator);
 
 int		copy_statement_with_parameters(StatementClass *stmt, BOOL);
-SQLLEN		pg_hex2bin(const char *in, char *out, SQLLEN len);
+SQLLEN		WD_hex2bin(const char *in, char *out, SQLLEN len);
 size_t		findTag(const char *str, int ccsc);
 
 BOOL build_libpq_bind_params(StatementClass *stmt,

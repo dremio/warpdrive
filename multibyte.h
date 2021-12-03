@@ -5,7 +5,7 @@
  * Multibyte library header ( psqlODBC Only )
  *
  */
-#include "psqlodbc.h"
+#include "wdodbc.h"
 #include "qresult.h"
 
 /* PostgreSQL client encoding */
@@ -54,7 +54,7 @@ enum {
 	,OTHER		=	-1
 };
 
-extern int pg_CS_code(const char *stat_string);
+extern int WD_CS_code(const char *stat_string);
 
 /* Old Type Compatible */
 typedef struct
@@ -73,8 +73,8 @@ void encoded_str_constr(encoded_str *encstr, int ccsc, const char *str);
 extern int encoded_nextchar(encoded_str *encstr);
 extern ssize_t encoded_position_shift(encoded_str *encstr, size_t shift);
 extern int encoded_byte_check(encoded_str *encstr, size_t abspos);
-/* #define check_client_encoding(X) pg_CS_name(pg_CS_code(X)) */
+/* #define check_client_encoding(X) WD_CS_name(WD_CS_code(X)) */
 char *check_client_encoding(const pgNAME sql_string);
 const char *derive_locale_encoding(const char *dbencoding);
-int pg_mb_maxlen(int characterset_code);
+int WD_mb_maxlen(int characterset_code);
 #endif /* __MULTIBUYTE_H__ */

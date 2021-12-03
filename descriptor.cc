@@ -369,10 +369,10 @@ char CC_add_descriptor(ConnectionClass *self, DescriptorClass *desc)
  *	This API allocates a Application descriptor.
  */
 RETCODE SQL_API
-PGAPI_AllocDesc(HDBC ConnectionHandle,
+WD_AllocDesc(HDBC ConnectionHandle,
 				SQLHDESC *DescriptorHandle)
 {
-	CSTR func = "PGAPI_AllocDesc";
+	CSTR func = "WD_AllocDesc";
 	ConnectionClass	*conn = (ConnectionClass *) ConnectionHandle;
 	RETCODE	ret = SQL_SUCCESS;
 	DescriptorClass	*desc;
@@ -402,7 +402,7 @@ PGAPI_AllocDesc(HDBC ConnectionHandle,
 }
 
 RETCODE SQL_API
-PGAPI_FreeDesc(SQLHDESC DescriptorHandle)
+WD_FreeDesc(SQLHDESC DescriptorHandle)
 {
 	DescriptorClass *desc = (DescriptorClass *) DescriptorHandle;
 	RETCODE	ret = SQL_SUCCESS;
@@ -513,7 +513,7 @@ static void IPDFields_copy(const IPDFields *src, IPDFields *target)
 }
 
 RETCODE	SQL_API
-PGAPI_CopyDesc(SQLHDESC SourceDescHandle,
+WD_CopyDesc(SQLHDESC SourceDescHandle,
 			   SQLHDESC TargetDescHandle)
 {
 	RETCODE ret = SQL_ERROR;
@@ -690,10 +690,10 @@ static const struct
 	{ DESC_COUNT_FIELD_INCORRECT, "07002", "07002" },
 };
 
-static	PG_ErrorInfo	*DC_create_errorinfo(const DescriptorClass *self)
+static	WD_ErrorInfo	*DC_create_errorinfo(const DescriptorClass *self)
 {
 	const DescriptorHeader *deschd = &(self->deschd);
-	PG_ErrorInfo	*error;
+	WD_ErrorInfo	*error;
 	ConnectionClass	*conn;
 	EnvironmentClass	*env;
 	Int4	errornum;
@@ -727,7 +727,7 @@ DC_log_error(const char *func, const char *desc, const DescriptorClass *self)
 
 /*		Returns the next SQL error information. */
 RETCODE		SQL_API
-PGAPI_DescError(SQLHDESC hdesc,
+WD_DescError(SQLHDESC hdesc,
 				SQLSMALLINT	RecNumber,
 				SQLCHAR * szSqlState,
 				SQLINTEGER * pfNativeError,

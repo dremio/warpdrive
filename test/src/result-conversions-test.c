@@ -20,11 +20,11 @@
 #define isnan(x) _isnan(x)
 #endif
 
-static const char *pgtypes[] =
+static const char *wdtypes[] =
 {
 	/*
 	 * This query uses every PostgreSQL data type the driver recognizes,
-	 * i.e. that has a PG_TYPE_* code.
+	 * i.e. that has a WD_TYPE_* code.
 	 */
 	"true",			"boolean",
 	"\\x464F4F",	"bytea",
@@ -464,14 +464,14 @@ get_sql_type_size(int sql_c_type)
 static char *resultbuf = NULL;
 
 void
-test_conversion(const char *pgtype, const char *pgvalue, int sqltype, const char *sqltypestr, int buflen, int use_time)
+test_conversion(const char *wdtype, const char *pgvalue, int sqltype, const char *sqltypestr, int buflen, int use_time)
 {
 	char		sql[500];
 	SQLRETURN	rc;
 	SQLLEN		len_or_ind;
 	int			fixed_len;
 
-	printf("'%s' (%s) as %s: ", pgvalue, pgtype, sqltypestr);
+	printf("'%s' (%s) as %s: ", pgvalue, wdtype, sqltypestr);
 
 	if (resultbuf == NULL)
 		resultbuf = malloc(500);
@@ -494,7 +494,7 @@ test_conversion(const char *pgtype, const char *pgvalue, int sqltype, const char
 	 */
 	snprintf(sql, sizeof(sql),
 			 "SELECT $$%s$$::%s AS %s_col /* convert to %s */",
-			 pgvalue, pgtype, pgtype, sqltypestr);
+			 pgvalue, wdtype, wdtype, sqltypestr);
 
 	rc = SQLExecDirect(hstmt, (SQLCHAR *) sql, SQL_NTS);
 	CHECK_STMT_RESULT(rc, "SQLExecDirect failed", hstmt);
@@ -528,7 +528,7 @@ test_conversion(const char *pgtype, const char *pgvalue, int sqltype, const char
 		else if (1 <=  buflen &&
 			 SQL_C_WCHAR == sqltype &&
 			 0 == len_or_ind &&
-			 0 == strcmp(pgtype, "text") &&
+			 0 == strcmp(wdtype, "text") &&
 			 IsAnsi())
 			printf(" (truncated)");
 
@@ -568,7 +568,7 @@ int main(int argc, char **argv)
 {
 	SQLRETURN	rc;
 	int			sqltype_i;
-	int			pgtype_i;
+	int			wdtype_i;
 
 	test_connect();
 
@@ -595,17 +595,17 @@ int main(int argc, char **argv)
 	exec_cmd("SET lc_monetary='C'");
 
 	/* Test all combinations of PostgreSQL data types and SQL datatypes */
-	for (pgtype_i = 0; pgtypes[pgtype_i * 2] != NULL; pgtype_i++)
+	for (wdtype_i = 0; wdtypes[wdtype_i * 2] != NULL; wdtype_i++)
 	{
-		const char *value = pgtypes[pgtype_i * 2];
-		const char *pgtype = pgtypes[pgtype_i * 2 +1];
+		const char *value = wdtypes[wdtype_i * 2];
+		const char *wdtype = wdtypes[wdtype_i * 2 +1];
 
 		for (sqltype_i = 0; sqltypes[sqltype_i].str != NULL; sqltype_i++)
 		{
 			int sqltype = sqltypes[sqltype_i].sqltype;
 			const char *sqltypestr = sqltypes[sqltype_i].str;
 
-			test_conversion(pgtype, value, sqltype, sqltypestr, 100, 0);
+			test_conversion(wdtype, value, sqltype, sqltypestr, 100, 0);
 		}
 	}
 

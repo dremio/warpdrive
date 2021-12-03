@@ -12,7 +12,7 @@
  *-------
  */
 
-#include "pgtypes.h"
+#include "wdtypes.h"
 #include "columninfo.h"
 
 #include "connection.h"
@@ -91,10 +91,10 @@ CI_read_fields_from_pgres(ColumnInfoClass *self, PGresult *pgres)
 		/* Subtract the header length */
 		switch (new_adtid)
 		{
-			case PG_TYPE_DATETIME:
-			case PG_TYPE_TIMESTAMP_NO_TMZONE:
-			case PG_TYPE_TIME:
-			case PG_TYPE_TIME_WITH_TMZONE:
+			case WD_TYPE_DATETIME:
+			case WD_TYPE_TIMESTAMP_NO_TMZONE:
+			case WD_TYPE_TIME:
+			case WD_TYPE_TIME_WITH_TMZONE:
 				break;
 			default:
 				new_atttypmod -= 4;
@@ -162,7 +162,7 @@ CI_set_field_info(ColumnInfoClass *self, int field_num, const char *new_name,
 	self->coli_array[field_num].adtsize = new_adtsize;
 	self->coli_array[field_num].atttypmod = new_atttypmod;
 
-	self->coli_array[field_num].display_size = PG_ADT_UNSET;
+	self->coli_array[field_num].display_size = WD_ADT_UNSET;
 	self->coli_array[field_num].relid = new_relid;
 	self->coli_array[field_num].attid = new_attid;
 }

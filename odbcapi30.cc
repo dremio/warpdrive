@@ -18,7 +18,7 @@
  *-------
  */
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 #include "misc.h"
 
 #include <stdio.h>
@@ -41,18 +41,18 @@ SQLAllocHandle(SQLSMALLINT HandleType,
 	switch (HandleType)
 	{
 		case SQL_HANDLE_ENV:
-			ret = PGAPI_AllocEnv(OutputHandle);
+			ret = WD_AllocEnv(OutputHandle);
 			break;
 		case SQL_HANDLE_DBC:
 			ENTER_ENV_CS((EnvironmentClass *) InputHandle);
-			ret = PGAPI_AllocConnect(InputHandle, OutputHandle);
+			ret = WD_AllocConnect(InputHandle, OutputHandle);
 			LEAVE_ENV_CS((EnvironmentClass *) InputHandle);
 			break;
 		case SQL_HANDLE_STMT:
 			conn = (ConnectionClass *) InputHandle;
 			CC_examine_global_transaction(conn);
 			ENTER_CONN_CS(conn);
-			ret = PGAPI_AllocStmt(InputHandle, OutputHandle, PODBC_EXTERNAL_STATEMENT | PODBC_INHERIT_CONNECT_OPTIONS);
+			ret = WD_AllocStmt(InputHandle, OutputHandle, PODBC_EXTERNAL_STATEMENT | PODBC_INHERIT_CONNECT_OPTIONS);
 			if (*OutputHandle)
 				((StatementClass *) (*OutputHandle))->external = 1;
 			LEAVE_CONN_CS(conn);
@@ -61,7 +61,7 @@ SQLAllocHandle(SQLSMALLINT HandleType,
 			conn = (ConnectionClass *) InputHandle;
 			CC_examine_global_transaction(conn);
 			ENTER_CONN_CS(conn);
-			ret = PGAPI_AllocDesc(InputHandle, OutputHandle);
+			ret = WD_AllocDesc(InputHandle, OutputHandle);
 			LEAVE_CONN_CS(conn);
 MYLOG(DETAIL_LOG_LEVEL, "OutputHandle=%p\n", *OutputHandle);
 			break;
@@ -88,7 +88,7 @@ SQLBindParam(HSTMT StatementHandle,
 	ENTER_STMT_CS(stmt);
 	SC_clear_error(stmt);
 	StartRollbackState(stmt);
-	ret = PGAPI_BindParameter(StatementHandle, ParameterNumber, SQL_PARAM_INPUT, ValueType, ParameterType, LengthPrecision, ParameterScale, ParameterValue, BufferLength, StrLen_or_Ind);
+	ret = WD_BindParameter(StatementHandle, ParameterNumber, SQL_PARAM_INPUT, ValueType, ParameterType, LengthPrecision, ParameterScale, ParameterValue, BufferLength, StrLen_or_Ind);
 	ret = DiscardStatementSvp(stmt,ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	return ret;
@@ -108,7 +108,7 @@ SQLCloseCursor(HSTMT StatementHandle)
 	ENTER_STMT_CS(stmt);
 	SC_clear_error(stmt);
 	StartRollbackState(stmt);
-	ret = PGAPI_FreeStmt(StatementHandle, SQL_CLOSE);
+	ret = WD_FreeStmt(StatementHandle, SQL_CLOSE);
 	ret = DiscardStatementSvp(stmt,ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	return ret;
@@ -140,7 +140,7 @@ SQLColAttribute(SQLHSTMT StatementHandle,
 	ENTER_STMT_CS(stmt);
 	SC_clear_error(stmt);
 	StartRollbackState(stmt);
-	ret = PGAPI_ColAttributes(StatementHandle, ColumnNumber,
+	ret = WD_ColAttributes(StatementHandle, ColumnNumber,
 					   FieldIdentifier, CharacterAttribute, BufferLength,
 							   StringLength, NumericAttribute);
 	ret = DiscardStatementSvp(stmt,ret, FALSE);
@@ -157,7 +157,7 @@ SQLCopyDesc(SQLHDESC SourceDescHandle,
 	RETCODE	ret;
 
 	MYLOG(0, "Entering\n");
-	ret = PGAPI_CopyDesc(SourceDescHandle, TargetDescHandle);
+	ret = WD_CopyDesc(SourceDescHandle, TargetDescHandle);
 	return ret;
 }
 
@@ -173,14 +173,14 @@ SQLEndTran(SQLSMALLINT HandleType, SQLHANDLE Handle,
 	{
 		case SQL_HANDLE_ENV:
 			ENTER_ENV_CS((EnvironmentClass *) Handle);
-			ret = PGAPI_Transact(Handle, SQL_NULL_HDBC, CompletionType);
+			ret = WD_Transact(Handle, SQL_NULL_HDBC, CompletionType);
 			LEAVE_ENV_CS((EnvironmentClass *) Handle);
 			break;
 		case SQL_HANDLE_DBC:
 			CC_examine_global_transaction((ConnectionClass *) Handle);
 			ENTER_CONN_CS((ConnectionClass *) Handle);
 			CC_clear_error((ConnectionClass *) Handle);
-			ret = PGAPI_Transact(SQL_NULL_HENV, Handle, CompletionType);
+			ret = WD_Transact(SQL_NULL_HENV, Handle, CompletionType);
 			LEAVE_CONN_CS((ConnectionClass *) Handle);
 			break;
 		default:
@@ -228,7 +228,7 @@ MYLOG(0, "bookmark=" FORMAT_LEN " FetchOffset = " FORMAT_LEN "\n", FetchOffset, 
 	{
 		ARDFields	*opts = SC_get_ARDF(stmt);
 
-		ret = PGAPI_ExtendedFetch(StatementHandle, FetchOrientation, FetchOffset,
+		ret = WD_ExtendedFetch(StatementHandle, FetchOrientation, FetchOffset,
 				pcRow, rowStatusArray, bkmarkoff, opts->size_of_rowset);
 		stmt->transition_status = STMT_TRANSITION_FETCH_SCROLL;
 	}
@@ -252,10 +252,10 @@ SQLFreeHandle(SQLSMALLINT HandleType, SQLHANDLE Handle)
 	switch (HandleType)
 	{
 		case SQL_HANDLE_ENV:
-			ret = PGAPI_FreeEnv(Handle);
+			ret = WD_FreeEnv(Handle);
 			break;
 		case SQL_HANDLE_DBC:
-			ret = PGAPI_FreeConnect(Handle);
+			ret = WD_FreeConnect(Handle);
 			break;
 		case SQL_HANDLE_STMT:
 			stmt = (StatementClass *) Handle;
@@ -267,14 +267,14 @@ SQLFreeHandle(SQLSMALLINT HandleType, SQLHANDLE Handle)
 					ENTER_CONN_CS(conn);
 			}
 
-			ret = PGAPI_FreeStmt(Handle, SQL_DROP);
+			ret = WD_FreeStmt(Handle, SQL_DROP);
 
 			if (conn)
 				LEAVE_CONN_CS(conn);
 
 			break;
 		case SQL_HANDLE_DESC:
-			ret = PGAPI_FreeDesc(Handle);
+			ret = WD_FreeDesc(Handle);
 			break;
 		default:
 			ret = SQL_ERROR;
@@ -294,7 +294,7 @@ SQLGetDescField(SQLHDESC DescriptorHandle,
 	RETCODE	ret;
 
 	MYLOG(0, "Entering\n");
-	ret = PGAPI_GetDescField(DescriptorHandle, RecNumber, FieldIdentifier,
+	ret = WD_GetDescField(DescriptorHandle, RecNumber, FieldIdentifier,
 			Value, BufferLength, StringLength);
 	return ret;
 }
@@ -323,7 +323,7 @@ SQLGetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 	RETCODE	ret;
 
 	MYLOG(0, "Entering Handle=(%u,%p) Rec=%d Id=%d info=(%p,%d)\n", HandleType, Handle, RecNumber, DiagIdentifier, DiagInfo, BufferLength);
-	ret = PGAPI_GetDiagField(HandleType, Handle, RecNumber, DiagIdentifier,
+	ret = WD_GetDiagField(HandleType, Handle, RecNumber, DiagIdentifier,
 				DiagInfo, BufferLength, StringLength);
 	return ret;
 }
@@ -338,7 +338,7 @@ SQLGetDiagRec(SQLSMALLINT HandleType, SQLHANDLE Handle,
 	RETCODE	ret;
 
 	MYLOG(0, "Entering\n");
-	ret = PGAPI_GetDiagRec(HandleType, Handle, RecNumber, Sqlstate,
+	ret = WD_GetDiagRec(HandleType, Handle, RecNumber, Sqlstate,
 			NativeError, MessageText, BufferLength, TextLength);
 	return ret;
 }
@@ -391,7 +391,7 @@ SQLGetConnectAttr(HDBC ConnectionHandle,
 	CC_examine_global_transaction((ConnectionClass*) ConnectionHandle);
 	ENTER_CONN_CS((ConnectionClass *) ConnectionHandle);
 	CC_clear_error((ConnectionClass *) ConnectionHandle);
-	ret = PGAPI_GetConnectAttr(ConnectionHandle, Attribute,Value,
+	ret = WD_GetConnectAttr(ConnectionHandle, Attribute,Value,
 			BufferLength, StringLength);
 	LEAVE_CONN_CS((ConnectionClass *) ConnectionHandle);
 	return ret;
@@ -410,7 +410,7 @@ SQLGetStmtAttr(HSTMT StatementHandle,
 	ENTER_STMT_CS(stmt);
 	SC_clear_error(stmt);
 	StartRollbackState(stmt);
-	ret = PGAPI_GetStmtAttr(StatementHandle, Attribute, Value,
+	ret = WD_GetStmtAttr(StatementHandle, Attribute, Value,
 			BufferLength, StringLength);
 	ret = DiscardStatementSvp(stmt,ret, FALSE);
 	LEAVE_STMT_CS(stmt);
@@ -430,7 +430,7 @@ SQLSetConnectAttr(HDBC ConnectionHandle,
 	CC_examine_global_transaction(conn);
 	ENTER_CONN_CS(conn);
 	CC_clear_error(conn);
-	ret = PGAPI_SetConnectAttr(ConnectionHandle, Attribute, Value,
+	ret = WD_SetConnectAttr(ConnectionHandle, Attribute, Value,
 				  StringLength);
 	LEAVE_CONN_CS(conn);
 	return ret;
@@ -445,7 +445,7 @@ SQLSetDescField(SQLHDESC DescriptorHandle,
 	RETCODE		ret;
 
 	MYLOG(0, "Entering h=%p rec=%d field=%d val=%p\n", DescriptorHandle, RecNumber, FieldIdentifier, Value);
-	ret = PGAPI_SetDescField(DescriptorHandle, RecNumber, FieldIdentifier,
+	ret = WD_SetDescField(DescriptorHandle, RecNumber, FieldIdentifier,
 				Value, BufferLength);
 	return ret;
 }
@@ -539,7 +539,7 @@ SQLSetStmtAttr(HSTMT StatementHandle,
 	ENTER_STMT_CS(stmt);
 	SC_clear_error(stmt);
 	StartRollbackState(stmt);
-	ret = PGAPI_SetStmtAttr(StatementHandle, Attribute, Value, StringLength);
+	ret = WD_SetStmtAttr(StatementHandle, Attribute, Value, StringLength);
 	ret = DiscardStatementSvp(stmt,ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	return ret;
@@ -551,7 +551,7 @@ SQLSetStmtAttr(HSTMT StatementHandle,
 			|= (1 << ((uwAPI) & 0x000F)) \
 				)
 RETCODE		SQL_API
-PGAPI_GetFunctions30(HDBC hdbc, SQLUSMALLINT fFunction, SQLUSMALLINT FAR * pfExists)
+WD_GetFunctions30(HDBC hdbc, SQLUSMALLINT fFunction, SQLUSMALLINT FAR * pfExists)
 {
 	ConnectionClass	*conn = (ConnectionClass *) hdbc;
 	ConnInfo	*ci = &(conn->connInfo);
@@ -683,7 +683,7 @@ SQLBulkOperations(HSTMT hstmt, SQLSMALLINT operation)
 	MYLOG(0, "Entering Handle=%p %d\n", hstmt, operation);
 	SC_clear_error(stmt);
 	StartRollbackState(stmt);
-	ret = PGAPI_BulkOperations(hstmt, operation);
+	ret = WD_BulkOperations(hstmt, operation);
 	ret = DiscardStatementSvp(stmt,ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	return ret;

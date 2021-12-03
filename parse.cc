@@ -22,7 +22,7 @@
  */
 /* Multibyte support	Eiji Tokuya 2001-03-15 */
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -31,7 +31,7 @@
 #include "statement.h"
 #include "connection.h"
 #include "qresult.h"
-#include "pgtypes.h"
+#include "wdtypes.h"
 #include "pgapifunc.h"
 #include "catfunc.h"
 
@@ -56,10 +56,10 @@ Int4 FI_precision(const FIELD_INFO *fi)
 	ftype = FI_type(fi);
 	switch (ftype)
 	{
-		case PG_TYPE_NUMERIC:
+		case WD_TYPE_NUMERIC:
 			return fi->column_size;
-		case PG_TYPE_DATETIME:
-		case PG_TYPE_TIMESTAMP_NO_TMZONE:
+		case WD_TYPE_DATETIME:
+		case WD_TYPE_TIMESTAMP_NO_TMZONE:
 			return fi->decimal_digits;
 	}
 	return 0;
@@ -72,7 +72,7 @@ Int4 FI_scale(const FIELD_INFO *fi)
 	ftype = FI_type(fi);
 	switch (ftype)
 	{
-		case PG_TYPE_NUMERIC:
+		case WD_TYPE_NUMERIC:
 			return fi->decimal_digits;
 	}
 	return 0;
@@ -439,7 +439,7 @@ MYLOG(0, "Entering\n");
 				for (i = 0; i < num_tuples; i++)
 				{
 					if (QR_get_value_backend_int(res, i, COLUMNS_AUTO_INCREMENT, NULL) != 0&&
-					    QR_get_value_backend_int(res, i, COLUMNS_FIELD_TYPE, NULL) == PG_TYPE_INT4)
+					    QR_get_value_backend_int(res, i, COLUMNS_FIELD_TYPE, NULL) == WD_TYPE_INT4)
 					{
 						char		query[512];
 
@@ -456,7 +456,7 @@ MYLOG(0, "Entering\n");
 	else
 		return FALSE;
 
-	stmt->num_key_fields = PG_NUM_NORMAL_KEYS;
+	stmt->num_key_fields = WD_NUM_NORMAL_KEYS;
 	if (TI_has_subclass(ti))
 		keyFound = FALSE;
 	else if (TI_has_oids(ti))
@@ -481,13 +481,13 @@ static BOOL increaseNtab(StatementClass *stmt, const char *func)
 
 	if (!(stmt->ntab % TAB_INCR))
 	{
-		SC_REALLOC_return_with_error(ti, TABLE_INFO *, (stmt->ntab + TAB_INCR) * sizeof(TABLE_INFO *), stmt, "PGAPI_AllocStmt failed in parse_statement for TABLE_INFO", FALSE);
+		SC_REALLOC_return_with_error(ti, TABLE_INFO *, (stmt->ntab + TAB_INCR) * sizeof(TABLE_INFO *), stmt, "WD_AllocStmt failed in parse_statement for TABLE_INFO", FALSE);
 		stmt->ti = ti;
 	}
 	wti = ti[stmt->ntab] = (TABLE_INFO *) malloc(sizeof(TABLE_INFO));
 	if (wti == NULL)
 	{
-		SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "PGAPI_AllocStmt failed in parse_statement for TABLE_INFO(2).", func);
+		SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "WD_AllocStmt failed in parse_statement for TABLE_INFO(2).", func);
 		return FALSE;
 	}
 
@@ -580,13 +580,13 @@ static void xxxxx(StatementClass *stmt, FIELD_INFO *fi, QResultClass *res, int i
 	else if (fi->attnum > 0)
 	{
 		int	unknowns_as = 0;
-		int	type = pg_true_type(SC_get_conn(stmt), fi->columntype, fi->basetype);
+		int	type = WD_true_type(SC_get_conn(stmt), fi->columntype, fi->basetype);
 
 		fi->nullable = TRUE;	/* probably ? */
-		fi->column_size = pgtype_column_size(stmt, type, i, unknowns_as);
-		fi->length = pgtype_buffer_length(stmt, type, i, unknowns_as);
-		fi->decimal_digits = pgtype_decimal_digits(stmt, type, i);
-		fi->display_size = pgtype_display_size(stmt, type, i, unknowns_as);
+		fi->column_size = wdtype_column_size(stmt, type, i, unknowns_as);
+		fi->length = wdtype_buffer_length(stmt, type, i, unknowns_as);
+		fi->decimal_digits = wdtype_decimal_digits(stmt, type, i);
+		fi->display_size = wdtype_display_size(stmt, type, i, unknowns_as);
 	}
 
 	if (NAME_IS_NULL(fi->column_name))
@@ -755,7 +755,7 @@ COL_INFO **coli)
 			 * We also have to check as follows.
 			 */
 			SPRINTF_FIXED(token,
-					 "select nspname from pg_namespace n, pg_class c"
+					 "select nspname from WD_namespace n, WD_class c"
 					 " where c.relnamespace=n.oid and c.oid='%s'::regclass",
 					 identifierEscape((const SQLCHAR *) SAFE_NAME(table_name), SQL_NTS, conn, relcnv, sizeof(relcnv), TRUE));
 			res = CC_send_query(conn, token, NULL, READ_ONLY_QUERY, NULL);
@@ -798,32 +798,32 @@ getColumnsInfo(ConnectionClass *conn, TABLE_INFO *wti, OID greloid, StatementCla
 	StatementClass	*col_stmt;
 	QResultClass	*res;
 
-	MYLOG(0, "entering Getting PG_Columns for table %u(%s)\n", greloid, PRINT_NAME(wti->table_name));
+	MYLOG(0, "entering Getting WD_Columns for table %u(%s)\n", greloid, PRINT_NAME(wti->table_name));
 
 	if (NULL == conn)
 		conn = SC_get_conn(stmt);
-	result = PGAPI_AllocStmt(conn, &hcol_stmt, 0);
+	result = WD_AllocStmt(conn, &hcol_stmt, 0);
 	if (!SQL_SUCCEEDED(result))
 	{
 		if (stmt)
-			SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "PGAPI_AllocStmt failed in parse_statement for columns.", __FUNCTION__);
+			SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "WD_AllocStmt failed in parse_statement for columns.", __FUNCTION__);
 		goto cleanup;
 	}
 
 	col_stmt = (StatementClass *) hcol_stmt;
 
 	if (greloid)
-		result = PGAPI_Columns(hcol_stmt, NULL, 0,
+		result = WD_Columns(hcol_stmt, NULL, 0,
 				NULL, 0, NULL, 0, NULL, 0,
 				PODBC_SEARCH_BY_IDS, greloid, 0);
 	else
-		result = PGAPI_Columns(hcol_stmt, NULL, 0,
+		result = WD_Columns(hcol_stmt, NULL, 0,
 							   (SQLCHAR *) SAFE_NAME(wti->schema_name), SQL_NTS,
 							   (SQLCHAR *) SAFE_NAME(wti->table_name), SQL_NTS,
 							   NULL, 0,
 							   PODBC_NOT_SEARCH_PATTERN, 0, 0);
 
-	MYLOG(0, "        Past PG_Columns\n");
+	MYLOG(0, "        Past WD_Columns\n");
 	res = SC_get_ExecdOrParsed(col_stmt);
 	if (SQL_SUCCEEDED(result)
 		&& res != NULL && QR_get_num_cached_tuples(res) > 0)
@@ -856,7 +856,7 @@ getColumnsInfo(ConnectionClass *conn, TABLE_INFO *wti, OID greloid, StatementCla
 					continue;
 				if ((0 == tcoli->table_oid &&
 				    NAME_IS_NULL(tcoli->table_name)) ||
-				    strnicmp(SAFE_NAME(tcoli->schema_name), "pg_temp_", 8) == 0)
+				    strnicmp(SAFE_NAME(tcoli->schema_name), "WD_temp_", 8) == 0)
 				{
 					coli = tcoli;
 					coli_exist = TRUE;
@@ -897,7 +897,7 @@ getColumnsInfo(ConnectionClass *conn, TABLE_INFO *wti, OID greloid, StatementCla
 				if (!col_info)
 				{
 					if (stmt)
-						SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "PGAPI_AllocStmt failed in parse_statement for col_info.", __FUNCTION__);
+						SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "WD_AllocStmt failed in parse_statement for col_info.", __FUNCTION__);
 					goto cleanup;
 				}
 				conn->col_info = col_info;
@@ -910,7 +910,7 @@ getColumnsInfo(ConnectionClass *conn, TABLE_INFO *wti, OID greloid, StatementCla
 		if (!coli)
 		{
 			if (stmt)
-				SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "PGAPI_AllocStmt failed in parse_statement for col_info(2).", __FUNCTION__);
+				SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "WD_AllocStmt failed in parse_statement for col_info(2).", __FUNCTION__);
 			goto cleanup;
 		}
 		col_info_initialize(coli);
@@ -974,7 +974,7 @@ MYLOG(DETAIL_LOG_LEVEL, "oid item == %s\n", (const char *) QR_get_value_backend_
 	}
 cleanup:
 	if (hcol_stmt)
-		PGAPI_FreeStmt(hcol_stmt, SQL_DROP);
+		WD_FreeStmt(hcol_stmt, SQL_DROP);
 	return found;
 }
 
@@ -1117,22 +1117,22 @@ MYLOG(DETAIL_LOG_LEVEL, "entering fields=" FORMAT_SIZE_T " ntab=%d\n", nfields, 
 		char		keycolnam[MAX_INFO_STRING];
 		SQLLEN		keycollen;
 
-		ret = PGAPI_AllocStmt(conn, &pstmt, 0);
+		ret = WD_AllocStmt(conn, &pstmt, 0);
 		if (!SQL_SUCCEEDED(ret))
 			return ret;
 		oneti = ti[i];
-		ret = PGAPI_PrimaryKeys(pstmt, NULL, 0, NULL, 0, NULL, 0, oneti->table_oid);
+		ret = WD_PrimaryKeys(pstmt, NULL, 0, NULL, 0, NULL, 0, oneti->table_oid);
 		if (!SQL_SUCCEEDED(ret))
 			goto cleanup;
 #ifdef	UNICODE_SUPPORT
 		if (CC_is_in_unicode_driver(conn))
 			internal_asis_type = INTERNAL_ASIS_TYPE;
 #endif /* UNICODE_SUPPORT */
-		ret = PGAPI_BindCol(pstmt, 4, internal_asis_type, keycolnam, MAX_INFO_STRING, &keycollen);
+		ret = WD_BindCol(pstmt, 4, internal_asis_type, keycolnam, MAX_INFO_STRING, &keycollen);
 		if (!SQL_SUCCEEDED(ret))
 			goto cleanup;
 		contains_key = TRUE;
-		ret = PGAPI_Fetch(pstmt);
+		ret = WD_Fetch(pstmt);
 		while (SQL_SUCCEEDED(ret))
 		{
 			int	i;	// different from i of outer loop
@@ -1156,7 +1156,7 @@ MYLOG(DETAIL_LOG_LEVEL, "key %s found at %p\n", keycolnam, fi + i);
 				MYLOG(0, "%s not found\n", keycolnam);
 				break;
 			}
-			ret = PGAPI_Fetch(pstmt);
+			ret = WD_Fetch(pstmt);
 		}
 		if (SQL_SUCCEEDED(ret))
 			contains_key = FALSE;
@@ -1176,7 +1176,7 @@ MYLOG(DETAIL_LOG_LEVEL, "contains_key=%d\n", contains_key);
 	}
 cleanup:
 	if (pstmt)
-		PGAPI_FreeStmt(pstmt, SQL_DROP);
+		WD_FreeStmt(pstmt, SQL_DROP);
 	return ret;
 }
 
@@ -1520,7 +1520,7 @@ MYLOG(0, "blevel=%d btoken=%s in_dot=%d in_field=%d tbname=%s\n", blevel, btoken
 						if (!allocateFields(irdflds, new_size))
 						{
 							SC_set_parse_status(stmt, STMT_PARSE_FATAL);
-							SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "PGAPI_AllocStmt failed in parse_statement for FIELD_INFO.", func);
+							SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "WD_AllocStmt failed in parse_statement for FIELD_INFO.", func);
 							goto cleanup;
 						}
 						fi = irdflds->fi;
@@ -1535,7 +1535,7 @@ MYLOG(0, "blevel=%d btoken=%s in_dot=%d in_field=%d tbname=%s\n", blevel, btoken
 					if (NULL == wfi)
 					{
 						SC_set_parse_status(stmt, STMT_PARSE_FATAL);
-						SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "PGAPI_AllocStmt failed in parse_statement for FIELD_INFO(2).", func);
+						SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "WD_AllocStmt failed in parse_statement for FIELD_INFO(2).", func);
 						goto cleanup;
 					}
 
@@ -1883,13 +1883,13 @@ MYLOG(0, "blevel=%d btoken=%s in_dot=%d in_field=%d tbname=%s\n", blevel, btoken
 			wfi->ti = NULL;
 
 			/*
-			 * wfi->type = PG_TYPE_TEXT; wfi->column_size = 0; the
+			 * wfi->type = WD_TYPE_TEXT; wfi->column_size = 0; the
 			 * following may be better
 			 */
-			wfi->basetype = PG_TYPE_UNKNOWN;
+			wfi->basetype = WD_TYPE_UNKNOWN;
 			if (wfi->column_size == 0)
 			{
-				wfi->basetype = PG_TYPE_VARCHAR;
+				wfi->basetype = WD_TYPE_VARCHAR;
 				wfi->column_size = 254;
 			}
 			wfi->length = wfi->column_size;
@@ -1993,7 +1993,7 @@ MYLOG(0, "blevel=%d btoken=%s in_dot=%d in_field=%d tbname=%s\n", blevel, btoken
 		goto cleanup;
 	}
 
-	MYLOG(0, "Done PG_Columns\n");
+	MYLOG(0, "Done WD_Columns\n");
 
 	/*
 	 * Now resolve the fields to point to column info

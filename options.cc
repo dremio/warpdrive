@@ -13,7 +13,7 @@
  *--------
  */
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 #include "unicode_support.h"
 #include <string.h>
 
@@ -294,11 +294,11 @@ set_statement_option(ConnectionClass *conn,
 
 /* Implements only SQL_AUTOCOMMIT */
 RETCODE		SQL_API
-PGAPI_SetConnectOption(HDBC hdbc,
+WD_SetConnectOption(HDBC hdbc,
 					   SQLUSMALLINT fOption,
 					   SQLULEN vParam)
 {
-	CSTR func = "PGAPI_SetConnectOption";
+	CSTR func = "WD_SetConnectOption";
 	ConnectionClass *conn = (ConnectionClass *) hdbc;
 	char		changed = FALSE;
 	RETCODE		retval;
@@ -479,13 +479,13 @@ PGAPI_SetConnectOption(HDBC hdbc,
 
 /* This function just can tell you whether you are in Autcommit mode or not */
 RETCODE		SQL_API
-PGAPI_GetConnectOption(HDBC hdbc,
+WD_GetConnectOption(HDBC hdbc,
 					   SQLUSMALLINT fOption,
 					   PTR pvParam,
 					   SQLINTEGER *StringLength,
 					   SQLINTEGER BufferLength)
 {
-	CSTR func = "PGAPI_GetConnectOption";
+	CSTR func = "WD_GetConnectOption";
 	ConnectionClass *conn = (ConnectionClass *) hdbc;
 	const char	*p = NULL;
 	SQLLEN		len = sizeof(SQLINTEGER);
@@ -607,11 +607,11 @@ PGAPI_GetConnectOption(HDBC hdbc,
 
 
 RETCODE		SQL_API
-PGAPI_SetStmtOption(HSTMT hstmt,
+WD_SetStmtOption(HSTMT hstmt,
 					SQLUSMALLINT fOption,
 					SQLULEN vParam)
 {
-	CSTR func = "PGAPI_SetStmtOption";
+	CSTR func = "WD_SetStmtOption";
 	StatementClass *stmt = (StatementClass *) hstmt;
 	RETCODE	retval;
 
@@ -635,13 +635,13 @@ PGAPI_SetStmtOption(HSTMT hstmt,
 
 
 RETCODE		SQL_API
-PGAPI_GetStmtOption(HSTMT hstmt,
+WD_GetStmtOption(HSTMT hstmt,
 					SQLUSMALLINT fOption,
 					PTR pvParam,
 					SQLINTEGER *StringLength,
 					SQLINTEGER BufferLength)
 {
-	CSTR func = "PGAPI_GetStmtOption";
+	CSTR func = "WD_GetStmtOption";
 	StatementClass *stmt = (StatementClass *) hstmt;
 	QResultClass *res;
 	SQLLEN		ridx;

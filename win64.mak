@@ -67,8 +67,8 @@ CUSTOMCLOPT=$(CUSTOMCLOPT) /MDd
 CUSTOMLINKLIBS=
 
 # Print the paths that will be used in the build
-!MESSAGE Using PostgreSQL Include directory: $(PG_INC)
-!MESSAGE Using PostgreSQL Library directory: $(PG_LIB)
+!MESSAGE Using PostgreSQL Include directory: $(WD_INC)
+!MESSAGE Using PostgreSQL Library directory: $(WD_LIB)
 
 !IF "$(ANSI_VERSION)" == "yes"
 DTCLIB = pgenlista
@@ -104,8 +104,8 @@ RSC_DEFINES = $(RSC_DEFINES) /D "UNICODE_SUPPORT"
 ADD_DEFINES = $(ADD_DEFINES) /Wp64
 !ENDIF
 
-!IF "$(PG_INC)" != ""
-INC_OPT = $(INC_OPT) /I "$(PG_INC)" /I "$(PG_INC)\internal"
+!IF "$(WD_INC)" != ""
+INC_OPT = $(INC_OPT) /I "$(WD_INC)" /I "$(WD_INC)\internal"
 !ENDIF
 !IF "$(ADD_INC)" != ""
 INC_OPT = $(INC_OPT) /I "$(ADD_INC)"
@@ -222,8 +222,8 @@ LINK32_FLAGS=$(LINK32_FLAGS)
 LINK32_FLAGS=$(LINK32_FLAGS) /debug /pdbtype:sept
 !ENDIF
 LINK32_FLAGS=$(LINK32_FLAGS) $(VC07_DELAY_LOAD)
-!IF "$(PG_LIB)" != ""
-LINK32_FLAGS=$(LINK32_FLAGS) /libpath:"$(PG_LIB)"
+!IF "$(WD_LIB)" != ""
+LINK32_FLAGS=$(LINK32_FLAGS) /libpath:"$(WD_LIB)"
 !ENDIF
 
 LINK32_OBJS= \
@@ -244,7 +244,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\multibyte.obj" \
 	"$(INTDIR)\options.obj" \
 	"$(INTDIR)\parse.obj" \
-	"$(INTDIR)\pgtypes.obj" \
+	"$(INTDIR)\wdtypes.obj" \
 	"$(INTDIR)\psqlodbc.obj" \
 	"$(INTDIR)\qresult.obj" \
 	"$(INTDIR)\results.obj" \

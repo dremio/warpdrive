@@ -9,7 +9,7 @@
 #ifndef __DESCRIPTOR_H__
 #define __DESCRIPTOR_H__
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 
 typedef struct InheritanceClass
 {
@@ -111,7 +111,7 @@ typedef struct DescriptorHeader_
 	UInt4	error_index;	/* 1-based index */
 	Int4	__error_number;
 	char	*__error_message;
-	PG_ErrorInfo	*pgerror;
+	WD_ErrorInfo	*pgerror;
 } DescriptorHeader;
 
 /*
@@ -217,7 +217,7 @@ RETCODE	DC_set_stmt(DescriptorClass *desc, StatementClass *stmt);
 void	DC_clear_error(DescriptorClass *desc);
 void	DC_set_error(DescriptorClass *desc, int errornumber, const char * errormsg);
 void	DC_set_errormsg(DescriptorClass *desc, const char * errormsg);
-PG_ErrorInfo *DC_get_error(DescriptorClass *self);
+WD_ErrorInfo *DC_get_error(DescriptorClass *self);
 int	DC_get_errornumber(const DescriptorClass *self);
 const char *DC_get_errormsg(const DescriptorClass *self);
 void	DC_log_error(const char *func, const char *desc, const DescriptorClass *self);

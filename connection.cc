@@ -77,12 +77,12 @@ static void CC_set_error_if_not_set(ConnectionClass *self, int errornumber, cons
 }
 
 RETCODE		SQL_API
-PGAPI_AllocConnect(HENV henv,
+WD_AllocConnect(HENV henv,
 				   HDBC * phdbc)
 {
 	EnvironmentClass *env = (EnvironmentClass *) henv;
 	ConnectionClass *conn;
-	CSTR func = "PGAPI_AllocConnect";
+	CSTR func = "WD_AllocConnect";
 
 	MYLOG(0, "entering...\n");
 
@@ -116,7 +116,7 @@ PGAPI_AllocConnect(HENV henv,
 
 
 RETCODE		SQL_API
-PGAPI_Connect(HDBC hdbc,
+WD_Connect(HDBC hdbc,
 			  const SQLCHAR * szDSN,
 			  SQLSMALLINT cbDSN,
 			  const SQLCHAR * szUID,
@@ -126,7 +126,7 @@ PGAPI_Connect(HDBC hdbc,
 {
 	ConnectionClass *conn = (ConnectionClass *) hdbc;
 	ConnInfo   *ci;
-	CSTR func = "PGAPI_Connect";
+	CSTR func = "WD_Connect";
 	RETCODE	ret = SQL_SUCCESS;
 	char	fchar, *tmpstr;
 
@@ -147,8 +147,8 @@ PGAPI_Connect(HDBC hdbc,
 	getDSNinfo(ci, NULL);
 
 	logs_on_off(1, ci->drivers.debug, ci->drivers.commlog);
-	/* initialize pg_version from connInfo.protocol    */
-	CC_initialize_pg_version(conn);
+	/* initialize WD_version from connInfo.protocol    */
+	CC_initialize_WD_version(conn);
 
 	/*
 	 * override values from DSN info with UID and authStr(pwd) This only
@@ -184,14 +184,14 @@ PGAPI_Connect(HDBC hdbc,
 
 
 RETCODE		SQL_API
-PGAPI_BrowseConnect(HDBC hdbc,
+WD_BrowseConnect(HDBC hdbc,
 					const SQLCHAR * szConnStrIn,
 					SQLSMALLINT cbConnStrIn,
 					SQLCHAR * szConnStrOut,
 					SQLSMALLINT cbConnStrOutMax,
 					SQLSMALLINT * pcbConnStrOut)
 {
-	CSTR func = "PGAPI_BrowseConnect";
+	CSTR func = "WD_BrowseConnect";
 	ConnectionClass *conn = (ConnectionClass *) hdbc;
 
 	MYLOG(0, "entering...\n");
@@ -203,10 +203,10 @@ PGAPI_BrowseConnect(HDBC hdbc,
 
 /* Drop any hstmts open on hdbc and disconnect from database */
 RETCODE		SQL_API
-PGAPI_Disconnect(HDBC hdbc)
+WD_Disconnect(HDBC hdbc)
 {
 	ConnectionClass *conn = (ConnectionClass *) hdbc;
-	CSTR func = "PGAPI_Disconnect";
+	CSTR func = "WD_Disconnect";
 
 
 	MYLOG(0, "entering...\n");
@@ -237,10 +237,10 @@ PGAPI_Disconnect(HDBC hdbc)
 
 
 RETCODE		SQL_API
-PGAPI_FreeConnect(HDBC hdbc)
+WD_FreeConnect(HDBC hdbc)
 {
 	ConnectionClass *conn = (ConnectionClass *) hdbc;
-	CSTR func = "PGAPI_FreeConnect";
+	CSTR func = "WD_FreeConnect";
 	EnvironmentClass *env;
 
 	MYLOG(0, "entering...hdbc=%p\n", hdbc);
@@ -323,7 +323,7 @@ CC_initialize(ConnectionClass *rv, BOOL lockinit)
 
 	rv->num_descs = STMT_INCREMENT;
 
-	rv->lobj_type = PG_TYPE_LO_UNDEFINED;
+	rv->lobj_type = WD_TYPE_LO_UNDEFINED;
 	if (isMsAccess())
 		rv->ms_jet = 1;
 	rv->isolation = 0; // means initially unknown server's default isolation
@@ -611,14 +611,14 @@ CC_set_client_encoding(ConnectionClass *self, const char * encoding)
 	if (encoding)
 	{
 		self->original_client_encoding = strdup(encoding);
-		self->ccsc = pg_CS_code(encoding);
+		self->ccsc = WD_CS_code(encoding);
 	}
 	else
 	{
 		self->original_client_encoding = NULL;
 		self->ccsc = SQL_ASCII;
 	}
-	self->mb_maxbyte_per_char = pg_mb_maxlen(self->ccsc);
+	self->mb_maxbyte_per_char = WD_mb_maxlen(self->ccsc);
 	if (currenc)
 		free(currenc);
 }
@@ -796,8 +796,8 @@ CC_set_translation(ConnectionClass *self)
 	return TRUE;
 }
 
-#ifndef PG_DIAG_SEVERITY_NONLOCALIZED
-#define PG_DIAG_SEVERITY_NONLOCALIZED 'V'
+#ifndef WD_DIAG_SEVERITY_NONLOCALIZED
+#define WD_DIAG_SEVERITY_NONLOCALIZED 'V'
 #endif
 
 void
@@ -828,7 +828,7 @@ handle_pgres_error(ConnectionClass *self, const PGresult *pgres,
 
 	MYLOG(DETAIL_LOG_LEVEL, "entering\n");
 
-	sqlstate = PQresultErrorField(pgres, PG_DIAG_SQLSTATE);
+	sqlstate = PQresultErrorField(pgres, WD_DIAG_SQLSTATE);
 	if (res && pgres)
 	{
 		if (sqlstate)
@@ -857,11 +857,11 @@ handle_pgres_error(ConnectionClass *self, const PGresult *pgres,
 	 * more user-friendly, but for now, construct a message with
 	 * severity and primary message, which is backwards compatible.
 	 */
-	errseverity = PQresultErrorField(pgres, PG_DIAG_SEVERITY);
-	if (PG_VERSION_GE(self, 9.6))
+	errseverity = PQresultErrorField(pgres, WD_DIAG_SEVERITY);
+	if (WD_VERSION_GE(self, 9.6))
 	{
-		errseverity_nonloc = PQresultErrorField(pgres, PG_DIAG_SEVERITY_NONLOCALIZED);
-		MYLOG(0, "PG_DIAG_SEVERITY_NONLOCALIZED=%s\n", SAFE_STR(errseverity_nonloc));
+		errseverity_nonloc = PQresultErrorField(pgres, WD_DIAG_SEVERITY_NONLOCALIZED);
+		MYLOG(0, "WD_DIAG_SEVERITY_NONLOCALIZED=%s\n", SAFE_STR(errseverity_nonloc));
 	}
 	if (!error_not_a_notice)
 	{
@@ -876,7 +876,7 @@ handle_pgres_error(ConnectionClass *self, const PGresult *pgres,
 				level = 1;
 		}
 	}
-	errprimary = PQresultErrorField(pgres, PG_DIAG_MESSAGE_PRIMARY);
+	errprimary = PQresultErrorField(pgres, WD_DIAG_MESSAGE_PRIMARY);
 	if (errseverity_nonloc)
 		QLOG(level, "\t%s(%s) %s '%s'\n", errseverity_nonloc, SAFE_STR(errseverity), SAFE_STR(sqlstate), SAFE_STR(errprimary));
 	else
@@ -892,15 +892,15 @@ handle_pgres_error(ConnectionClass *self, const PGresult *pgres,
 	}
 	else if (display_error_level > 0)
 	{
-		errdetail = PQresultErrorField(pgres, PG_DIAG_MESSAGE_DETAIL);
-		errhint = PQresultErrorField(pgres, PG_DIAG_MESSAGE_HINT);
-		errstatementposition = PQresultErrorField(pgres, PG_DIAG_STATEMENT_POSITION);
-		errinternalquery = PQresultErrorField(pgres, PG_DIAG_INTERNAL_POSITION);
-		errcontext = PQresultErrorField(pgres, PG_DIAG_CONTEXT);
-		errschemaname = PQresultErrorField(pgres, PG_DIAG_SCHEMA_NAME);
-		errtablename = PQresultErrorField(pgres, PG_DIAG_TABLE_NAME);
-		errcolumnname = PQresultErrorField(pgres, PG_DIAG_COLUMN_NAME);
-		errdatatypename = PQresultErrorField(pgres, PG_DIAG_DATATYPE_NAME);
+		errdetail = PQresultErrorField(pgres, WD_DIAG_MESSAGE_DETAIL);
+		errhint = PQresultErrorField(pgres, WD_DIAG_MESSAGE_HINT);
+		errstatementposition = PQresultErrorField(pgres, WD_DIAG_STATEMENT_POSITION);
+		errinternalquery = PQresultErrorField(pgres, WD_DIAG_INTERNAL_POSITION);
+		errcontext = PQresultErrorField(pgres, WD_DIAG_CONTEXT);
+		errschemaname = PQresultErrorField(pgres, WD_DIAG_SCHEMA_NAME);
+		errtablename = PQresultErrorField(pgres, WD_DIAG_TABLE_NAME);
+		errcolumnname = PQresultErrorField(pgres, WD_DIAG_COLUMN_NAME);
+		errdatatypename = PQresultErrorField(pgres, WD_DIAG_DATATYPE_NAME);
 	}
 	initPQExpBuffer(&errbuf);
 	if (errseverity && errprimary)
@@ -1859,7 +1859,7 @@ CC_send_query_append(ConnectionClass *self, const char *query, QueryInfo *qi, UD
 	consider_rollback = (issue_begin || (CC_is_in_trans(self) && !CC_is_in_error_trans(self)) || strnicmp(query, "begin", 5) == 0);
 	if (rollback_on_error)
 		rollback_on_error = consider_rollback;
-	query_rollback = (rollback_on_error && !end_with_commit && PG_VERSION_GE(self, 8.0));
+	query_rollback = (rollback_on_error && !end_with_commit && WD_VERSION_GE(self, 8.0));
 	if (!query_rollback && consider_rollback && !end_with_commit)
 	{
 		if (stmt)
@@ -2407,7 +2407,7 @@ CC_send_function(ConnectionClass *self, const char *fn_name, void *result_buf, i
 #define	return DONT_CALL_RETURN_FROM_HERE???
 	ENTER_INNER_CONN_CS(self, func_cs_count);
 
-	SPRINTF_FIXED(sqlbuffer, "SELECT pg_catalog.%s%s", fn_name,
+	SPRINTF_FIXED(sqlbuffer, "SELECT WD_catalog.%s%s", fn_name,
 			 func_param_str[nargs]);
 	for (i = 0; i < nargs; ++i)
 	{
@@ -2415,7 +2415,7 @@ CC_send_function(ConnectionClass *self, const char *fn_name, void *result_buf, i
 		/* integers are sent as binary, others as text */
 		if (args[i].isint == 2)
 		{
-			paramTypes[i] = PG_TYPE_INT8;
+			paramTypes[i] = WD_TYPE_INT8;
 			int8ParamBufs[i] = odbc_hton64(args[i].u.integer64);
 			paramValues[i] = (char *) &int8ParamBufs[i];
 			paramLengths[i] = 8;
@@ -2423,7 +2423,7 @@ CC_send_function(ConnectionClass *self, const char *fn_name, void *result_buf, i
 		}
 		else if (args[i].isint)
 		{
-			paramTypes[i] = PG_TYPE_INT4;
+			paramTypes[i] = WD_TYPE_INT4;
 			intParamBufs[i] = htonl(args[i].u.integer);
 			paramValues[i] = (char *) &intParamBufs[i];
 			paramLengths[i] = 4;
@@ -2519,7 +2519,7 @@ CC_send_settings(ConnectionClass *self, const char *set_query)
  *	has not transitioned to "connected" yet.
  */
 
-	result = PGAPI_AllocStmt(self, &hstmt, 0);
+	result = WD_AllocStmt(self, &hstmt, 0);
 	if (!SQL_SUCCEEDED(result))
 		return FALSE;
 
@@ -2539,7 +2539,7 @@ CC_send_settings(ConnectionClass *self, const char *set_query)
 #endif /* HAVE_STRTOK_R */
 	while (ptr)
 	{
-		result = PGAPI_ExecDirect(hstmt, (SQLCHAR *) ptr, SQL_NTS, 0);
+		result = WD_ExecDirect(hstmt, (SQLCHAR *) ptr, SQL_NTS, 0);
 		if (!SQL_SUCCEEDED(result))
 			status = FALSE;
 
@@ -2553,7 +2553,7 @@ CC_send_settings(ConnectionClass *self, const char *set_query)
 	}
 	free(cs);
 
-	PGAPI_FreeStmt(hstmt, SQL_DROP);
+	WD_FreeStmt(hstmt, SQL_DROP);
 
 	return status;
 }
@@ -2562,7 +2562,7 @@ CC_send_settings(ConnectionClass *self, const char *set_query)
 /*
  *	This function is just a hack to get the oid of our Large Object oid type.
  *	If a real Large Object oid type is made part of Postgres, this function
- *	will go away and the define 'PG_TYPE_LO' will be updated.
+ *	will go away and the define 'WD_TYPE_LO' will be updated.
  */
 static SQLRETURN
 CC_lookup_lo(ConnectionClass *self)
@@ -2572,7 +2572,7 @@ CC_lookup_lo(ConnectionClass *self)
 
 	MYLOG(0, "entering...\n");
 
-	res = CC_send_query(self, "select oid, typbasetype from pg_type where typname = '"  PG_TYPE_LO_NAME "'",
+	res = CC_send_query(self, "select oid, typbasetype from WD_type where typname = '"  WD_TYPE_LO_NAME "'",
 		NULL, READ_ONLY_QUERY, NULL);
 
 	if (!QR_command_maybe_successful(res))
@@ -2583,7 +2583,7 @@ CC_lookup_lo(ConnectionClass *self)
 
 		self->lobj_type = QR_get_value_backend_int(res, 0, 0, NULL);
 		basetype = QR_get_value_backend_int(res, 0, 1, NULL);
-		if (PG_TYPE_OID == basetype)
+		if (WD_TYPE_OID == basetype)
 			self->lo_is_domain = 1;
 		else if (0 != basetype)
 			self->lobj_type = 0;
@@ -2600,11 +2600,11 @@ CC_lookup_lo(ConnectionClass *self)
  *	h-inoue 01-2-2001
  */
 void
-CC_initialize_pg_version(ConnectionClass *self)
+CC_initialize_WD_version(ConnectionClass *self)
 {
-	STRCPY_FIXED(self->pg_version, "7.4");
-	self->pg_version_major = 7;
-	self->pg_version_minor = 4;
+	STRCPY_FIXED(self->WD_version, "7.4");
+	self->WD_version_major = 7;
+	self->WD_version_minor = 4;
 }
 
 
@@ -2919,11 +2919,11 @@ MYLOG(DETAIL_LOG_LEVEL, "status=%d\n", pqret);
 	MYLOG(0, "protocol=%d\n", pversion);
 
 	pversion = PQserverVersion(pqconn);
-	self->pg_version_major = pversion / 10000;
-	self->pg_version_minor = (pversion % 10000) / 100;
-	SPRINTF_FIXED(self->pg_version, "%d.%d.%d",  self->pg_version_major, self->pg_version_minor, pversion % 100);
+	self->WD_version_major = pversion / 10000;
+	self->WD_version_minor = (pversion % 10000) / 100;
+	SPRINTF_FIXED(self->WD_version, "%d.%d.%d",  self->WD_version_major, self->WD_version_minor, pversion % 100);
 
-	MYLOG(0, "Server version=%s\n", self->pg_version);
+	MYLOG(0, "Server version=%s\n", self->WD_version);
 
 	if (!CC_get_username(self)[0])
 	{
@@ -3429,7 +3429,7 @@ DLL_DECLARE void PgDtc_free_connect(void *self)
 {
 	ConnectionClass *conn = (ConnectionClass *) self;
 
-	PGAPI_FreeConnect(conn);
+	WD_FreeConnect(conn);
 }
 
 DLL_DECLARE BOOL PgDtc_one_phase_operation(void *self, int operation)
@@ -3530,7 +3530,7 @@ PgDtc_isolate(void *self, DWORD option)
 		CC_initialize(sconn, FALSE);
 		if (!disposingConn)
 			CC_copy_conninfo(&sconn->connInfo, &newconn->connInfo);
-		CC_initialize_pg_version(sconn);
+		CC_initialize_WD_version(sconn);
 		sconn->henv = henv;
 		newconn->henv = NULL;
 		SYNC_AUTOCOMMIT(sconn);
@@ -3539,7 +3539,7 @@ PgDtc_isolate(void *self, DWORD option)
 	newconn = CC_Constructor();
 	if (!newconn) return NULL;
 	CC_copy_conninfo(&newconn->connInfo, &sconn->connInfo);
-	CC_initialize_pg_version(newconn);
+	CC_initialize_WD_version(newconn);
 	newconn->asdum = sconn->asdum;
 	newconn->gTranInfo = sconn->gTranInfo;
 	CC_set_dtc_isolated(newconn);
@@ -3560,7 +3560,7 @@ CC_set_transact(ConnectionClass *self, UInt4 isolation)
 	QResultClass *res;
 	BOOL	bShow = FALSE;
 
-	if (PG_VERSION_LT(self, 8.0) &&
+	if (WD_VERSION_LT(self, 8.0) &&
 		(isolation == SQL_TXN_READ_UNCOMMITTED ||
 		 isolation == SQL_TXN_REPEATABLE_READ))
 	{

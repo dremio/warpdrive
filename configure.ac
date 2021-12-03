@@ -154,7 +154,7 @@ SQLRETURN SQL_API SQLColAttribute(SQLHSTMT StatementHandle,
 # Whether libpq functionalities are used
 #
 AC_ARG_WITH(libpq, [  --with-libpq[[=DIR]]	  DIR is the PostgreSQL base install
-			  directory or the path to pg_config],
+			  directory or the path to WD_config],
 [], [with_libpq=yes])
 
 if test "$with_libpq" = no; then
@@ -168,9 +168,9 @@ if test "$with_libpq" != yes; then
 		LDFLAGS="$LDFLAGS -L$with_libpq/lib"
 	else
 		if test -x "$with_libpq"; then
-			PG_CONFIG=$with_libpq
+			WD_CONFIG=$with_libpq
 		else
-			AC_MSG_ERROR([specified pg_config not found])
+			AC_MSG_ERROR([specified WD_config not found])
 		fi
 	fi
 fi
@@ -190,16 +190,16 @@ PGAC_ARG_BOOL(enable, pthreads, yes,
 # Find libpq headers and libraries
 #
 
-if test -z "$PG_CONFIG"; then
-  AC_PATH_PROGS(PG_CONFIG, pg_config)
+if test -z "$WD_CONFIG"; then
+  AC_PATH_PROGS(WD_CONFIG, WD_config)
 fi
 
-if test -n "$PG_CONFIG"; then
-  pg_includedir=`"$PG_CONFIG" --includedir`
-  pg_pkg_includedir=`"$PG_CONFIG" --pkgincludedir`
-  pg_libdir=`"$PG_CONFIG" --libdir`
-  CPPFLAGS="$CPPFLAGS -I$pg_includedir -I$pg_pkg_includedir/internal"
-  LDFLAGS="$LDFLAGS -L$pg_libdir"
+if test -n "$WD_CONFIG"; then
+  WD_includedir=`"$WD_CONFIG" --includedir`
+  WD_pkg_includedir=`"$WD_CONFIG" --pkgincludedir`
+  WD_libdir=`"$WD_CONFIG" --libdir`
+  CPPFLAGS="$CPPFLAGS -I$WD_includedir -I$WD_pkg_includedir/internal"
+  LDFLAGS="$LDFLAGS -L$WD_libdir"
 fi
 
 
@@ -266,11 +266,11 @@ if test "$enable_pthreads" = yes; then
   if test x"$ac_cv_func_pthread_mutexattr_settype" = xyes; then
     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]],
                  [[int i = PTHREAD_MUTEX_RECURSIVE;]])],
-                 [AC_DEFINE(PG_RECURSIVE_MUTEXATTR, PTHREAD_MUTEX_RECURSIVE,
+                 [AC_DEFINE(WD_RECURSIVE_MUTEXATTR, PTHREAD_MUTEX_RECURSIVE,
                             [Define if you have PTHREAD_MUTEX_RECURSIVE])],
                  [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]],
 		                 [[int i = PTHREAD_MUTEX_RECURSIVE_NP;]])],
-		                 [AC_DEFINE(PG_RECURSIVE_MUTEXATTR, PTHREAD_MUTEX_RECURSIVE_NP,
+		                 [AC_DEFINE(WD_RECURSIVE_MUTEXATTR, PTHREAD_MUTEX_RECURSIVE_NP,
                                             [Define if you have PTHREAD_MUTEX_RECURSIVE_NP])])])
   fi
 fi

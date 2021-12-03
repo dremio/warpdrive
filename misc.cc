@@ -12,7 +12,7 @@
  *-------
  */
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 #include "misc.h"
 
 #include <stdio.h>

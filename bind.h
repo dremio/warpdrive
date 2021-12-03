@@ -9,7 +9,7 @@
 #ifndef __BIND_H__
 #define __BIND_H__
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 #include "descriptor.h"
 
 /*
@@ -78,7 +78,7 @@ struct ParameterImplClass_
 	pgNAME		paramName;	/* this is unavailable even in 8.1 */
 	SQLSMALLINT	paramType;
 	SQLSMALLINT	SQLType;
-	OID		PGType;
+	OID		wdtype;
 	SQLULEN		column_size;
 	SQLSMALLINT	decimal_digits;
 	SQLSMALLINT	precision;	/* the precision for numeric or timestamp type */
@@ -105,10 +105,10 @@ typedef struct
 	(book->buffer + offset + \
 	(bind_size > 0 ? bind_size : (SQL_C_VARBOOKMARK == book->returntype ? book->buflen : sizeof(UInt4))) * index)
 
-/* Macros to handle pgtype of parameters */
-#define	PIC_get_pgtype(pari) ((pari).PGType)
-#define	PIC_set_pgtype(pari, type) ((pari).PGType = (type))
-#define	PIC_dsp_pgtype(conn, pari) ((pari).PGType ? (pari).PGType : sqltype_to_pgtype(conn, (pari).SQLType))
+/* Macros to handle wdtype of parameters */
+#define	PIC_get_wdtype(pari) ((pari).wdtype)
+#define	PIC_set_wdtype(pari, type) ((pari).wdtype = (type))
+#define	PIC_dsp_wdtype(conn, pari) ((pari).wdtype ? (pari).wdtype : sqltype_to_wdtype(conn, (pari).SQLType))
 
 void	extend_column_bindings(ARDFields *opts, int num_columns);
 void	reset_a_column_binding(ARDFields *opts, int icol);

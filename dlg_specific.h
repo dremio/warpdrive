@@ -9,7 +9,7 @@
 #ifndef __DLG_SPECIFIC_H__
 #define __DLG_SPECIFIC_H__
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 
 #ifdef WIN32
 #include  <windowsx.h>

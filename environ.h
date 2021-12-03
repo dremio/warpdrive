@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 
 #if defined (POSIX_MULTITHREAD_SUPPORT)
 #include <pthread.h>

@@ -13,7 +13,7 @@
  */
 
 #define	_MYLOG_FUNCS_IMPLEMENT_
-#include "psqlodbc.h"
+#include "wdodbc.h"
 #include "dlg_specific.h"
 #include "misc.h"
 
@@ -40,16 +40,16 @@
 
 #ifdef WIN32
 #define DIRSEPARATOR		"\\"
-#define PG_BINARY			O_BINARY
-#define PG_BINARY_R			"rb"
-#define PG_BINARY_W			"wb"
-#define PG_BINARY_A			"ab"
+#define WD_BINARY			O_BINARY
+#define WD_BINARY_R			"rb"
+#define WD_BINARY_W			"wb"
+#define WD_BINARY_A			"ab"
 #else
 #define DIRSEPARATOR		"/"
-#define PG_BINARY			0
-#define PG_BINARY_R			"r"
-#define PG_BINARY_W			"w"
-#define PG_BINARY_A			"a"
+#define WD_BINARY			0
+#define WD_BINARY_R			"r"
+#define WD_BINARY_W			"w"
+#define WD_BINARY_A			"a"
 #endif /* WIN32 */
 
 
@@ -292,7 +292,7 @@ static void MLOG_open()
 	if (MLOGFP) return;
 
 	generate_filename(logdir ? logdir : MYLOGDIR, MYLOGFILE, filebuf, sizeof(filebuf));
-	MLOGFP = fopen(filebuf, PG_BINARY_A);
+	MLOGFP = fopen(filebuf, WD_BINARY_A);
 	if (!MLOGFP)
 	{
 		int lasterror = GENERAL_ERRNO;
@@ -300,7 +300,7 @@ static void MLOG_open()
 		open_error = TRUE;
 		SPRINTF_FIXED(errbuf, "%s open error %d\n", filebuf, lasterror);
 		generate_homefile(MYLOGFILE, filebuf, sizeof(filebuf));
-		MLOGFP = fopen(filebuf, PG_BINARY_A);
+		MLOGFP = fopen(filebuf, WD_BINARY_A);
 	}
 	if (MLOGFP)
 	{
@@ -421,11 +421,11 @@ qlog_misc(unsigned int option, const char *fmt, va_list args)
 	if (!QLOGFP)
 	{
 		generate_filename(logdir ? logdir : QLOGDIR, QLOGFILE, filebuf, sizeof(filebuf));
-		QLOGFP = fopen(filebuf, PG_BINARY_A);
+		QLOGFP = fopen(filebuf, WD_BINARY_A);
 		if (!QLOGFP)
 		{
 			generate_homefile(QLOGFILE, filebuf, sizeof(filebuf));
-			QLOGFP = fopen(filebuf, PG_BINARY_A);
+			QLOGFP = fopen(filebuf, WD_BINARY_A);
 		}
 		if (!QLOGFP)
 			qlog_on = 0;

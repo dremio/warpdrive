@@ -9,7 +9,7 @@
 #ifndef __CONNECTION_H__
 #define __CONNECTION_H__
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 #include <libpq-fe.h>
 #include "pqexpbuffer.h"
 
@@ -206,13 +206,13 @@ do { \
  *		3rd parameter: minor version number
  */
 #define SERVER_VERSION_GT(conn, major, minor) \
-	((conn)->pg_version_major > major || \
-	((conn)->pg_version_major == major && (conn)->pg_version_minor > minor))
+	((conn)->WD_version_major > major || \
+	((conn)->WD_version_major == major && (conn)->WD_version_minor > minor))
 #define SERVER_VERSION_GE(conn, major, minor) \
-	((conn)->pg_version_major > major || \
-	((conn)->pg_version_major == major && (conn)->pg_version_minor >= minor))
+	((conn)->WD_version_major > major || \
+	((conn)->WD_version_major == major && (conn)->WD_version_minor >= minor))
 #define SERVER_VERSION_EQ(conn, major, minor) \
-	((conn)->pg_version_major == major && (conn)->pg_version_minor == minor)
+	((conn)->WD_version_major == major && (conn)->WD_version_minor == minor)
 #define STRING_AFTER_DOT(string)	(strchr(#string, '.') + 1)
 
 /*
@@ -221,14 +221,14 @@ do { \
  *	Note: Never pass a variable as the second parameter.
  *		  It must be a decimal constant of the form %d.%d .
  */
-#define PG_VERSION_GT(conn, ver) \
+#define WD_VERSION_GT(conn, ver) \
  (SERVER_VERSION_GT(conn, (int) ver, atoi(STRING_AFTER_DOT(ver))))
-#define PG_VERSION_GE(conn, ver) \
+#define WD_VERSION_GE(conn, ver) \
  (SERVER_VERSION_GE(conn, (int) ver, atoi(STRING_AFTER_DOT(ver))))
-#define PG_VERSION_EQ(conn, ver) \
+#define WD_VERSION_EQ(conn, ver) \
  (SERVER_VERSION_EQ(conn, (int) ver, atoi(STRING_AFTER_DOT(ver))))
-#define PG_VERSION_LE(conn, ver) (! PG_VERSION_GT(conn, ver))
-#define PG_VERSION_LT(conn, ver) (! PG_VERSION_GE(conn, ver))
+#define WD_VERSION_LE(conn, ver) (! WD_VERSION_GT(conn, ver))
+#define WD_VERSION_LT(conn, ver) (! WD_VERSION_GE(conn, ver))
 
 /*	This is used to store cached table information in the connection */
 struct col_info
@@ -303,11 +303,11 @@ struct ConnectionClass_
 	DriverToDataSourceProc DriverToDataSource;
 	char		transact_status;	/* Is a transaction is currently
 						 * in progress */
-	char		pg_version[MAX_INFO_STRING];	/* Version of PostgreSQL
+	char		WD_version[MAX_INFO_STRING];	/* Version of PostgreSQL
 							 * we're connected to -
 							 * DJP 25-1-2001 */
-	Int2		pg_version_major;
-	Int2		pg_version_minor;
+	Int2		WD_version_major;
+	Int2		WD_version_minor;
 	char		ms_jet;
 	char		unicode;
 	char		result_uncommitted;
@@ -427,7 +427,7 @@ void		handle_pgres_error(ConnectionClass *self, const PGresult *pgres,
 void		CC_clear_error(ConnectionClass *self);
 int		CC_send_function(ConnectionClass *conn, const char *fn_name, void *result_buf, int *actual_result_len, int result_is_int, LO_ARG *argv, int nargs);
 char		CC_send_settings(ConnectionClass *self, const char *set_query);
-void		CC_initialize_pg_version(ConnectionClass *conn);
+void		CC_initialize_WD_version(ConnectionClass *conn);
 void		CC_log_error(const char *func, const char *desc, const ConnectionClass *self);
 int			CC_send_cancel_request(const ConnectionClass *conn);
 void		CC_on_commit(ConnectionClass *conn);

@@ -17,7 +17,7 @@
  *-------
  */
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 #include "unicode_support.h"
 #include <stdio.h>
 #include <string.h>
@@ -66,7 +66,7 @@ SQLColumnsW(HSTMT StatementHandle,
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
 	else
-		ret = PGAPI_Columns(StatementHandle,
+		ret = WD_Columns(StatementHandle,
 							(SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
 							(SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
 							(SQLCHAR *) tbName, (SQLSMALLINT) nmlen3,
@@ -105,7 +105,7 @@ SQLConnectW(HDBC ConnectionHandle,
 	svName = ucs2_to_utf8(ServerName, NameLength1, &nmlen1, FALSE);
 	usName = ucs2_to_utf8(UserName, NameLength2, &nmlen2, FALSE);
 	auth = ucs2_to_utf8(Authentication, NameLength3, &nmlen3, FALSE);
-	ret = PGAPI_Connect(ConnectionHandle,
+	ret = WD_Connect(ConnectionHandle,
 						(SQLCHAR *) svName, (SQLSMALLINT) nmlen1,
 						(SQLCHAR *) usName, (SQLSMALLINT) nmlen2,
 						(SQLCHAR *) auth, (SQLSMALLINT) nmlen3);
@@ -160,7 +160,7 @@ SQLDriverConnectW(HDBC hdbc,
 	}
 	else if (pcbConnStrOut)
 		pCSO = &olen;
-	ret = PGAPI_DriverConnect(hdbc, hwnd,
+	ret = WD_DriverConnect(hdbc, hwnd,
 							  (SQLCHAR *) szIn, (SQLSMALLINT) inlen,
 							  (SQLCHAR *) szOut, maxlen,
 							  pCSO, fDriverCompletion);
@@ -217,7 +217,7 @@ SQLBrowseConnectW(HDBC			hdbc,
 	obuflen = cbConnStrOutMax + 1;
 	szOut = malloc(obuflen);
 	if (szOut)
-		ret = PGAPI_BrowseConnect(hdbc, (SQLCHAR *) szIn, (SQLSMALLINT) inlen,
+		ret = WD_BrowseConnect(hdbc, (SQLCHAR *) szIn, (SQLSMALLINT) inlen,
 								  (SQLCHAR *) szOut, cbConnStrOutMax, &olen);
 	else
 	{
@@ -246,7 +246,7 @@ SQLDataSourcesW(HENV EnvironmentHandle,
 {
 	MYLOG(0, "Entering\n");
 	/*
-	return PGAPI_DataSources(EnvironmentHandle, Direction, ServerName,
+	return WD_DataSources(EnvironmentHandle, Direction, ServerName,
 		BufferLength1, NameLength1, Description, BufferLength2,
 		NameLength2);
 	*/
@@ -289,7 +289,7 @@ SQLDescribeColW(HSTMT StatementHandle,
 			break;
 		}
 		clName = clNamet;
-		ret = PGAPI_DescribeCol(StatementHandle, ColumnNumber,
+		ret = WD_DescribeCol(StatementHandle, ColumnNumber,
 								(SQLCHAR *) clName, buflen,
 								&nmlen, DataType, ColumnSize,
 			DecimalDigits, Nullable);
@@ -340,7 +340,7 @@ SQLExecDirectW(HSTMT StatementHandle,
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
 	else
-		ret = PGAPI_ExecDirect(StatementHandle,
+		ret = WD_ExecDirect(StatementHandle,
 							   (SQLCHAR *) stxt, (SQLINTEGER) slen, flag);
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS(stmt);
@@ -378,7 +378,7 @@ SQLGetCursorNameW(HSTMT StatementHandle,
 			break;
 		}
 		crName = crNamet;
-		ret = PGAPI_GetCursorName(StatementHandle, (SQLCHAR *) crName, buflen, &clen);
+		ret = WD_GetCursorName(StatementHandle, (SQLCHAR *) crName, buflen, &clen);
 		if (SQL_SUCCESS_WITH_INFO != ret || clen < buflen)
 			break;
 	}
@@ -415,7 +415,7 @@ SQLGetInfoW(HDBC ConnectionHandle,
 	CC_set_in_unicode_driver(conn);
 	CC_clear_error(conn);
 	MYLOG(0, "Entering\n");
-	if ((ret = PGAPI_GetInfo(ConnectionHandle, InfoType, InfoValue,
+	if ((ret = WD_GetInfo(ConnectionHandle, InfoType, InfoValue,
 							 BufferLength, StringLength)) == SQL_ERROR)
 		CC_log_error("SQLGetInfoW", "", conn);
 	LEAVE_CONN_CS(conn);
@@ -443,7 +443,7 @@ SQLPrepareW(HSTMT StatementHandle,
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
 	else
-		ret = PGAPI_Prepare(StatementHandle, (SQLCHAR *) stxt, (SQLINTEGER) slen);
+		ret = WD_Prepare(StatementHandle, (SQLCHAR *) stxt, (SQLINTEGER) slen);
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	if (stxt)
@@ -465,7 +465,7 @@ SQLSetCursorNameW(HSTMT StatementHandle,
 	ENTER_STMT_CS(stmt);
 	SC_clear_error(stmt);
 	StartRollbackState(stmt);
-	ret = PGAPI_SetCursorName(StatementHandle, (SQLCHAR *) crName, (SQLSMALLINT) nlen);
+	ret = WD_SetCursorName(StatementHandle, (SQLCHAR *) crName, (SQLSMALLINT) nlen);
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	if (crName)
@@ -504,7 +504,7 @@ SQLSpecialColumnsW(HSTMT StatementHandle,
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
 	else
-		ret = PGAPI_SpecialColumns(StatementHandle, IdentifierType,
+		ret = WD_SpecialColumns(StatementHandle, IdentifierType,
 								   (SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
 								   (SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
 								   (SQLCHAR *) tbName, (SQLSMALLINT) nmlen3,
@@ -550,7 +550,7 @@ SQLStatisticsW(HSTMT StatementHandle,
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
 	else
-		ret = PGAPI_Statistics(StatementHandle,
+		ret = WD_Statistics(StatementHandle,
 							   (SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
 							   (SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
 							   (SQLCHAR *) tbName, (SQLSMALLINT) nmlen3,
@@ -600,7 +600,7 @@ SQLTablesW(HSTMT StatementHandle,
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
 	else
-		ret = PGAPI_Tables(StatementHandle,
+		ret = WD_Tables(StatementHandle,
 						   (SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
 						   (SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
 						   (SQLCHAR *) tbName, (SQLSMALLINT) nmlen3,
@@ -656,7 +656,7 @@ SQLColumnPrivilegesW(HSTMT			hstmt,
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
 	else
-		ret = PGAPI_ColumnPrivileges(hstmt,
+		ret = WD_ColumnPrivileges(hstmt,
 									 (SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
 									 (SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
 									 (SQLCHAR *) tbName, (SQLSMALLINT) nmlen3,
@@ -716,7 +716,7 @@ SQLForeignKeysW(HSTMT			hstmt,
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
 	else
-		ret = PGAPI_ForeignKeys(hstmt,
+		ret = WD_ForeignKeys(hstmt,
 								(SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
 								(SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
 								(SQLCHAR *) tbName, (SQLSMALLINT) nmlen3,
@@ -773,7 +773,7 @@ SQLNativeSqlW(HDBC			hdbc,
 			break;
 		}
 		szOut = szOutt;
-		ret = PGAPI_NativeSql(hdbc, (SQLCHAR *) szIn, (SQLINTEGER) slen,
+		ret = WD_NativeSql(hdbc, (SQLCHAR *) szIn, (SQLINTEGER) slen,
 							  (SQLCHAR *) szOut, buflen, &olen);
 		if (SQL_SUCCESS_WITH_INFO != ret || olen < buflen)
 			break;
@@ -833,7 +833,7 @@ SQLPrimaryKeysW(HSTMT			hstmt,
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
 	else
-		ret = PGAPI_PrimaryKeys(hstmt,
+		ret = WD_PrimaryKeys(hstmt,
 								(SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
 								(SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
 								(SQLCHAR *) tbName, (SQLSMALLINT) nmlen3, 0);
@@ -883,7 +883,7 @@ SQLProcedureColumnsW(HSTMT			hstmt,
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
 	else
-		ret = PGAPI_ProcedureColumns(hstmt,
+		ret = WD_ProcedureColumns(hstmt,
 									 (SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
 									 (SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
 									 (SQLCHAR *) prName, (SQLSMALLINT) nmlen3,
@@ -937,7 +937,7 @@ SQLProceduresW(HSTMT		hstmt,
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
 	else
-		ret = PGAPI_Procedures(hstmt,
+		ret = WD_Procedures(hstmt,
 							   (SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
 							   (SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
 							   (SQLCHAR *) prName, (SQLSMALLINT) nmlen3,
@@ -988,7 +988,7 @@ SQLTablePrivilegesW(HSTMT			hstmt,
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
 	else
-		ret = PGAPI_TablePrivileges(hstmt,
+		ret = WD_TablePrivileges(hstmt,
 									(SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
 									(SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
 									(SQLCHAR *) tbName, (SQLSMALLINT) nmlen3,
@@ -1022,7 +1022,7 @@ SQLGetTypeInfoW(SQLHSTMT	StatementHandle,
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
 	else
-		ret = PGAPI_GetTypeInfo(StatementHandle, DataType);
+		ret = WD_GetTypeInfo(StatementHandle, DataType);
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	return ret;

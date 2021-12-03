@@ -1,4 +1,4 @@
-/* File:			psqlodbc.h
+/* File:			wdodbc.h
  *
  * Description:		This file contains defines and declarations that are related to
  *					the entire driver.
@@ -9,7 +9,7 @@
 #ifndef __UNICODE_SUPPORT_H__
 #define __UNICODE_SUPPORT_H__
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 
 #ifdef	UNICODE_SUPPORT
 #define WCLEN sizeof(SQLWCHAR)

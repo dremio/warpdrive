@@ -1,6 +1,6 @@
 #include	<windows.h>
 
-#include	"psqlodbc.h"
+#include	"wdodbc.h"
 #include	"dlg_specific.h"
 #include	"loadlib.h"
 #include	"misc.h"
@@ -71,10 +71,10 @@ DllMain(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 		case DLL_PROCESS_ATTACH:
 			s_hModule = hInst;	/* Save for dialog boxes */
 			initialize_global_cs();
-#ifdef	PG_BIN
-			if (s_hLModule = LoadLibraryEx(PG_BIN "\\libpq.dll", NULL, LOAD_WITH_ALTERED_SEARCH_PATH), s_hLModule == NULL)
-				MYLOG(0, "libpq in the folder %s couldn't be loaded\n", PG_BIN);
-#endif /* PG_BIN */
+#ifdef	WD_BIN
+			if (s_hLModule = LoadLibraryEx(WD_BIN "\\libpq.dll", NULL, LOAD_WITH_ALTERED_SEARCH_PATH), s_hLModule == NULL)
+				MYLOG(0, "libpq in the folder %s couldn't be loaded\n", WD_BIN);
+#endif /* WD_BIN */
 			if (NULL == s_hLModule)
 			{
 				char message[MAX_PATH] = "";
@@ -89,13 +89,13 @@ DllMain(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 					if (s_hLModule = LoadLibraryEx(dllPath, NULL, LOAD_WITH_ALTERED_SEARCH_PATH), s_hLModule == NULL)
 					{
 						MYLOG(0, "libpq in the folder %s%s couldn't be loaded\n", drive, dir);
-						SPRINTF_FIXED(message, "libpq in neither %s nor %s%s could be loaded", PG_BIN, drive, dir);
+						SPRINTF_FIXED(message, "libpq in neither %s nor %s%s could be loaded", WD_BIN, drive, dir);
 					}
 				}
-#ifdef	PG_BIN
+#ifdef	WD_BIN
 				else
-					SPRINTF_FIXED(message, "libpq in the folder %s couldn't be loaded", PG_BIN);
-#endif /* PG_BIN */
+					SPRINTF_FIXED(message, "libpq in the folder %s couldn't be loaded", WD_BIN);
+#endif /* WD_BIN */
 				if (message[0])
 					MessageBox(NULL, message, "psqlsetup", MB_OK);
 			}

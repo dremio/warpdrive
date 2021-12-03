@@ -55,14 +55,14 @@
 	  Properties="Configuration=$(Configuration);srcPath=$(srcPath)"/>
 
 	<Error
-	  Text="PG_BIN isn't set%0D%0ACouldn't build psqlsetup."
-		Condition="'($PG_BIN)'==''"/>
+	  Text="WD_BIN isn't set%0D%0ACouldn't build psqlsetup."
+		Condition="'($WD_BIN)'==''"/>
 	<Error
-	  Text="directory $(PG_BIN) doesn't exist.%0D%0Aset PG_BIN properly."
-		Condition="!exists('$(PG_BIN)')"/>
+	  Text="directory $(WD_BIN) doesn't exist.%0D%0Aset WD_BIN properly."
+		Condition="!exists('$(WD_BIN)')"/>
 	<Error
-	  Text="$(PG_BIN)\libpq.dll doesn't exist.%0D%0Aset PG_BIN properly."
-		Condition="!exists('$(PG_BIN)\libpq.dll')"/>
+	  Text="$(WD_BIN)\libpq.dll doesn't exist.%0D%0Aset WD_BIN properly."
+		Condition="!exists('$(WD_BIN)\libpq.dll')"/>
 
         <MSBuild Projects="psqlsetup.vcxproj"
 	  Targets="Build"
@@ -96,14 +96,14 @@
 	  Properties="Configuration=$(Configuration);srcPath=$(srcPath)"/>
 
 	<Error
-	  Text="PG_BIN isn't set%0D%0Acoudn't build psqlsetup."
-		Condition="'$PG_BIN)'==''"/>
+	  Text="WD_BIN isn't set%0D%0Acoudn't build psqlsetup."
+		Condition="'$WD_BIN)'==''"/>
 	<Error
-	  Text="directory $(PG_BIN) doesn't exist.%0D%0Aset PG_BIN properly."
-		Condition="!exists('$(PG_BIN)')"/>
+	  Text="directory $(WD_BIN) doesn't exist.%0D%0Aset WD_BIN properly."
+		Condition="!exists('$(WD_BIN)')"/>
 	<Error
-	  Text="$(PG_BIN)\libpq.dll doesn't exist.%0D%0Aset PG_BIN properly."
-		Condition="!exists('$(PG_BIN)\llibpq.dll')"/>
+	  Text="$(WD_BIN)\libpq.dll doesn't exist.%0D%0Aset WD_BIN properly."
+		Condition="!exists('$(WD_BIN)\llibpq.dll')"/>
         <MSBuild Projects="psqlsetup.vcxproj"
 	  Targets="ReBuild"
 	  Properties="Configuration=$(Configuration);srcPath=$(srcPath)"/>

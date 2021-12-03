@@ -9,7 +9,7 @@
 #ifndef __COLUMNINFO_H__
 #define __COLUMNINFO_H__
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 
 #include <libpq-fe.h>
 

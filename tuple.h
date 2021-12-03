@@ -13,7 +13,7 @@
 #ifndef __TUPLE_H__
 #define __TUPLE_H__
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 
 /*	Used by backend data AND manual result sets */
 struct TupleField_
@@ -65,9 +65,9 @@ void		set_tuplefield_int4(TupleField *tuple_field, Int4 value);
 SQLLEN	ClearCachedRows(TupleField *tuple, int num_fields, SQLLEN num_rows);
 SQLLEN	ReplaceCachedRows(TupleField *otuple, const TupleField *ituple, int num_fields, SQLLEN num_rows);
 
-typedef struct _PG_BM_ {
+typedef struct _WD_BM_ {
 	Int4	index;
 	KeySet	keys;
-} PG_BM;
+} WD_BM;
 
 #endif

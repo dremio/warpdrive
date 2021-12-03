@@ -23,7 +23,7 @@
 #include "statement.h"
 #include "descriptor.h"
 #include "qresult.h"
-#include "pgtypes.h"
+#include "wdtypes.h"
 #include "multibyte.h"
 
 #include "pgapifunc.h"
@@ -31,7 +31,7 @@
 
 /*		Bind parameters on a statement handle */
 RETCODE		SQL_API
-PGAPI_BindParameter(HSTMT hstmt,
+WD_BindParameter(HSTMT hstmt,
 					SQLUSMALLINT ipar,
 					SQLSMALLINT fParamType,
 					SQLSMALLINT fCType,
@@ -43,7 +43,7 @@ PGAPI_BindParameter(HSTMT hstmt,
 					SQLLEN * pcbValue)
 {
 	StatementClass *stmt = (StatementClass *) hstmt;
-	CSTR func = "PGAPI_BindParameter";
+	CSTR func = "WD_BindParameter";
 	APDFields	*apdopts;
 	IPDFields	*ipdopts;
 	PutDataInfo	*pdata_info;
@@ -144,7 +144,7 @@ PGAPI_BindParameter(HSTMT hstmt,
 
 /*	Associate a user-supplied buffer with a database column. */
 RETCODE		SQL_API
-PGAPI_BindCol(HSTMT hstmt,
+WD_BindCol(HSTMT hstmt,
 			  SQLUSMALLINT icol,
 			  SQLSMALLINT fCType,
 			  PTR rgbValue,
@@ -152,7 +152,7 @@ PGAPI_BindCol(HSTMT hstmt,
 			  SQLLEN * pcbValue)
 {
 	StatementClass *stmt = (StatementClass *) hstmt;
-	CSTR func = "PGAPI_BindCol";
+	CSTR func = "WD_BindCol";
 	ARDFields	*opts;
 	GetDataInfo	*gdata_info;
 	BindInfoClass	*bookmark;
@@ -299,7 +299,7 @@ cleanup:
  *	data type (most likely varchar).
  */
 RETCODE		SQL_API
-PGAPI_DescribeParam(HSTMT hstmt,
+WD_DescribeParam(HSTMT hstmt,
 					SQLUSMALLINT ipar,
 					SQLSMALLINT * pfSqlType,
 					SQLULEN * pcbParamDef,
@@ -307,11 +307,11 @@ PGAPI_DescribeParam(HSTMT hstmt,
 					SQLSMALLINT * pfNullable)
 {
 	StatementClass *stmt = (StatementClass *) hstmt;
-	CSTR func = "PGAPI_DescribeParam";
+	CSTR func = "WD_DescribeParam";
 	IPDFields	*ipdopts;
 	RETCODE		ret = SQL_SUCCESS;
 	int		num_params;
-	OID		pgtype;
+	OID		wdtype;
 	ConnectionClass	*conn;
 
 	MYLOG(0, "entering...%d\n", ipar);
@@ -331,13 +331,13 @@ PGAPI_DescribeParam(HSTMT hstmt,
 	{
 		SQLSMALLINT	num_p;
 
-		PGAPI_NumParams(stmt, &num_p);
+		WD_NumParams(stmt, &num_p);
 		num_params = num_p;
 	}
 	if ((ipar < 1) || (ipar > num_params))
 	{
 MYLOG(DETAIL_LOG_LEVEL, "num_params=%d\n", stmt->num_params);
-		SC_set_error(stmt, STMT_BAD_PARAMETER_NUMBER_ERROR, "Invalid parameter number for PGAPI_DescribeParam.", func);
+		SC_set_error(stmt, STMT_BAD_PARAMETER_NUMBER_ERROR, "Invalid parameter number for WD_DescribeParam.", func);
 		return SQL_ERROR;
 	}
 	extend_iparameter_bindings(ipdopts, stmt->num_params);
@@ -359,7 +359,7 @@ MYLOG(DETAIL_LOG_LEVEL, "howTo=%d\n", SC_get_prepare_method(stmt));
 	}
 
 	ipar--;
-	pgtype = PIC_get_pgtype(ipdopts->parameters[ipar]);
+	wdtype = PIC_get_wdtype(ipdopts->parameters[ipar]);
 	/*
 	 * This implementation is not very good, since it is supposed to
 	 * describe
@@ -367,11 +367,11 @@ MYLOG(DETAIL_LOG_LEVEL, "howTo=%d\n", SC_get_prepare_method(stmt));
 	/* parameter markers, not bound parameters.  */
 	if (pfSqlType)
 	{
-MYLOG(DETAIL_LOG_LEVEL, "[%d].SQLType=%d .PGType=%d\n", ipar, ipdopts->parameters[ipar].SQLType, pgtype);
+MYLOG(DETAIL_LOG_LEVEL, "[%d].SQLType=%d .wdtype=%d\n", ipar, ipdopts->parameters[ipar].SQLType, wdtype);
 		if (ipdopts->parameters[ipar].SQLType)
 			*pfSqlType = ipdopts->parameters[ipar].SQLType;
-		else if (pgtype)
-			*pfSqlType = pgtype_attr_to_concise_type(conn, pgtype, PG_ATP_UNSET, PG_ADT_UNSET, PG_UNKNOWNS_UNSET);
+		else if (wdtype)
+			*pfSqlType = wdtype_attr_to_concise_type(conn, wdtype, WD_ATP_UNSET, WD_ADT_UNSET, WD_UNKNOWNS_UNSET);
 		else
 		{
 			ret = SQL_ERROR;
@@ -385,8 +385,8 @@ MYLOG(DETAIL_LOG_LEVEL, "[%d].SQLType=%d .PGType=%d\n", ipar, ipdopts->parameter
 		*pcbParamDef = 0;
 		if (ipdopts->parameters[ipar].SQLType)
 			*pcbParamDef = ipdopts->parameters[ipar].column_size;
-		if (0 == *pcbParamDef && pgtype)
-			*pcbParamDef = pgtype_attr_column_size(conn, pgtype, PG_ATP_UNSET, PG_ADT_UNSET, PG_UNKNOWNS_UNSET);
+		if (0 == *pcbParamDef && wdtype)
+			*pcbParamDef = wdtype_attr_column_size(conn, wdtype, WD_ATP_UNSET, WD_ADT_UNSET, WD_UNKNOWNS_UNSET);
 	}
 
 	if (pibScale)
@@ -394,12 +394,12 @@ MYLOG(DETAIL_LOG_LEVEL, "[%d].SQLType=%d .PGType=%d\n", ipar, ipdopts->parameter
 		*pibScale = 0;
 		if (ipdopts->parameters[ipar].SQLType)
 			*pibScale = ipdopts->parameters[ipar].decimal_digits;
-		else if (pgtype)
-			*pibScale = pgtype_scale(stmt, pgtype, -1);
+		else if (wdtype)
+			*pibScale = wdtype_scale(stmt, wdtype, -1);
 	}
 
 	if (pfNullable)
-		*pfNullable = pgtype_nullable(SC_get_conn(stmt), ipdopts->parameters[ipar].paramType);
+		*pfNullable = wdtype_nullable(SC_get_conn(stmt), ipdopts->parameters[ipar].paramType);
 cleanup:
 #undef	return
 	return ret;
@@ -416,11 +416,11 @@ cleanup:
  *	If the statement does not have parameters, it should just return 0.
  */
 RETCODE		SQL_API
-PGAPI_NumParams(HSTMT hstmt,
+WD_NumParams(HSTMT hstmt,
 				SQLSMALLINT * pcpar)
 {
 	StatementClass *stmt = (StatementClass *) hstmt;
-	CSTR func = "PGAPI_NumParams";
+	CSTR func = "WD_NumParams";
 
 	MYLOG(0, "entering...\n");
 
@@ -443,7 +443,7 @@ MYLOG(DETAIL_LOG_LEVEL, "num_params=%d,%d\n", stmt->num_params, stmt->proc_retur
 	else if (!stmt->statement)
 	{
 		/* no statement has been allocated */
-		SC_set_error(stmt, STMT_SEQUENCE_ERROR, "PGAPI_NumParams called with no statement ready.", func);
+		SC_set_error(stmt, STMT_SEQUENCE_ERROR, "WD_NumParams called with no statement ready.", func);
 		return SQL_ERROR;
 	}
 	else
@@ -588,7 +588,7 @@ reset_a_iparameter_binding(IPDFields *self, int ipar)
 	self->parameters[ipar].decimal_digits = 0;
 	self->parameters[ipar].precision = 0;
 	self->parameters[ipar].scale = 0;
-	PIC_set_pgtype(self->parameters[ipar], 0);
+	PIC_set_wdtype(self->parameters[ipar], 0);
 }
 
 int

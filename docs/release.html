@@ -101,13 +101,13 @@ Changes:<br />
 <li>Remove tests for abstime type because the type was removed in PG12.</li>
 <li>Update results for PG12's new floating point output format.</li>
 </ol>
-<li>Fix the bug that causes Error : A parameter cannot be found that matches parameter nameÅene'.</li>
+<li>Fix the bug that causes Error : A parameter cannot be found that matches parameter nameÔøΩene'.</li>
 <ol type="a">
 <li>Check BuildResult(the result of drivers build) before building installers.</li>
 <li>Enclose the command part * Find_VSDir $vc_ver * with parentheses so that
 the subsequent * -ne "" * isn't considered to be a parameter.</li>
 </ol>
-<li>Cope with the removal of pg_class.relhasoids in PG12 correctly when retrieving updatable cursors.</li>
+<li>Cope with the removal of WD_class.relhasoids in PG12 correctly when retrieving updatable cursors.</li>
 </ol>
 <h2><a id="12.00.0000">psqlODBC 12.00.0000 Release</a></h2>
 Changes:<br />
@@ -117,7 +117,7 @@ Changes:<br />
 <li>Added support for scalar functions TIMESTAMPADD(), TIMESTAMPDIFF() and EXTRACT() functions.</li>
 <li>The macro IS_NOT_SPACE() is used for not pointers but integers.</li>
 <li>Fix a crash bug when SQLProcedureColumns() handles satisfies_hash_partition(). </li>
-The proargmodes column of satisfies_hash_partition()'s pg_proc entry is not null but the proallargtypes column is null. <br />
+The proargmodes column of satisfies_hash_partition()'s WD_proc entry is not null but the proallargtypes column is null. <br />
 Per report from James.wang.
 </ol>
 <h2><a id="11.01.0000">psqlODBC 11.01.0000 Release</a></h2>
@@ -168,7 +168,7 @@ Per report from Haribabu Kommi.
 Also modified some error messages.</li>
 <li>Let SQLTables() or SQLTablePrivileges() show partition tables.</li>
 <li>Fix build on Solaris defined(__SUNPRO_C) using Solaris Studio</li>
-<li>Reduce DB access to pg_class or pg_index by caching relhasoids, relhassubclass etc.
+<li>Reduce DB access to WD_class or WD_index by caching relhasoids, relhassubclass etc.
 It would improve the performance of SQLSetPos() or SQLBulkOperations() very much in some cases.</li>
 Per report from Takayuki Tsunakawa.
 </ol>
@@ -197,7 +197,7 @@ Report and patch by Takayuki Tsunakawa.
 Changes:<br />
 <ol type="1">
 <li>Call Get-VSSetupInstance to detect Visual Studio installations whose version >= 15 when VSSetup module is available.</li>
-<li>Review the handling of @@IDENTITY when a column's default is nextval(a_sequence) but the column isn't a serial. Unfortunately the function pg_get_serial_sequence() doesn't work for sequences which aren't serial type.</li>
+<li>Review the handling of @@IDENTITY when a column's default is nextval(a_sequence) but the column isn't a serial. Unfortunately the function WD_get_serial_sequence() doesn't work for sequences which aren't serial type.</li>
 <li>Add add an option -NoPDB to buildInstallers.ps1.</li>
 The switch option can be specified so as to exclude PDB files from the installers.
 <li>Fix a bug in pgdebug_realloc().</li>
@@ -215,11 +215,11 @@ Changes:<br />
 <li>Improve @@identty handling.</li>
 Use multibyte-aware eatTableIdentifiers() instead of next_name_token().<br />
 Use identifierEscape() to escape single quotes or double quotes.
-<li>PG_PRINTF_ATTRIBUTE instead of printf in __attribute__((format(printf, .., ..))) function attribute.</li>
+<li>WD_PRINTF_ATTRIBUTE instead of printf in __attribute__((format(printf, .., ..))) function attribute.</li>
 <li>Review the use of encoded_nextchar().</li>
 Remove variables which work in conjunction with encstr(encoded_str) so as to avoid misleadingness.
-<li>Use pg_get_serial_sequence() to get serial sequence of identity columns or serial columns. </li>
-pg_get_serial_sequence() for identity columns became available in PG 10.
+<li>Use WD_get_serial_sequence() to get serial sequence of identity columns or serial columns. </li>
+WD_get_serial_sequence() for identity columns became available in PG 10.
 <li>Preparation for development with VC15(VS 2017).</li>
 <li>Fix the bug that 'create table T_$001 (\81c)' fails when useServerSidePrepare is turned on.</li>
 Per report from Gregory Pruss.
@@ -296,16 +296,16 @@ Changes:<br />
 <li><b>Implement SQLSet/GetConnectAttr() for some driver specific options.</b><br /></li>
 <li><b>Modify the code about UNKNOWNS_AS_LONGEST of the Unknown Sizes option so that it works properly.</b><br /></li>
 <li><b>Revise the handling of show oid column and row versioning option.</b><br /></li>
-<li><b>Revise the use of pgtype_xxxx() in catalog functions.</b><br /></li>
-<li><b>Replace pgtype_xxxx() whose 1st parameter is StatementClass with pgtype_attr_xxxx(). </b><br /></li>
-Also use macros for pgtype_xxxx() calls which have PG_ATP_UNSET, PG_ADT_UNSET or PG_UNKNOWNS_UNSET parameters.
-<li><b>Remove the use of PG_STATIC and UNKNOWNS_AS_DEFAULT.</b><br /></li>
+<li><b>Revise the use of wdtype_xxxx() in catalog functions.</b><br /></li>
+<li><b>Replace wdtype_xxxx() whose 1st parameter is StatementClass with wdtype_attr_xxxx(). </b><br /></li>
+Also use macros for wdtype_xxxx() calls which have WD_ATP_UNSET, WD_ADT_UNSET or WD_UNKNOWNS_UNSET parameters.
+<li><b>Remove the use of WD_STATIC and UNKNOWNS_AS_DEFAULT.</b><br /></li>
 <li><b>Remove UNKNOWNS_AS_CATALOG of Unknown Sizes option.</b><br /></li>
 <li><b>Use symbols defined in catfunc.h instead of literal column numbers in SQLGetTypeInfo(), SQLSpecialColumns() and SQLTablePrivileges().</b><br /></li>
 <li><b>Fixes about SQLDescribeCol() or SQLColAttribute().</b><br /></li>
 <ol type="a">
 <li>Report the size of constant strings using Unknown Sizes as Longest.</li>
-<li>Correct the inconsistency between the sqltype of PG_TYPE_TEXT or PG_TYPE_UNKNOWN and the size in case of Unknown Sizes as Longeset.</li>
+<li>Correct the inconsistency between the sqltype of WD_TYPE_TEXT or WD_TYPE_UNKNOWN and the size in case of Unknown Sizes as Longeset.</li>
 </ol>
 <li><b>Fix a bug about Unicode driver for ansi apps.</b><br /></li>
 <li><b>Fix a dangling reference in CC_lookup_characterset() introduced.</b><br /></li>
@@ -379,7 +379,7 @@ Reported by Shinji Mecha.
 <li><b>Fixed return proper sqlstate error 08S01 in case of communication link failures.</b><br /></li>
 Patch by Tsunakawa,Takayuki.
 <li><b>Check the existence of directory for logging.</b><br /></li>
-<li><b>Handle PG_DIAG_SEVERITY_NONLOCALIZED for servers whose version >= 9.6 so as to detect FATAL message properly.</b><br /></li>
+<li><b>Handle WD_DIAG_SEVERITY_NONLOCALIZED for servers whose version >= 9.6 so as to detect FATAL message properly.</b><br /></li>
 <li><b>Now default isolation level is server's default instead of fixed SQL_TXN_READ_COMMITTED.</b><br /></li>
 Patch by Tsunakawa,Takayuki.
 <li><b>Make sure the isolation level is SQLUINTEGER and add the declaration of CC_get_isolation().</b><br /></li>
@@ -502,7 +502,7 @@ Changes:<br />
  <ol type="a">
  <li>Unify midtemp and moneytemp.<br /></li>
  <li>Variable wconverted is no longer needed.<br /></li>
- <li>Pre_convert for PG_TYPE_BOOL is not needed.<br /></li>
+ <li>Pre_convert for WD_TYPE_BOOL is not needed.<br /></li>
  <li>It's better to take the same road even in case of pre_convet.<br /></li>
  </ol>
 
@@ -519,7 +519,7 @@ Changes:<br />
  Patch by tsunakawa, Takayuki.
 
  <li><b>The existing memory is not freed upon realloc() failure.</b><br /></li>
- PGAPI_BindCol() doesn't check the failure of extend_getdata_info().<br />
+ WD_BindCol() doesn't check the failure of extend_getdata_info().<br />
  Patch by Tsunakawa, Takayuki.
 
  <li><b>The statement linked list is not properly chained, which throws away some statements.</b><br /></li>
@@ -539,7 +539,7 @@ Changes:<br />
  <ol type="a">
  <li>SC_get_errormsg() definition is repeated twice in succession.<br /></li>
  <li>In info.c:SQLGetInfo(), "len = 0" is unnecessary because len is assigned at the end of the function.<br /></li>
- <li>In execute.c:PGAPI_ExecDirect(), flag doesn't need to be set as its value doesn't change.<br /></li>
+ <li>In execute.c:WD_ExecDirect(), flag doesn't need to be set as its value doesn't change.<br /></li>
  <li>PODBC_PER_STATEMENT_ROLLBACK is not used.<br /></li>
  </ol>
  Patch by Tsunakawa, Takayuki.
@@ -764,7 +764,7 @@ Patch originally by John Smith.
 reported by John Smith.
 <li><b>Fix use of server-queried version before connection.</b><br /></li>
 psqlODBC attempted to use the version that's queried from the server before it was obtained from the server during the connection setup. Because the server
-version is initialized to 0.0, tests for "server version >= 7.4" or "server version >= 6.4" using the PG_VERSION_LT macro were always returning false.
+version is initialized to 0.0, tests for "server version >= 7.4" or "server version >= 6.4" using the WD_VERSION_LT macro were always returning false.
 Instead, use PROTOCOL_64 and PROTOCOL_74 tests against conninfo. These don't offer any "greater than" form, so just test both. There's little point adding
 anything prettier when it can all be removed when v1/v2 protocol support is removed soon anyway.
 The main symptom of this issue was that psqlODBC was sending an invalid protocol message for the v3 protocol, "Q \0", causing the server to wait for
@@ -775,7 +775,7 @@ would emit:
 <br />
 This issue was observed while tracking down problems with XA transactions in MSDTC failing to commit after a successful prepare because an isolated tx 
 created via getLockedXAConn() got stuck here, but is not confined to that problem.
-<li><b>Don't use PG_VERSION_xx() macros in original_CC_connect().</b><br /></li>
+<li><b>Don't use WD_VERSION_xx() macros in original_CC_connect().</b><br /></li>
 it's not obtained from the server yet. This may fix another cause of the problem Craig Ringer reported.
 <li><b>Fix bug in SQLCancel().</b><br /></li>
 If one thread was busy executing a savepoint statement, while another thread calls SQLCancel() on the statement, SQLCancel() would try to release the
@@ -783,7 +783,7 @@ locks held by the other thread. That's extremely racy; if the other thread tries
 we could end up releasing the lock to many times or too few times. Also, releasing a pthread mutex from a different thread than the one who acquired
 it is undefined behavior.
 AFAICS the DiscardStatementSvp() call in SQLCancel() can be safely removed.
-It's outright wrong and dangerous if the statement is busy executing in a different thread, and the other codepaths in PGAPI_Cancel() already call
+It's outright wrong and dangerous if the statement is busy executing in a different thread, and the other codepaths in WD_Cancel() already call
 DiscardStatementSvp().
 Bug report by Jade Koskela.
 <li><b>Fixes a NULL pointer dereference occurring when connecting.</b><br /></li>
@@ -809,7 +809,7 @@ Per report by Pluto Cobain.
 The powershell scripts had lots of duplication. Make the unified code instead.
 Original patch was provided by Craig Ringer.
 <li><b>Clear unused stuff from PgDtc_isolate() function.</b><br /></li>
-Also add CC_initialize_pg_version() call after CC_copy_conninfo() so as to avoid the trouble caused by early PG_VERSION_xx() calls.
+Also add CC_initialize_WD_version() call after CC_copy_conninfo() so as to avoid the trouble caused by early WD_VERSION_xx() calls.
 <li><b>Fix race condition in getting the current decimal separator.</b><br /></li>
 The code to get the current decimal separator was not thread-safe. If two threads concurrently saw that the locale had changed, they might both try
 to free() the same string.
@@ -864,11 +864,11 @@ Per the C standard, the routine should be passed an int, with a value that's rep
 "function(void)" is the correct syntax in a function declaration, although in practice compilers accept the latter too. It's OK in a function definition, but change those too for consistency.
  This fixed by Michael Paquier.<br />
 <li><b>Add missing function declarations.</b><br /></li>
-These are not actually used outside of pgtypes.c, but let's be consistent and declare them in pgtypes.h
+These are not actually used outside of wdtypes.c, but let's be consistent and declare them in wdtypes.h
  This fixed by Michael Paquier.<br />
-<li><b>Use the PG_CONFIG setting from ./configure cmd line in regression tests.</b><br /></li>
-If compiling without libpq (configure --without-libpq), then you still need to have pg_config in path to build the regression tests, or specify
- PG_CONFIG at the make command line.<br />
+<li><b>Use the WD_CONFIG setting from ./configure cmd line in regression tests.</b><br /></li>
+If compiling without libpq (configure --without-libpq), then you still need to have WD_config in path to build the regression tests, or specify
+ WD_CONFIG at the make command line.<br />
 <li><b>Add more test cases.</b><br /></li>
 Add a new test case to test ODBC functions deprecated in ODBC 3.0, ODBC catalog functions, SQLGetConnectOption and Avoid deprecated SQLAllocStmt/SQLFreeStmt in regression tests. and more.
 Per Michael Paquier<br />
@@ -1193,9 +1193,9 @@ Changes:<br />
 12.) Apply the patch by Peter Crabtree which fixes a crash bug.<br />
 13.) Improve the handling of bools_as_char case.<br />
 14.) Fix a bug when creating a connection string.<br />
-15.) Use pg_get_expr(adbin, ..) instead of unreliable adsrc in pg_attrdef so as to know the sequence name associated with serial items.<br />
+15.) Use WD_get_expr(adbin, ..) instead of unreliable adsrc in WD_attrdef so as to know the sequence name associated with serial items.<br />
 16.) Added 64-bit version of installer files.<br />
-17.) Introduce pgtype_attr_xxxx functions which take a typmod parameter as well as a type oid parameter as an extension of pgtype_xxxx functions so that SQLColumns and SQLDescribeCol(SQLColAttrinute) could use common functions.<br />
+17.) Introduce wdtype_attr_xxxx functions which take a typmod parameter as well as a type oid parameter as an extension of wdtype_xxxx functions so that SQLColumns and SQLDescribeCol(SQLColAttrinute) could use common functions.<br />
 18.) Call PQconnectdbParams instead of PQconnectdb when it's available.<br />
 19.) Make cursor open check at transaction end a little more effective.<br />
 20.) Added code for SQL_INTERVAL support and refcursor support though they are disabled.<br />
@@ -1237,7 +1237,7 @@ Changes:<br />
 8.) Remove a spurious "." with no trailing digits in timestamp representation (bug report from Brian Feldman).<br />
 9.) Rename trim() funtion in order to avoid conflict of function name(report from Dominic Smith).<br />
 10.) Put back the change to add *read only* clause for read only cursors.<br />
-11.) Improve pgtype_transfer_octet_length().<br />
+11.) Improve wdtype_transfer_octet_length().<br />
 12.) Fix a bug reported by Milen Manev that SQLExec *select for a table* -> SQLDescribeCol() -> add a column to the table -> SQLExec *select for the table* -> SQLDescribeCol() for the added column causes a bad result.<br />
 13.) Use strncpy_null() instead of strncpy().<br />
 14.) Close (holdable) cursors on commit if possible.<br />

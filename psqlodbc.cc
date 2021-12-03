@@ -18,7 +18,7 @@
 #include <crtdbg.h>
 #endif /* _DEBUG */
 #endif /* WIN32 */
-#include "psqlodbc.h"
+#include "wdodbc.h"
 #include "dlg_specific.h"
 #include "environ.h"
 #include "misc.h"
@@ -44,7 +44,7 @@ extern	CRITICAL_SECTION	conns_cs, common_cs;
 extern	pthread_mutex_t 	conns_cs, common_cs;
 
 #ifdef	POSIX_THREADMUTEX_SUPPORT
-#ifdef	PG_RECURSIVE_MUTEXATTR
+#ifdef	WD_RECURSIVE_MUTEXATTR
 static	pthread_mutexattr_t	recur_attr;
 const	pthread_mutexattr_t*	getMutexAttr(void)
 {
@@ -54,7 +54,7 @@ const	pthread_mutexattr_t*	getMutexAttr(void)
 	{
 		if (0 != pthread_mutexattr_init(&recur_attr))
 			return NULL;
-		if (0 != pthread_mutexattr_settype(&recur_attr, PG_RECURSIVE_MUTEXATTR))
+		if (0 != pthread_mutexattr_settype(&recur_attr, WD_RECURSIVE_MUTEXATTR))
 			return NULL;
 	}
 	init = 0;
@@ -66,7 +66,7 @@ const	pthread_mutexattr_t*	getMutexAttr(void)
 {
 	return NULL;
 }
-#endif /* PG_RECURSIVE_MUTEXATTR */
+#endif /* WD_RECURSIVE_MUTEXATTR */
 #endif /* POSIX_THREADMUTEX_SUPPORT */
 #endif /* WIN_MULTITHREAD_SUPPORT */
 

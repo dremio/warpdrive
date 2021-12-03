@@ -188,7 +188,7 @@ SOURCE=pgapi30.c
 # End Source File
 # Begin Source File
 
-SOURCE=pgtypes.c
+SOURCE=wdtypes.c
 # End Source File
 # Begin Source File
 
@@ -284,11 +284,11 @@ SOURCE=pgapifunc.h
 # End Source File
 # Begin Source File
 
-SOURCE=pgtypes.h
+SOURCE=wdtypes.h
 # End Source File
 # Begin Source File
 
-SOURCE=psqlodbc.h
+SOURCE=wdodbc.h
 # End Source File
 # Begin Source File
 

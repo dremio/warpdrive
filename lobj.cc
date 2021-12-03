@@ -174,7 +174,7 @@ odbc_lo_lseek64(ConnectionClass *conn, int fd, Int8 offset, Int4 whence)
 	Int8		retval;
 	Int4		result_len;
 
-	if (PG_VERSION_LT(conn, 9.3))
+	if (WD_VERSION_LT(conn, 9.3))
 	{
 		Int4	offset32;
 
@@ -213,7 +213,7 @@ odbc_lo_tell64(ConnectionClass *conn, int fd)
 	Int8		retval;
 	Int4		result_len;
 
-	if (PG_VERSION_LT(conn, 9.3))
+	if (WD_VERSION_LT(conn, 9.3))
 		return (Int8) odbc_lo_tell(conn, fd);
 
 	argv[0].isint = 1;

@@ -1,9 +1,9 @@
 /*--------
- * Module:			pgtypes.c
+ * Module:			wdtypes.c
  *
  * Description:		This module contains routines for getting information
  *					about the supported Postgres data types.  Only the
- *					function pgtype_to_sqltype() returns an unknown condition.
+ *					function wdtype_to_sqltype() returns an unknown condition.
  *					All other functions return a suitable default so that
  *					even data types that are not directly supported can be
  *					used (it is handled as char data).
@@ -16,7 +16,7 @@
  *--------
  */
 
-#include "pgtypes.h"
+#include "wdtypes.h"
 
 #include "dlg_specific.h"
 #include "statement.h"
@@ -50,7 +50,7 @@ SQLSMALLINT ansi_to_wtype(const ConnectionClass *self, SQLSMALLINT ansitype)
 Int4		getCharColumnSize(const StatementClass *stmt, OID type, int col, int handle_unknown_size_as);
 
 /*
- * these are the types we support.	all of the pgtype_ functions should
+ * these are the types we support.	all of the wdtype_ functions should
  * return values for each one of these.
  * Even types not directly supported are handled as character types
  * so all types should work (points, etc.)
@@ -62,34 +62,34 @@ Int4		getCharColumnSize(const StatementClass *stmt, OID type, int col, int handl
  */
 
 /*
-OID pgtypes_defined[][2] = {
-			{PG_TYPE_CHAR, 0}
-			,{PG_TYPE_CHAR2, 0}
-			,{PG_TYPE_CHAR4, 0}
-			,{PG_TYPE_CHAR8, 0}
-			,{PG_TYPE_CHAR16, 0}
-			,{PG_TYPE_NAME, 0}
-			,{PG_TYPE_VARCHAR, 0}
-			,{PG_TYPE_BPCHAR, 0}
-			,{PG_TYPE_DATE, 0}
-			,{PG_TYPE_TIME, 0}
-			,{PG_TYPE_TIME_WITH_TMZONE, 0}
-			,{PG_TYPE_DATETIME, 0}
-			,{PG_TYPE_ABSTIME, 0}
-			,{PG_TYPE_TIMESTAMP_NO_TMZONE, 0}
-			,{PG_TYPE_TIMESTAMP, 0}
-			,{PG_TYPE_TEXT, 0}
-			,{PG_TYPE_INT2, 0}
-			,{PG_TYPE_INT4, 0}
-			,{PG_TYPE_FLOAT4, 0}
-			,{PG_TYPE_FLOAT8, 0}
-			,{PG_TYPE_OID, 0}
-			,{PG_TYPE_MONEY, 0}
-			,{PG_TYPE_BOOL, 0}
-			,{PG_TYPE_BYTEA, 0}
-			,{PG_TYPE_NUMERIC, 0}
-			,{PG_TYPE_XID, 0}
-			,{PG_TYPE_LO_UNDEFINED, 0}
+OID wdtypes_defined[][2] = {
+			{WD_TYPE_CHAR, 0}
+			,{WD_TYPE_CHAR2, 0}
+			,{WD_TYPE_CHAR4, 0}
+			,{WD_TYPE_CHAR8, 0}
+			,{WD_TYPE_CHAR16, 0}
+			,{WD_TYPE_NAME, 0}
+			,{WD_TYPE_VARCHAR, 0}
+			,{WD_TYPE_BPCHAR, 0}
+			,{WD_TYPE_DATE, 0}
+			,{WD_TYPE_TIME, 0}
+			,{WD_TYPE_TIME_WITH_TMZONE, 0}
+			,{WD_TYPE_DATETIME, 0}
+			,{WD_TYPE_ABSTIME, 0}
+			,{WD_TYPE_TIMESTAMP_NO_TMZONE, 0}
+			,{WD_TYPE_TIMESTAMP, 0}
+			,{WD_TYPE_TEXT, 0}
+			,{WD_TYPE_INT2, 0}
+			,{WD_TYPE_INT4, 0}
+			,{WD_TYPE_FLOAT4, 0}
+			,{WD_TYPE_FLOAT8, 0}
+			,{WD_TYPE_OID, 0}
+			,{WD_TYPE_MONEY, 0}
+			,{WD_TYPE_BOOL, 0}
+			,{WD_TYPE_BYTEA, 0}
+			,{WD_TYPE_NUMERIC, 0}
+			,{WD_TYPE_XID, 0}
+			,{WD_TYPE_LO_UNDEFINED, 0}
 			,{0, 0} };
 */
 
@@ -125,7 +125,7 @@ SQLSMALLINT	sqlTypes[] = {
 #endif /* UNICODE_SUPPORT */
 	SQL_GUID,
 /* AFAIK SQL_INTERVAL types cause troubles in some spplications */
-#ifdef	PG_INTERVAL_AS_SQL_INTERVAL
+#ifdef	WD_INTERVAL_AS_SQL_INTERVAL
 	SQL_INTERVAL_MONTH,
 	SQL_INTERVAL_YEAR,
 	SQL_INTERVAL_YEAR_TO_MONTH,
@@ -139,7 +139,7 @@ SQLSMALLINT	sqlTypes[] = {
 	SQL_INTERVAL_HOUR_TO_MINUTE,
 	SQL_INTERVAL_HOUR_TO_SECOND,
 	SQL_INTERVAL_MINUTE_TO_SECOND,
-#endif /* PG_INTERVAL_AS_SQL_INTERVAL */
+#endif /* WD_INTERVAL_AS_SQL_INTERVAL */
 	0
 };
 
@@ -151,7 +151,7 @@ SQLSMALLINT	sqlTypes[] = {
 #endif
 
 OID
-pg_true_type(const ConnectionClass *conn, OID type, OID basetype)
+WD_true_type(const ConnectionClass *conn, OID type, OID basetype)
 {
 	if (0 == basetype)
 		return type;
@@ -270,15 +270,15 @@ getCharColumnSizeX(const ConnectionClass *conn, OID type, int atttypmod, int adt
 	/* Assign Maximum size based on parameters */
 	switch (type)
 	{
-		case PG_TYPE_TEXT:
+		case WD_TYPE_TEXT:
 			if (ci->drivers.text_as_longvarchar)
 				maxsize = ci->drivers.max_longvarchar_size;
 			else
 				maxsize = ci->drivers.max_varchar_size;
 			break;
 
-		case PG_TYPE_VARCHAR:
-		case PG_TYPE_BPCHAR:
+		case WD_TYPE_VARCHAR:
+		case WD_TYPE_BPCHAR:
 			maxsize = ci->drivers.max_varchar_size;
 			break;
 
@@ -349,9 +349,9 @@ MYLOG(DETAIL_LOG_LEVEL, "!!! catalog_result=%d\n", handle_unknown_size_as);
 		return maxsize;
 	switch (type)
 	{
-		case PG_TYPE_BPCHAR:
-		case PG_TYPE_VARCHAR:
-		case PG_TYPE_TEXT:
+		case WD_TYPE_BPCHAR:
+		case WD_TYPE_VARCHAR:
+		case WD_TYPE_TEXT:
 			return maxsize;
 	}
 
@@ -400,7 +400,7 @@ getNumericColumnSizeX(const ConnectionClass *conn, OID type, int atttypmod, int 
 		case SQL_LONGVARCHAR:
 			return ci->drivers.max_longvarchar_size;
 		case SQL_DOUBLE:
-			return PG_DOUBLE_DIGITS;
+			return WD_DOUBLE_DIGITS;
 	}
 	switch (handle_unknown_size_as)
 	{
@@ -437,13 +437,13 @@ getTimestampColumnSizeX(const ConnectionClass *conn, OID type, int atttypmod)
 
 	switch (type)
 	{
-		case PG_TYPE_TIME:
+		case WD_TYPE_TIME:
 			fixed = 8;
 			break;
-		case PG_TYPE_TIME_WITH_TMZONE:
+		case WD_TYPE_TIME_WITH_TMZONE:
 			fixed = 11;
 			break;
-		case PG_TYPE_TIMESTAMP_NO_TMZONE:
+		case WD_TYPE_TIMESTAMP_NO_TMZONE:
 			fixed = 19;
 			break;
 		default:
@@ -515,32 +515,32 @@ getIntervalColumnSize(OID type, int atttypmod)
 
 
 SQLSMALLINT
-pgtype_attr_to_concise_type(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longestlen, int handle_unknown_size_as)
+wdtype_attr_to_concise_type(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longestlen, int handle_unknown_size_as)
 {
 	const ConnInfo	*ci = &(conn->connInfo);
 	EnvironmentClass *env = (EnvironmentClass *) CC_get_env(conn);
-#ifdef	PG_INTERVAL_AS_SQL_INTERVAL
+#ifdef	WD_INTERVAL_AS_SQL_INTERVAL
 	SQLSMALLINT	sqltype;
-#endif /* PG_INTERVAL_AS_SQL_INTERVAL */
+#endif /* WD_INTERVAL_AS_SQL_INTERVAL */
 	BOOL	bLongVarchar, bFixed = FALSE;
 
 	switch (type)
 	{
-		case PG_TYPE_CHAR:
+		case WD_TYPE_CHAR:
 			return ansi_to_wtype(conn, SQL_CHAR);
-		case PG_TYPE_NAME:
-		case PG_TYPE_REFCURSOR:
+		case WD_TYPE_NAME:
+		case WD_TYPE_REFCURSOR:
 			return ansi_to_wtype(conn, SQL_VARCHAR);
 
-		case PG_TYPE_BPCHAR:
+		case WD_TYPE_BPCHAR:
 			bFixed = TRUE;
-		case PG_TYPE_VARCHAR:
+		case WD_TYPE_VARCHAR:
 			if (getCharColumnSizeX(conn, type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as) > ci->drivers.max_varchar_size)
 				bLongVarchar = TRUE;
 			else
 				bLongVarchar = FALSE;
 			return ansi_to_wtype(conn, bLongVarchar ? SQL_LONGVARCHAR : (bFixed ? SQL_CHAR : SQL_VARCHAR));
-		case PG_TYPE_TEXT:
+		case WD_TYPE_TEXT:
 			bLongVarchar = ci->drivers.text_as_longvarchar;
 			if (bLongVarchar)
 			{
@@ -551,74 +551,74 @@ pgtype_attr_to_concise_type(const ConnectionClass *conn, OID type, int atttypmod
 			}
 			return ansi_to_wtype(conn, bLongVarchar ? SQL_LONGVARCHAR : SQL_VARCHAR);
 
-		case PG_TYPE_BYTEA:
+		case WD_TYPE_BYTEA:
 			if (ci->bytea_as_longvarbinary)
 				return SQL_LONGVARBINARY;
 			else
 				return SQL_VARBINARY;
-		case PG_TYPE_LO_UNDEFINED:
+		case WD_TYPE_LO_UNDEFINED:
 			return SQL_LONGVARBINARY;
 
-		case PG_TYPE_INT2:
+		case WD_TYPE_INT2:
 			return SQL_SMALLINT;
 
-		case PG_TYPE_OID:
-		case PG_TYPE_XID:
-		case PG_TYPE_INT4:
+		case WD_TYPE_OID:
+		case WD_TYPE_XID:
+		case WD_TYPE_INT4:
 			return SQL_INTEGER;
 
 			/* Change this to SQL_BIGINT for ODBC v3 bjm 2001-01-23 */
-		case PG_TYPE_INT8:
+		case WD_TYPE_INT8:
 			if (ci->int8_as != 0)
 				return ci->int8_as;
 			if (conn->ms_jet)
 				return SQL_NUMERIC; /* maybe a little better than SQL_VARCHAR */
 			return SQL_BIGINT;
 
-		case PG_TYPE_NUMERIC:
+		case WD_TYPE_NUMERIC:
 			if (-1 == atttypmod && DEFAULT_NUMERIC_AS != ci->numeric_as)
 				return ci->numeric_as;
 			return SQL_NUMERIC;
 
-		case PG_TYPE_FLOAT4:
+		case WD_TYPE_FLOAT4:
 			return SQL_REAL;
-		case PG_TYPE_FLOAT8:
+		case WD_TYPE_FLOAT8:
 			return SQL_FLOAT;
-		case PG_TYPE_DATE:
+		case WD_TYPE_DATE:
 			if (EN_is_odbc3(env))
 				return SQL_TYPE_DATE;
 			return SQL_DATE;
-		case PG_TYPE_TIME:
+		case WD_TYPE_TIME:
 			if (EN_is_odbc3(env))
 				return SQL_TYPE_TIME;
 			return SQL_TIME;
-		case PG_TYPE_ABSTIME:
-		case PG_TYPE_DATETIME:
-		case PG_TYPE_TIMESTAMP_NO_TMZONE:
-		case PG_TYPE_TIMESTAMP:
+		case WD_TYPE_ABSTIME:
+		case WD_TYPE_DATETIME:
+		case WD_TYPE_TIMESTAMP_NO_TMZONE:
+		case WD_TYPE_TIMESTAMP:
 			if (EN_is_odbc3(env))
 				return SQL_TYPE_TIMESTAMP;
 			return SQL_TIMESTAMP;
-		case PG_TYPE_MONEY:
+		case WD_TYPE_MONEY:
 			return SQL_FLOAT;
-		case PG_TYPE_BOOL:
+		case WD_TYPE_BOOL:
 			return ci->drivers.bools_as_char ? SQL_VARCHAR : SQL_BIT;
-		case PG_TYPE_XML:
+		case WD_TYPE_XML:
 			return ansi_to_wtype(conn, SQL_LONGVARCHAR);
-		case PG_TYPE_INET:
-		case PG_TYPE_CIDR:
-		case PG_TYPE_MACADDR:
+		case WD_TYPE_INET:
+		case WD_TYPE_CIDR:
+		case WD_TYPE_MACADDR:
 			return ansi_to_wtype(conn, SQL_VARCHAR);
-		case PG_TYPE_UUID:
+		case WD_TYPE_UUID:
 			return SQL_GUID;
 
-		case PG_TYPE_INTERVAL:
-#ifdef	PG_INTERVAL_AS_SQL_INTERVAL
+		case WD_TYPE_INTERVAL:
+#ifdef	WD_INTERVAL_AS_SQL_INTERVAL
 			if (sqltype = get_interval_type(atttypmod, NULL), 0 != sqltype)
 				return sqltype;
-#endif /* PG_INTERVAL_AS_SQL_INTERVAL */
+#endif /* WD_INTERVAL_AS_SQL_INTERVAL */
 			return ansi_to_wtype(conn, SQL_VARCHAR);
-		case PG_TYPE_BIT:
+		case WD_TYPE_BIT:
 			if (1 == atttypmod)
 				return SQL_BIT;
 			else
@@ -651,15 +651,15 @@ pgtype_attr_to_concise_type(const ConnectionClass *conn, OID type, int atttypmod
 }
 
 SQLSMALLINT
-pgtype_attr_to_sqldesctype(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longestlen, int handle_unknown_size_as)
+wdtype_attr_to_sqldesctype(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longestlen, int handle_unknown_size_as)
 {
 	SQLSMALLINT	rettype;
 
-#ifdef	PG_INTERVAL_AS_SQL_INTERVAL
-	if (PG_TYPE_INTERVAL == type)
+#ifdef	WD_INTERVAL_AS_SQL_INTERVAL
+	if (WD_TYPE_INTERVAL == type)
 		return SQL_INTERVAL;
-#endif /* PG_INTERVAL_AS_SQL_INTERVAL */
-	switch (rettype = pgtype_attr_to_concise_type(conn, type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as))
+#endif /* WD_INTERVAL_AS_SQL_INTERVAL */
+	switch (rettype = wdtype_attr_to_concise_type(conn, type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as))
 	{
 		case SQL_TYPE_DATE:
 		case SQL_TYPE_TIME:
@@ -670,11 +670,11 @@ pgtype_attr_to_sqldesctype(const ConnectionClass *conn, OID type, int atttypmod,
 }
 
 SQLSMALLINT
-pgtype_attr_to_datetime_sub(const ConnectionClass *conn, OID type, int atttypmod)
+wdtype_attr_to_datetime_sub(const ConnectionClass *conn, OID type, int atttypmod)
 {
 	SQLSMALLINT	rettype;
 
-	switch (rettype = pgtype_attr_to_concise_type(conn, type, atttypmod, PG_ADT_UNSET, PG_UNKNOWNS_UNSET))
+	switch (rettype = wdtype_attr_to_concise_type(conn, type, atttypmod, WD_ADT_UNSET, WD_UNKNOWNS_UNSET))
 	{
 		case SQL_TYPE_DATE:
 			return SQL_CODE_DATE;
@@ -701,71 +701,71 @@ pgtype_attr_to_datetime_sub(const ConnectionClass *conn, OID type, int atttypmod
 }
 
 SQLSMALLINT
-pgtype_attr_to_ctype(const ConnectionClass *conn, OID type, int atttypmod)
+wdtype_attr_to_ctype(const ConnectionClass *conn, OID type, int atttypmod)
 {
 	const ConnInfo	*ci = &(conn->connInfo);
 	EnvironmentClass *env = (EnvironmentClass *) CC_get_env(conn);
-#ifdef	PG_INTERVAL_AS_SQL_INTERVAL
+#ifdef	WD_INTERVAL_AS_SQL_INTERVAL
 	SQLSMALLINT	ctype;
-#endif /* PG_INTERVAL_A_SQL_INTERVAL */
+#endif /* WD_INTERVAL_A_SQL_INTERVAL */
 
 	switch (type)
 	{
-		case PG_TYPE_INT8:
+		case WD_TYPE_INT8:
 			if (!conn->ms_jet)
 				return ALLOWED_C_BIGINT;
 			return SQL_C_CHAR;
-		case PG_TYPE_NUMERIC:
+		case WD_TYPE_NUMERIC:
 			return SQL_C_CHAR;
-		case PG_TYPE_INT2:
+		case WD_TYPE_INT2:
 			return SQL_C_SSHORT;
-		case PG_TYPE_OID:
-		case PG_TYPE_XID:
+		case WD_TYPE_OID:
+		case WD_TYPE_XID:
 			return SQL_C_ULONG;
-		case PG_TYPE_INT4:
+		case WD_TYPE_INT4:
 			return SQL_C_SLONG;
-		case PG_TYPE_FLOAT4:
+		case WD_TYPE_FLOAT4:
 			return SQL_C_FLOAT;
-		case PG_TYPE_FLOAT8:
+		case WD_TYPE_FLOAT8:
 			return SQL_C_DOUBLE;
-		case PG_TYPE_DATE:
+		case WD_TYPE_DATE:
 			if (EN_is_odbc3(env))
 				return SQL_C_TYPE_DATE;
 			return SQL_C_DATE;
-		case PG_TYPE_TIME:
+		case WD_TYPE_TIME:
 			if (EN_is_odbc3(env))
 				return SQL_C_TYPE_TIME;
 			return SQL_C_TIME;
-		case PG_TYPE_ABSTIME:
-		case PG_TYPE_DATETIME:
-		case PG_TYPE_TIMESTAMP_NO_TMZONE:
-		case PG_TYPE_TIMESTAMP:
+		case WD_TYPE_ABSTIME:
+		case WD_TYPE_DATETIME:
+		case WD_TYPE_TIMESTAMP_NO_TMZONE:
+		case WD_TYPE_TIMESTAMP:
 			if (EN_is_odbc3(env))
 				return SQL_C_TYPE_TIMESTAMP;
 			return SQL_C_TIMESTAMP;
-		case PG_TYPE_MONEY:
+		case WD_TYPE_MONEY:
 			return SQL_C_FLOAT;
-		case PG_TYPE_BOOL:
+		case WD_TYPE_BOOL:
 			return ci->drivers.bools_as_char ? SQL_C_CHAR : SQL_C_BIT;
 
-		case PG_TYPE_BYTEA:
+		case WD_TYPE_BYTEA:
 			return SQL_C_BINARY;
-		case PG_TYPE_LO_UNDEFINED:
+		case WD_TYPE_LO_UNDEFINED:
 			return SQL_C_BINARY;
-		case PG_TYPE_BPCHAR:
-		case PG_TYPE_VARCHAR:
-		case PG_TYPE_TEXT:
+		case WD_TYPE_BPCHAR:
+		case WD_TYPE_VARCHAR:
+		case WD_TYPE_TEXT:
 			return ansi_to_wtype(conn, SQL_C_CHAR);
-		case PG_TYPE_UUID:
+		case WD_TYPE_UUID:
 			if (!conn->ms_jet)
 				return SQL_C_GUID;
 			return ansi_to_wtype(conn, SQL_C_CHAR);
 
-		case PG_TYPE_INTERVAL:
-#ifdef	PG_INTERVAL_AS_SQL_INTERVAL
+		case WD_TYPE_INTERVAL:
+#ifdef	WD_INTERVAL_AS_SQL_INTERVAL
 			if (ctype = get_interval_type(atttypmod, NULL), 0 != ctype)
 				return ctype;
-#endif /* PG_INTERVAL_AS_SQL_INTERVAL */
+#endif /* WD_INTERVAL_AS_SQL_INTERVAL */
 			return ansi_to_wtype(conn, SQL_CHAR);
 
 		default:
@@ -782,87 +782,87 @@ pgtype_attr_to_ctype(const ConnectionClass *conn, OID type, int atttypmod)
 }
 
 const char *
-pgtype_attr_to_name(const ConnectionClass *conn, OID type, int atttypmod, BOOL auto_increment)
+wdtype_attr_to_name(const ConnectionClass *conn, OID type, int atttypmod, BOOL auto_increment)
 {
 	const char	*tname = NULL;
 
 	switch (type)
 	{
-		case PG_TYPE_CHAR:
+		case WD_TYPE_CHAR:
 			return "char";
-		case PG_TYPE_INT8:
+		case WD_TYPE_INT8:
 			return auto_increment ? "bigserial" : "int8";
-		case PG_TYPE_NUMERIC:
+		case WD_TYPE_NUMERIC:
 			return "numeric";
-		case PG_TYPE_VARCHAR:
+		case WD_TYPE_VARCHAR:
 			return "varchar";
-		case PG_TYPE_BPCHAR:
+		case WD_TYPE_BPCHAR:
 			return "char";
-		case PG_TYPE_TEXT:
+		case WD_TYPE_TEXT:
 			return "text";
-		case PG_TYPE_NAME:
+		case WD_TYPE_NAME:
 			return "name";
-		case PG_TYPE_REFCURSOR:
+		case WD_TYPE_REFCURSOR:
 			return "refcursor";
-		case PG_TYPE_INT2:
+		case WD_TYPE_INT2:
 			return "int2";
-		case PG_TYPE_OID:
+		case WD_TYPE_OID:
 			return OID_NAME;
-		case PG_TYPE_XID:
+		case WD_TYPE_XID:
 			return "xid";
-		case PG_TYPE_INT4:
-MYLOG(DETAIL_LOG_LEVEL, "pgtype_to_name int4\n");
+		case WD_TYPE_INT4:
+MYLOG(DETAIL_LOG_LEVEL, "wdtype_to_name int4\n");
 			return auto_increment ? "serial" : "int4";
-		case PG_TYPE_FLOAT4:
+		case WD_TYPE_FLOAT4:
 			return "float4";
-		case PG_TYPE_FLOAT8:
+		case WD_TYPE_FLOAT8:
 			return "float8";
-		case PG_TYPE_DATE:
+		case WD_TYPE_DATE:
 			return "date";
-		case PG_TYPE_TIME:
+		case WD_TYPE_TIME:
 			return "time";
-		case PG_TYPE_ABSTIME:
+		case WD_TYPE_ABSTIME:
 			return "abstime";
-		case PG_TYPE_DATETIME:
+		case WD_TYPE_DATETIME:
 			return "timestamptz";
-		case PG_TYPE_TIMESTAMP_NO_TMZONE:
+		case WD_TYPE_TIMESTAMP_NO_TMZONE:
 			return "timestamp without time zone";
-		case PG_TYPE_TIMESTAMP:
+		case WD_TYPE_TIMESTAMP:
 			return "timestamp";
-		case PG_TYPE_MONEY:
+		case WD_TYPE_MONEY:
 			return "money";
-		case PG_TYPE_BOOL:
+		case WD_TYPE_BOOL:
 			return "bool";
-		case PG_TYPE_BYTEA:
+		case WD_TYPE_BYTEA:
 			return "bytea";
-		case PG_TYPE_XML:
+		case WD_TYPE_XML:
 			return "xml";
-		case PG_TYPE_MACADDR:
+		case WD_TYPE_MACADDR:
 			return "macaddr";
-		case PG_TYPE_INET:
+		case WD_TYPE_INET:
 			return "inet";
-		case PG_TYPE_CIDR:
+		case WD_TYPE_CIDR:
 			return "cidr";
-		case PG_TYPE_UUID:
+		case WD_TYPE_UUID:
 			return "uuid";
-		case PG_TYPE_VOID:
+		case WD_TYPE_VOID:
 			return "void";
-		case PG_TYPE_INT2VECTOR:
+		case WD_TYPE_INT2VECTOR:
 			return "int2vector";
-		case PG_TYPE_OIDVECTOR:
+		case WD_TYPE_OIDVECTOR:
 			return "oidvector";
-		case PG_TYPE_ANY:
+		case WD_TYPE_ANY:
 			return "any";
-		case PG_TYPE_INTERVAL:
+		case WD_TYPE_INTERVAL:
 			get_interval_type(atttypmod, &tname);
 			return tname;
-		case PG_TYPE_LO_UNDEFINED:
-			return PG_TYPE_LO_NAME;
+		case WD_TYPE_LO_UNDEFINED:
+			return WD_TYPE_LO_NAME;
 
 		default:
 			/* hack until permanent type is available */
 			if (type == conn->lobj_type)
-				return PG_TYPE_LO_NAME;
+				return WD_TYPE_LO_NAME;
 
 			/*
 			 * "unknown" can actually be used in alter table because it is
@@ -874,21 +874,21 @@ MYLOG(DETAIL_LOG_LEVEL, "pgtype_to_name int4\n");
 
 
 Int4	/* PostgreSQL restriction */
-pgtype_attr_column_size(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longest, int handle_unknown_size_as)
+wdtype_attr_column_size(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longest, int handle_unknown_size_as)
 {
 	const ConnInfo	*ci = &(conn->connInfo);
 MYLOG(0, "entering type=%d, atttypmod=%d, adtsize_or=%d, unknown = %d\n", type, atttypmod, adtsize_or_longest, handle_unknown_size_as);
 
 	switch (type)
 	{
-		case PG_TYPE_CHAR:
+		case WD_TYPE_CHAR:
 			return 1;
 
-		case PG_TYPE_NAME:
-		case PG_TYPE_REFCURSOR:
+		case WD_TYPE_NAME:
+		case WD_TYPE_REFCURSOR:
 			{
 				int	value = 0;
-				if (PG_VERSION_GT(conn, 7.4))
+				if (WD_VERSION_GT(conn, 7.4))
 				{
 					/*
 					 * 'conn' argument is marked as const,
@@ -911,57 +911,57 @@ MYLOG(0, "entering type=%d, atttypmod=%d, adtsize_or=%d, unknown = %d\n", type, 
 				return value;
 			}
 
-		case PG_TYPE_INT2:
+		case WD_TYPE_INT2:
 			return 5;
 
-		case PG_TYPE_OID:
-		case PG_TYPE_XID:
-		case PG_TYPE_INT4:
+		case WD_TYPE_OID:
+		case WD_TYPE_XID:
+		case WD_TYPE_INT4:
 			return 10;
 
-		case PG_TYPE_INT8:
+		case WD_TYPE_INT8:
 			return 19;			/* signed */
 
-		case PG_TYPE_NUMERIC:
+		case WD_TYPE_NUMERIC:
 			return getNumericColumnSizeX(conn, type, atttypmod, adtsize_or_longest, handle_unknown_size_as);
 
-		case PG_TYPE_MONEY:
+		case WD_TYPE_MONEY:
 			return 10;
-		case PG_TYPE_FLOAT4:
-			return PG_REAL_DIGITS;
+		case WD_TYPE_FLOAT4:
+			return WD_REAL_DIGITS;
 
-		case PG_TYPE_FLOAT8:
-			return PG_DOUBLE_DIGITS;
+		case WD_TYPE_FLOAT8:
+			return WD_DOUBLE_DIGITS;
 
-		case PG_TYPE_DATE:
+		case WD_TYPE_DATE:
 			return 10;
-		case PG_TYPE_TIME:
+		case WD_TYPE_TIME:
 			return 8;
 
-		case PG_TYPE_ABSTIME:
-		case PG_TYPE_TIMESTAMP:
+		case WD_TYPE_ABSTIME:
+		case WD_TYPE_TIMESTAMP:
 			return 22;
-		case PG_TYPE_DATETIME:
-		case PG_TYPE_TIMESTAMP_NO_TMZONE:
+		case WD_TYPE_DATETIME:
+		case WD_TYPE_TIMESTAMP_NO_TMZONE:
 			/* return 22; */
 			return getTimestampColumnSizeX(conn, type, atttypmod);
 
-		case PG_TYPE_BOOL:
-			return ci->drivers.bools_as_char ? PG_WIDTH_OF_BOOLS_AS_CHAR : 1;
+		case WD_TYPE_BOOL:
+			return ci->drivers.bools_as_char ? WD_WIDTH_OF_BOOLS_AS_CHAR : 1;
 
-		case PG_TYPE_MACADDR:
+		case WD_TYPE_MACADDR:
 			return 17;
 
-		case PG_TYPE_INET:
-		case PG_TYPE_CIDR:
+		case WD_TYPE_INET:
+		case WD_TYPE_CIDR:
 			return sizeof("xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:255.255.255.255/128");
-		case PG_TYPE_UUID:
+		case WD_TYPE_UUID:
 			return sizeof("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX");
 
-		case PG_TYPE_LO_UNDEFINED:
+		case WD_TYPE_LO_UNDEFINED:
 			return SQL_NO_TOTAL;
 
-		case PG_TYPE_INTERVAL:
+		case WD_TYPE_INTERVAL:
 			return getIntervalColumnSize(type, atttypmod);
 
 		default:
@@ -969,7 +969,7 @@ MYLOG(0, "entering type=%d, atttypmod=%d, adtsize_or=%d, unknown = %d\n", type, 
 			if (type == conn->lobj_type)	/* hack until permanent
 												 * type is available */
 				return SQL_NO_TOTAL;
-			if (PG_TYPE_BYTEA == type && ci->bytea_as_longvarbinary)
+			if (WD_TYPE_BYTEA == type && ci->bytea_as_longvarbinary)
 				return SQL_NO_TOTAL;
 
 			/* Handle Character types and unknown types */
@@ -978,128 +978,128 @@ MYLOG(0, "entering type=%d, atttypmod=%d, adtsize_or=%d, unknown = %d\n", type, 
 }
 
 SQLSMALLINT
-pgtype_attr_precision(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longest, int handle_unknown_size_as)
+wdtype_attr_precision(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longest, int handle_unknown_size_as)
 {
 	switch (type)
 	{
-		case PG_TYPE_NUMERIC:
+		case WD_TYPE_NUMERIC:
 			return getNumericColumnSizeX(conn, type, atttypmod, adtsize_or_longest, handle_unknown_size_as);
-		case PG_TYPE_TIME:
-		case PG_TYPE_DATETIME:
-		case PG_TYPE_TIMESTAMP_NO_TMZONE:
+		case WD_TYPE_TIME:
+		case WD_TYPE_DATETIME:
+		case WD_TYPE_TIMESTAMP_NO_TMZONE:
 			return getTimestampDecimalDigitsX(conn, type, atttypmod);
-#ifdef	PG_INTERVAL_AS_SQL_INTERVAL
-		case PG_TYPE_INTERVAL:
+#ifdef	WD_INTERVAL_AS_SQL_INTERVAL
+		case WD_TYPE_INTERVAL:
 			return getIntervalDecimalDigits(type, atttypmod);
-#endif /* PG_INTERVAL_AS_SQL_INTERVAL */
+#endif /* WD_INTERVAL_AS_SQL_INTERVAL */
 	}
 	return -1;
 }
 
 Int4
-pgtype_attr_display_size(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longestlen, int handle_unknown_size_as)
+wdtype_attr_display_size(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longestlen, int handle_unknown_size_as)
 {
 	int	dsize;
 
 	switch (type)
 	{
-		case PG_TYPE_INT2:
+		case WD_TYPE_INT2:
 			return 6;
 
-		case PG_TYPE_OID:
-		case PG_TYPE_XID:
+		case WD_TYPE_OID:
+		case WD_TYPE_XID:
 			return 10;
 
-		case PG_TYPE_INT4:
+		case WD_TYPE_INT4:
 			return 11;
 
-		case PG_TYPE_INT8:
+		case WD_TYPE_INT8:
 			return 20;			/* signed: 19 digits + sign */
 
-		case PG_TYPE_NUMERIC:
+		case WD_TYPE_NUMERIC:
 			dsize = getNumericColumnSizeX(conn, type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as);
 			return dsize <= 0 ? dsize : dsize + 2;
 
-		case PG_TYPE_MONEY:
+		case WD_TYPE_MONEY:
 			return 15;			/* ($9,999,999.99) */
 
-		case PG_TYPE_FLOAT4:	/* a sign, PG_REAL_DIGITS digits, a decimal point, the letter E, a sign, and 2 digits */
-			return (1 + PG_REAL_DIGITS + 1 + 1 + 3);
+		case WD_TYPE_FLOAT4:	/* a sign, WD_REAL_DIGITS digits, a decimal point, the letter E, a sign, and 2 digits */
+			return (1 + WD_REAL_DIGITS + 1 + 1 + 3);
 
-		case PG_TYPE_FLOAT8:	/* a sign, PG_DOUBLE_DIGITS digits, a decimal point, the letter E, a sign, and 3 digits */
-			return (1 + PG_DOUBLE_DIGITS + 1 + 1 + 1 + 3);
+		case WD_TYPE_FLOAT8:	/* a sign, WD_DOUBLE_DIGITS digits, a decimal point, the letter E, a sign, and 3 digits */
+			return (1 + WD_DOUBLE_DIGITS + 1 + 1 + 1 + 3);
 
-		case PG_TYPE_MACADDR:
+		case WD_TYPE_MACADDR:
 			return 17;
-		case PG_TYPE_INET:
-		case PG_TYPE_CIDR:
+		case WD_TYPE_INET:
+		case WD_TYPE_CIDR:
 			return sizeof("xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:255.255.255.255/128");
-		case PG_TYPE_UUID:
+		case WD_TYPE_UUID:
 			return 36;
-		case PG_TYPE_INTERVAL:
+		case WD_TYPE_INTERVAL:
 			return 30;
 
 			/* Character types use regular precision */
 		default:
-			return pgtype_attr_column_size(conn, type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as);
+			return wdtype_attr_column_size(conn, type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as);
 	}
 }
 
 Int4
-pgtype_attr_buffer_length(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longestlen, int handle_unknown_size_as)
+wdtype_attr_buffer_length(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longestlen, int handle_unknown_size_as)
 {
 	int	dsize;
 
 	switch (type)
 	{
-		case PG_TYPE_INT2:
+		case WD_TYPE_INT2:
 			return 2; /* sizeof(SQLSMALLINT) */
 
-		case PG_TYPE_OID:
-		case PG_TYPE_XID:
-		case PG_TYPE_INT4:
+		case WD_TYPE_OID:
+		case WD_TYPE_XID:
+		case WD_TYPE_INT4:
 			return 4; /* sizeof(SQLINTEGER) */
 
-		case PG_TYPE_INT8:
-			if (SQL_C_CHAR == pgtype_attr_to_ctype(conn, type, atttypmod))
+		case WD_TYPE_INT8:
+			if (SQL_C_CHAR == wdtype_attr_to_ctype(conn, type, atttypmod))
 				return 20;			/* signed: 19 digits + sign */
 			return 8; /* sizeof(SQLSBININT) */
 
-		case PG_TYPE_NUMERIC:
+		case WD_TYPE_NUMERIC:
 			dsize = getNumericColumnSizeX(conn, type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as);
 			return dsize <= 0 ? dsize : dsize + 2;
 
-		case PG_TYPE_FLOAT4:
-		case PG_TYPE_MONEY:
+		case WD_TYPE_FLOAT4:
+		case WD_TYPE_MONEY:
 			return 4; /* sizeof(SQLREAL) */
 
-		case PG_TYPE_FLOAT8:
+		case WD_TYPE_FLOAT8:
 			return 8; /* sizeof(SQLFLOAT) */
 
-		case PG_TYPE_DATE:
-		case PG_TYPE_TIME:
+		case WD_TYPE_DATE:
+		case WD_TYPE_TIME:
 			return 6;		/* sizeof(DATE(TIME)_STRUCT) */
 
-		case PG_TYPE_ABSTIME:
-		case PG_TYPE_DATETIME:
-		case PG_TYPE_TIMESTAMP:
-		case PG_TYPE_TIMESTAMP_NO_TMZONE:
+		case WD_TYPE_ABSTIME:
+		case WD_TYPE_DATETIME:
+		case WD_TYPE_TIMESTAMP:
+		case WD_TYPE_TIMESTAMP_NO_TMZONE:
 			return 16;		/* sizeof(TIMESTAMP_STRUCT) */
 
-		case PG_TYPE_MACADDR:
+		case WD_TYPE_MACADDR:
 			return 17;
-		case PG_TYPE_INET:
-		case PG_TYPE_CIDR:
+		case WD_TYPE_INET:
+		case WD_TYPE_CIDR:
 			return sizeof("xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:255.255.255.255/128");
-		case PG_TYPE_UUID:
+		case WD_TYPE_UUID:
 			return 16;		/* sizeof(SQLGUID) */
 
 			/* Character types use the default precision */
-		case PG_TYPE_VARCHAR:
-		case PG_TYPE_BPCHAR:
+		case WD_TYPE_VARCHAR:
+		case WD_TYPE_BPCHAR:
 			{
 			int	coef = 1;
-			Int4	prec = pgtype_attr_column_size(conn, type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as), maxvarc;
+			Int4	prec = wdtype_attr_column_size(conn, type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as), maxvarc;
 			if (SQL_NO_TOTAL == prec)
 				return prec;
 #ifdef	UNICODE_SUPPORT
@@ -1117,96 +1117,96 @@ pgtype_attr_buffer_length(const ConnectionClass *conn, OID type, int atttypmod, 
 				return maxvarc;
 			return coef * prec;
 			}
-#ifdef	PG_INTERVAL_AS_SQL_INTERVAL
-		case PG_TYPE_INTERVAL:
+#ifdef	WD_INTERVAL_AS_SQL_INTERVAL
+		case WD_TYPE_INTERVAL:
 			return sizeof(SQL_INTERVAL_STRUCT);
-#endif /* PG_INTERVAL_AS_SQL_INTERVAL */
+#endif /* WD_INTERVAL_AS_SQL_INTERVAL */
 
 		default:
-			return pgtype_attr_column_size(conn, type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as);
+			return wdtype_attr_column_size(conn, type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as);
 	}
 }
 
 /*
  */
 Int4
-pgtype_attr_desclength(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longestlen, int handle_unknown_size_as)
+wdtype_attr_desclength(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longestlen, int handle_unknown_size_as)
 {
 	int	dsize;
 
 	switch (type)
 	{
-		case PG_TYPE_INT2:
+		case WD_TYPE_INT2:
 			return 2;
 
-		case PG_TYPE_OID:
-		case PG_TYPE_XID:
-		case PG_TYPE_INT4:
+		case WD_TYPE_OID:
+		case WD_TYPE_XID:
+		case WD_TYPE_INT4:
 			return 4;
 
-		case PG_TYPE_INT8:
+		case WD_TYPE_INT8:
 			return 20;			/* signed: 19 digits + sign */
 
-		case PG_TYPE_NUMERIC:
+		case WD_TYPE_NUMERIC:
 			dsize = getNumericColumnSizeX(conn, type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as);
 			return dsize <= 0 ? dsize : dsize + 2;
 
-		case PG_TYPE_FLOAT4:
-		case PG_TYPE_MONEY:
+		case WD_TYPE_FLOAT4:
+		case WD_TYPE_MONEY:
 			return 4;
 
-		case PG_TYPE_FLOAT8:
+		case WD_TYPE_FLOAT8:
 			return 8;
 
-		case PG_TYPE_DATE:
-		case PG_TYPE_TIME:
-		case PG_TYPE_ABSTIME:
-		case PG_TYPE_DATETIME:
-		case PG_TYPE_TIMESTAMP_NO_TMZONE:
-		case PG_TYPE_TIMESTAMP:
-		case PG_TYPE_VARCHAR:
-		case PG_TYPE_BPCHAR:
-			return pgtype_attr_column_size(conn, type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as);
+		case WD_TYPE_DATE:
+		case WD_TYPE_TIME:
+		case WD_TYPE_ABSTIME:
+		case WD_TYPE_DATETIME:
+		case WD_TYPE_TIMESTAMP_NO_TMZONE:
+		case WD_TYPE_TIMESTAMP:
+		case WD_TYPE_VARCHAR:
+		case WD_TYPE_BPCHAR:
+			return wdtype_attr_column_size(conn, type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as);
 		default:
-			return pgtype_attr_column_size(conn, type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as);
+			return wdtype_attr_column_size(conn, type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as);
 	}
 }
 
 Int2
-pgtype_attr_decimal_digits(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longestlen, int UNUSED_handle_unknown_size_as)
+wdtype_attr_decimal_digits(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longestlen, int UNUSED_handle_unknown_size_as)
 {
 	switch (type)
 	{
-		case PG_TYPE_INT2:
-		case PG_TYPE_OID:
-		case PG_TYPE_XID:
-		case PG_TYPE_INT4:
-		case PG_TYPE_INT8:
-		case PG_TYPE_FLOAT4:
-		case PG_TYPE_FLOAT8:
-		case PG_TYPE_MONEY:
-		case PG_TYPE_BOOL:
+		case WD_TYPE_INT2:
+		case WD_TYPE_OID:
+		case WD_TYPE_XID:
+		case WD_TYPE_INT4:
+		case WD_TYPE_INT8:
+		case WD_TYPE_FLOAT4:
+		case WD_TYPE_FLOAT8:
+		case WD_TYPE_MONEY:
+		case WD_TYPE_BOOL:
 
 			/*
 			 * Number of digits to the right of the decimal point in
 			 * "yyyy-mm=dd hh:mm:ss[.f...]"
 			 */
-		case PG_TYPE_ABSTIME:
-		case PG_TYPE_TIMESTAMP:
+		case WD_TYPE_ABSTIME:
+		case WD_TYPE_TIMESTAMP:
 			return 0;
-		case PG_TYPE_TIME:
-		case PG_TYPE_DATETIME:
-		case PG_TYPE_TIMESTAMP_NO_TMZONE:
+		case WD_TYPE_TIME:
+		case WD_TYPE_DATETIME:
+		case WD_TYPE_TIMESTAMP_NO_TMZONE:
 			/* return 0; */
 			return getTimestampDecimalDigitsX(conn, type, atttypmod);
 
-		case PG_TYPE_NUMERIC:
+		case WD_TYPE_NUMERIC:
 			return getNumericDecimalDigitsX(conn, type, atttypmod, adtsize_or_longestlen, UNUSED_handle_unknown_size_as);
 
-#ifdef	PG_INTERVAL_AS_SQL_INTERVAL
-		case PG_TYPE_INTERVAL:
+#ifdef	WD_INTERVAL_AS_SQL_INTERVAL
+		case WD_TYPE_INTERVAL:
 			return getIntervalDecimalDigits(type, atttypmod);
-#endif /* PG_INTERVAL_AS_SQL_INTERVAL */
+#endif /* WD_INTERVAL_AS_SQL_INTERVAL */
 
 		default:
 			return -1;
@@ -1214,29 +1214,29 @@ pgtype_attr_decimal_digits(const ConnectionClass *conn, OID type, int atttypmod,
 }
 
 Int2
-pgtype_attr_scale(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longestlen, int UNUSED_handle_unknown_size_as)
+wdtype_attr_scale(const ConnectionClass *conn, OID type, int atttypmod, int adtsize_or_longestlen, int UNUSED_handle_unknown_size_as)
 {
 	switch (type)
 	{
-		case PG_TYPE_NUMERIC:
+		case WD_TYPE_NUMERIC:
 			return getNumericDecimalDigitsX(conn, type, atttypmod, adtsize_or_longestlen, UNUSED_handle_unknown_size_as);
 	}
 	return -1;
 }
 
 Int4
-pgtype_attr_transfer_octet_length(const ConnectionClass *conn, OID type, int atttypmod, int handle_unknown_size_as)
+wdtype_attr_transfer_octet_length(const ConnectionClass *conn, OID type, int atttypmod, int handle_unknown_size_as)
 {
 	int	coef = 1;
 	Int4	maxvarc, column_size;
 
 	switch (type)
 	{
-		case PG_TYPE_VARCHAR:
-		case PG_TYPE_BPCHAR:
-		case PG_TYPE_TEXT:
-		case PG_TYPE_UNKNOWN:
-			column_size = pgtype_attr_column_size(conn, type, atttypmod, PG_ADT_UNSET, handle_unknown_size_as);
+		case WD_TYPE_VARCHAR:
+		case WD_TYPE_BPCHAR:
+		case WD_TYPE_TEXT:
+		case WD_TYPE_UNKNOWN:
+			column_size = wdtype_attr_column_size(conn, type, atttypmod, WD_ADT_UNSET, handle_unknown_size_as);
 			if (SQL_NO_TOTAL == column_size)
 				return column_size;
 #ifdef	UNICODE_SUPPORT
@@ -1253,11 +1253,11 @@ pgtype_attr_transfer_octet_length(const ConnectionClass *conn, OID type, int att
 			if (column_size <= maxvarc && column_size * coef > maxvarc)
 				return maxvarc;
 			return coef * column_size;
-		case PG_TYPE_BYTEA:
-			return pgtype_attr_column_size(conn, type, atttypmod, PG_ADT_UNSET, handle_unknown_size_as);
+		case WD_TYPE_BYTEA:
+			return wdtype_attr_column_size(conn, type, atttypmod, WD_ADT_UNSET, handle_unknown_size_as);
 		default:
 			if (type == conn->lobj_type)
-				return pgtype_attr_column_size(conn, type, atttypmod, PG_ADT_UNSET, handle_unknown_size_as);
+				return wdtype_attr_column_size(conn, type, atttypmod, WD_ADT_UNSET, handle_unknown_size_as);
 	}
 	return -1;
 }
@@ -1275,17 +1275,17 @@ pgtype_attr_transfer_octet_length(const ConnectionClass *conn, OID type, int att
  * in order to keep regression test results.
  */
 OID
-sqltype_to_bind_pgtype(const ConnectionClass *conn, SQLSMALLINT fSqlType)
+sqltype_to_bind_wdtype(const ConnectionClass *conn, SQLSMALLINT fSqlType)
 {
-	OID		pgType = 0;
+	OID		wdtype = 0;
 
-	return pgType;
+	return wdtype;
 }
 
 /*
  * Casting parameters e.g. ?::timestamp is much more flexible
  * than specifying parameter datatype oids determined by
- * sqltype_to_bind_pgtype() via parse message.
+ * sqltype_to_bind_wdtype() via parse message.
  */
 const char *
 sqltype_to_pgcast(const ConnectionClass *conn, SQLSMALLINT fSqlType)
@@ -1328,7 +1328,7 @@ sqltype_to_pgcast(const ConnectionClass *conn, SQLSMALLINT fSqlType)
 			pgCast = "::timestamp";
 			break;
 		case SQL_GUID:
-			if (PG_VERSION_GE(conn, 8.3))
+			if (WD_VERSION_GE(conn, 8.3))
 				pgCast = "::uuid";
 			break;
 		case SQL_INTERVAL_MONTH:
@@ -1352,108 +1352,108 @@ sqltype_to_pgcast(const ConnectionClass *conn, SQLSMALLINT fSqlType)
 }
 
 OID
-sqltype_to_pgtype(const ConnectionClass *conn, SQLSMALLINT fSqlType)
+sqltype_to_wdtype(const ConnectionClass *conn, SQLSMALLINT fSqlType)
 {
-	OID		pgType;
+	OID		wdtype;
 	const ConnInfo	*ci = &(conn->connInfo);
 
-	pgType = 0; /* ??? */
+	wdtype = 0; /* ??? */
 	switch (fSqlType)
 	{
 		case SQL_BINARY:
-			pgType = PG_TYPE_BYTEA;
+			wdtype = WD_TYPE_BYTEA;
 			break;
 
 		case SQL_CHAR:
-			pgType = PG_TYPE_BPCHAR;
+			wdtype = WD_TYPE_BPCHAR;
 			break;
 
 #ifdef	UNICODE_SUPPORT
 		case SQL_WCHAR:
-			pgType = PG_TYPE_BPCHAR;
+			wdtype = WD_TYPE_BPCHAR;
 			break;
 #endif /* UNICODE_SUPPORT */
 
 		case SQL_BIT:
-			pgType = PG_TYPE_BOOL;
+			wdtype = WD_TYPE_BOOL;
 			break;
 
 		case SQL_TYPE_DATE:
 		case SQL_DATE:
-			pgType = PG_TYPE_DATE;
+			wdtype = WD_TYPE_DATE;
 			break;
 
 		case SQL_DOUBLE:
 		case SQL_FLOAT:
-			pgType = PG_TYPE_FLOAT8;
+			wdtype = WD_TYPE_FLOAT8;
 			break;
 
 		case SQL_DECIMAL:
 		case SQL_NUMERIC:
-			pgType = PG_TYPE_NUMERIC;
+			wdtype = WD_TYPE_NUMERIC;
 			break;
 
 		case SQL_BIGINT:
-			pgType = PG_TYPE_INT8;
+			wdtype = WD_TYPE_INT8;
 			break;
 
 		case SQL_INTEGER:
-			pgType = PG_TYPE_INT4;
+			wdtype = WD_TYPE_INT4;
 			break;
 
 		case SQL_LONGVARBINARY:
 			if (ci->bytea_as_longvarbinary)
-				pgType = PG_TYPE_BYTEA;
+				wdtype = WD_TYPE_BYTEA;
 			else
-				pgType = conn->lobj_type;
+				wdtype = conn->lobj_type;
 			break;
 
 		case SQL_LONGVARCHAR:
-			pgType = ci->drivers.text_as_longvarchar ? PG_TYPE_TEXT : PG_TYPE_VARCHAR;
+			wdtype = ci->drivers.text_as_longvarchar ? WD_TYPE_TEXT : WD_TYPE_VARCHAR;
 			break;
 
 #ifdef	UNICODE_SUPPORT
 		case SQL_WLONGVARCHAR:
-			pgType = ci->drivers.text_as_longvarchar ? PG_TYPE_TEXT : PG_TYPE_VARCHAR;
+			wdtype = ci->drivers.text_as_longvarchar ? WD_TYPE_TEXT : WD_TYPE_VARCHAR;
 			break;
 #endif /* UNICODE_SUPPORT */
 
 		case SQL_REAL:
-			pgType = PG_TYPE_FLOAT4;
+			wdtype = WD_TYPE_FLOAT4;
 			break;
 
 		case SQL_SMALLINT:
 		case SQL_TINYINT:
-			pgType = PG_TYPE_INT2;
+			wdtype = WD_TYPE_INT2;
 			break;
 
 		case SQL_TIME:
 		case SQL_TYPE_TIME:
-			pgType = PG_TYPE_TIME;
+			wdtype = WD_TYPE_TIME;
 			break;
 
 		case SQL_TIMESTAMP:
 		case SQL_TYPE_TIMESTAMP:
-			pgType = PG_TYPE_DATETIME;
+			wdtype = WD_TYPE_DATETIME;
 			break;
 
 		case SQL_VARBINARY:
-			pgType = PG_TYPE_BYTEA;
+			wdtype = WD_TYPE_BYTEA;
 			break;
 
 		case SQL_VARCHAR:
-			pgType = PG_TYPE_VARCHAR;
+			wdtype = WD_TYPE_VARCHAR;
 			break;
 
 #ifdef	UNICODE_SUPPORT
 		case SQL_WVARCHAR:
-			pgType = PG_TYPE_VARCHAR;
+			wdtype = WD_TYPE_VARCHAR;
 			break;
 #endif /* UNICODE_SUPPORT */
 
 		case SQL_GUID:
-			if (PG_VERSION_GE(conn, 8.3))
-				pgType = PG_TYPE_UUID;
+			if (WD_VERSION_GE(conn, 8.3))
+				wdtype = WD_TYPE_UUID;
 			break;
 
 		case SQL_INTERVAL_MONTH:
@@ -1469,11 +1469,11 @@ sqltype_to_pgtype(const ConnectionClass *conn, SQLSMALLINT fSqlType)
 		case SQL_INTERVAL_HOUR_TO_MINUTE:
 		case SQL_INTERVAL_HOUR_TO_SECOND:
 		case SQL_INTERVAL_MINUTE_TO_SECOND:
-			pgType = PG_TYPE_INTERVAL;
+			wdtype = WD_TYPE_INTERVAL;
 			break;
 	}
 
-	return pgType;
+	return wdtype;
 }
 
 static int
@@ -1482,7 +1482,7 @@ getAtttypmodEtc(const StatementClass *stmt, int col, int *adtsize_or_longestlen)
 	int	atttypmod = -1;
 
 	if (NULL != adtsize_or_longestlen)
-		*adtsize_or_longestlen = PG_ADT_UNSET;
+		*adtsize_or_longestlen = WD_ADT_UNSET;
 	if (col >= 0)
 	{
 		const QResultClass	*res;
@@ -1497,7 +1497,7 @@ getAtttypmodEtc(const StatementClass *stmt, int col, int *adtsize_or_longestlen)
 				else
 				{
 					*adtsize_or_longestlen = QR_get_display_size(res, col);
-					if (PG_TYPE_NUMERIC == QR_get_field_type(res, col) &&
+					if (WD_TYPE_NUMERIC == QR_get_field_type(res, col) &&
 					   atttypmod < 0 &&
 					   *adtsize_or_longestlen > 0)
 					{
@@ -1541,78 +1541,78 @@ getAtttypmodEtc(const StatementClass *stmt, int col, int *adtsize_or_longestlen)
  *	types that are unknown.  All other pg routines in here return a suitable default.
  */
 SQLSMALLINT
-pgtype_to_concise_type(const StatementClass *stmt, OID type, int col, int handle_unknown_size_as)
+wdtype_to_concise_type(const StatementClass *stmt, OID type, int col, int handle_unknown_size_as)
 {
 	int	atttypmod, adtsize_or_longestlen;
 
 	atttypmod = getAtttypmodEtc(stmt, col, &adtsize_or_longestlen);
-	return pgtype_attr_to_concise_type(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as);
+	return wdtype_attr_to_concise_type(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as);
 }
 
 SQLSMALLINT
-pgtype_to_sqldesctype(const StatementClass *stmt, OID type, int col, int handle_unknown_size_as)
+wdtype_to_sqldesctype(const StatementClass *stmt, OID type, int col, int handle_unknown_size_as)
 {
 	int	adtsize_or_longestlen;
 	int	atttypmod = getAtttypmodEtc(stmt, col, &adtsize_or_longestlen);
 
-	return pgtype_attr_to_sqldesctype(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as);
+	return wdtype_attr_to_sqldesctype(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, handle_unknown_size_as);
 }
 
 SQLSMALLINT
-pgtype_to_datetime_sub(const StatementClass *stmt, OID type, int col)
+wdtype_to_datetime_sub(const StatementClass *stmt, OID type, int col)
 {
 	int	atttypmod = getAtttypmodEtc(stmt, col, NULL);
 
-	return pgtype_attr_to_datetime_sub(SC_get_conn(stmt), type, atttypmod);
+	return wdtype_attr_to_datetime_sub(SC_get_conn(stmt), type, atttypmod);
 }
 
 const char *
-pgtype_to_name(const StatementClass *stmt, OID type, int col, BOOL auto_increment)
+wdtype_to_name(const StatementClass *stmt, OID type, int col, BOOL auto_increment)
 {
 	int	atttypmod = getAtttypmodEtc(stmt, col, NULL);
 
-	return pgtype_attr_to_name(SC_get_conn(stmt), type, atttypmod, auto_increment);
+	return wdtype_attr_to_name(SC_get_conn(stmt), type, atttypmod, auto_increment);
 }
 
 
 /*
  *	This corresponds to "precision" in ODBC 2.x.
  *
- *	For PG_TYPE_VARCHAR, PG_TYPE_BPCHAR, PG_TYPE_NUMERIC, SQLColumns will
- *	override this length with the atttypmod length from pg_attribute .
+ *	For WD_TYPE_VARCHAR, WD_TYPE_BPCHAR, WD_TYPE_NUMERIC, SQLColumns will
+ *	override this length with the atttypmod length from WD_attribute .
  *
  *	If col >= 0, then will attempt to get the info from the result set.
  *	This is used for functions SQLDescribeCol and SQLColAttributes.
  */
 Int4	/* PostgreSQL restriction */
-pgtype_column_size(const StatementClass *stmt, OID type, int col, int handle_unknown_size_as)
+wdtype_column_size(const StatementClass *stmt, OID type, int col, int handle_unknown_size_as)
 {
 	int	atttypmod, adtsize_or_longestlen;
 
 	atttypmod = getAtttypmodEtc(stmt, col, &adtsize_or_longestlen);
-	return pgtype_attr_column_size(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, stmt->catalog_result ? UNKNOWNS_AS_LONGEST : handle_unknown_size_as);
+	return wdtype_attr_column_size(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, stmt->catalog_result ? UNKNOWNS_AS_LONGEST : handle_unknown_size_as);
 }
 
 /*
  *	precision in ODBC 3.x.
  */
 SQLSMALLINT
-pgtype_precision(const StatementClass *stmt, OID type, int col, int handle_unknown_size_as)
+wdtype_precision(const StatementClass *stmt, OID type, int col, int handle_unknown_size_as)
 {
 	int	atttypmod, adtsize_or_longestlen;
 
 	atttypmod = getAtttypmodEtc(stmt, col, &adtsize_or_longestlen);
-	return pgtype_attr_precision(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, stmt->catalog_result ? UNKNOWNS_AS_LONGEST : handle_unknown_size_as);
+	return wdtype_attr_precision(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, stmt->catalog_result ? UNKNOWNS_AS_LONGEST : handle_unknown_size_as);
 }
 
 
 Int4
-pgtype_display_size(const StatementClass *stmt, OID type, int col, int handle_unknown_size_as)
+wdtype_display_size(const StatementClass *stmt, OID type, int col, int handle_unknown_size_as)
 {
 	int	atttypmod, adtsize_or_longestlen;
 
 	atttypmod = getAtttypmodEtc(stmt, col, &adtsize_or_longestlen);
-	return pgtype_attr_display_size(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, stmt->catalog_result ? UNKNOWNS_AS_LONGEST : handle_unknown_size_as);
+	return wdtype_attr_display_size(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, stmt->catalog_result ? UNKNOWNS_AS_LONGEST : handle_unknown_size_as);
 }
 
 
@@ -1621,23 +1621,23 @@ pgtype_display_size(const StatementClass *stmt, OID type, int col, int handle_un
  *	or SQLFetchScroll operation if SQL_C_DEFAULT is specified.
  */
 Int4
-pgtype_buffer_length(const StatementClass *stmt, OID type, int col, int handle_unknown_size_as)
+wdtype_buffer_length(const StatementClass *stmt, OID type, int col, int handle_unknown_size_as)
 {
 	int	atttypmod, adtsize_or_longestlen;
 
 	atttypmod = getAtttypmodEtc(stmt, col, &adtsize_or_longestlen);
-	return pgtype_attr_buffer_length(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, stmt->catalog_result ? UNKNOWNS_AS_LONGEST : handle_unknown_size_as);
+	return wdtype_attr_buffer_length(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, stmt->catalog_result ? UNKNOWNS_AS_LONGEST : handle_unknown_size_as);
 }
 
 /*
  */
 Int4
-pgtype_desclength(const StatementClass *stmt, OID type, int col, int handle_unknown_size_as)
+wdtype_desclength(const StatementClass *stmt, OID type, int col, int handle_unknown_size_as)
 {
 	int	atttypmod, adtsize_or_longestlen;
 
 	atttypmod = getAtttypmodEtc(stmt, col, &adtsize_or_longestlen);
-	return pgtype_attr_desclength(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, stmt->catalog_result ? UNKNOWNS_AS_LONGEST : handle_unknown_size_as);
+	return wdtype_attr_desclength(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, stmt->catalog_result ? UNKNOWNS_AS_LONGEST : handle_unknown_size_as);
 }
 
 #ifdef	NOT_USED
@@ -1645,7 +1645,7 @@ pgtype_desclength(const StatementClass *stmt, OID type, int col, int handle_unkn
  *	Transfer octet length.
  */
 Int4
-pgtype_transfer_octet_length(const StatementClass *stmt, OID type, int column_size)
+wdtype_transfer_octet_length(const StatementClass *stmt, OID type, int column_size)
 {
 	ConnectionClass	*conn = SC_get_conn(stmt);
 
@@ -1653,9 +1653,9 @@ pgtype_transfer_octet_length(const StatementClass *stmt, OID type, int column_si
 	Int4	maxvarc;
 	switch (type)
 	{
-		case PG_TYPE_VARCHAR:
-		case PG_TYPE_BPCHAR:
-		case PG_TYPE_TEXT:
+		case WD_TYPE_VARCHAR:
+		case WD_TYPE_BPCHAR:
+		case WD_TYPE_TEXT:
 			if (SQL_NO_TOTAL == column_size)
 				return column_size;
 #ifdef	UNICODE_SUPPORT
@@ -1672,7 +1672,7 @@ pgtype_transfer_octet_length(const StatementClass *stmt, OID type, int column_si
 			if (column_size <= maxvarc && column_size * coef > maxvarc)
 				return maxvarc;
 			return coef * column_size;
-		case PG_TYPE_BYTEA:
+		case WD_TYPE_BYTEA:
 			return column_size;
 		default:
 			if (type == conn->lobj_type)
@@ -1686,24 +1686,24 @@ pgtype_transfer_octet_length(const StatementClass *stmt, OID type, int column_si
  *	corrsponds to "min_scale" in ODBC 2.x.
  */
 Int2
-pgtype_min_decimal_digits(const ConnectionClass *conn, OID type)
+wdtype_min_decimal_digits(const ConnectionClass *conn, OID type)
 {
 	switch (type)
 	{
-		case PG_TYPE_INT2:
-		case PG_TYPE_OID:
-		case PG_TYPE_XID:
-		case PG_TYPE_INT4:
-		case PG_TYPE_INT8:
-		case PG_TYPE_FLOAT4:
-		case PG_TYPE_FLOAT8:
-		case PG_TYPE_MONEY:
-		case PG_TYPE_BOOL:
-		case PG_TYPE_ABSTIME:
-		case PG_TYPE_TIMESTAMP:
-		case PG_TYPE_DATETIME:
-		case PG_TYPE_TIMESTAMP_NO_TMZONE:
-		case PG_TYPE_NUMERIC:
+		case WD_TYPE_INT2:
+		case WD_TYPE_OID:
+		case WD_TYPE_XID:
+		case WD_TYPE_INT4:
+		case WD_TYPE_INT8:
+		case WD_TYPE_FLOAT4:
+		case WD_TYPE_FLOAT8:
+		case WD_TYPE_MONEY:
+		case WD_TYPE_BOOL:
+		case WD_TYPE_ABSTIME:
+		case WD_TYPE_TIMESTAMP:
+		case WD_TYPE_DATETIME:
+		case WD_TYPE_TIMESTAMP_NO_TMZONE:
+		case WD_TYPE_NUMERIC:
 			return 0;
 		default:
 			return -1;
@@ -1714,26 +1714,26 @@ pgtype_min_decimal_digits(const ConnectionClass *conn, OID type)
  *	corrsponds to "max_scale" in ODBC 2.x.
  */
 Int2
-pgtype_max_decimal_digits(const ConnectionClass *conn, OID type)
+wdtype_max_decimal_digits(const ConnectionClass *conn, OID type)
 {
 	switch (type)
 	{
-		case PG_TYPE_INT2:
-		case PG_TYPE_OID:
-		case PG_TYPE_XID:
-		case PG_TYPE_INT4:
-		case PG_TYPE_INT8:
-		case PG_TYPE_FLOAT4:
-		case PG_TYPE_FLOAT8:
-		case PG_TYPE_MONEY:
-		case PG_TYPE_BOOL:
-		case PG_TYPE_ABSTIME:
-		case PG_TYPE_TIMESTAMP:
+		case WD_TYPE_INT2:
+		case WD_TYPE_OID:
+		case WD_TYPE_XID:
+		case WD_TYPE_INT4:
+		case WD_TYPE_INT8:
+		case WD_TYPE_FLOAT4:
+		case WD_TYPE_FLOAT8:
+		case WD_TYPE_MONEY:
+		case WD_TYPE_BOOL:
+		case WD_TYPE_ABSTIME:
+		case WD_TYPE_TIMESTAMP:
 			return 0;
-		case PG_TYPE_DATETIME:
-		case PG_TYPE_TIMESTAMP_NO_TMZONE:
+		case WD_TYPE_DATETIME:
+		case WD_TYPE_TIMESTAMP_NO_TMZONE:
 			return 38;
-		case PG_TYPE_NUMERIC:
+		case WD_TYPE_NUMERIC:
 			return getNumericDecimalDigitsX(conn, type, -1, -1, UNUSED_HANDLE_UNKNOWN_SIZE_AS);
 		default:
 			return -1;
@@ -1744,41 +1744,41 @@ pgtype_max_decimal_digits(const ConnectionClass *conn, OID type)
  *	corrsponds to "scale" in ODBC 2.x.
  */
 Int2
-pgtype_decimal_digits(const StatementClass *stmt, OID type, int col)
+wdtype_decimal_digits(const StatementClass *stmt, OID type, int col)
 {
 	int	atttypmod, adtsize_or_longestlen;
 
 	atttypmod = getAtttypmodEtc(stmt, col, &adtsize_or_longestlen);
-	return pgtype_attr_decimal_digits(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, UNUSED_HANDLE_UNKNOWN_SIZE_AS);
+	return wdtype_attr_decimal_digits(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, UNUSED_HANDLE_UNKNOWN_SIZE_AS);
 }
 
 /*
  *	"scale" in ODBC 3.x.
  */
 Int2
-pgtype_scale(const StatementClass *stmt, OID type, int col)
+wdtype_scale(const StatementClass *stmt, OID type, int col)
 {
 	int	atttypmod, adtsize_or_longestlen;
 
 	atttypmod = getAtttypmodEtc(stmt, col, &adtsize_or_longestlen);
-	return pgtype_attr_scale(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, UNUSED_HANDLE_UNKNOWN_SIZE_AS);
+	return wdtype_attr_scale(SC_get_conn(stmt), type, atttypmod, adtsize_or_longestlen, UNUSED_HANDLE_UNKNOWN_SIZE_AS);
 }
 
 
 Int2
-pgtype_radix(const ConnectionClass *conn, OID type)
+wdtype_radix(const ConnectionClass *conn, OID type)
 {
 	switch (type)
 	{
-		case PG_TYPE_INT2:
-		case PG_TYPE_XID:
-		case PG_TYPE_OID:
-		case PG_TYPE_INT4:
-		case PG_TYPE_INT8:
-		case PG_TYPE_NUMERIC:
-		case PG_TYPE_FLOAT4:
-		case PG_TYPE_MONEY:
-		case PG_TYPE_FLOAT8:
+		case WD_TYPE_INT2:
+		case WD_TYPE_XID:
+		case WD_TYPE_OID:
+		case WD_TYPE_INT4:
+		case WD_TYPE_INT8:
+		case WD_TYPE_NUMERIC:
+		case WD_TYPE_FLOAT4:
+		case WD_TYPE_MONEY:
+		case WD_TYPE_FLOAT8:
 			return 10;
 		default:
 			return -1;
@@ -1787,35 +1787,35 @@ pgtype_radix(const ConnectionClass *conn, OID type)
 
 
 Int2
-pgtype_nullable(const ConnectionClass *conn, OID type)
+wdtype_nullable(const ConnectionClass *conn, OID type)
 {
 	return SQL_NULLABLE;		/* everything should be nullable */
 }
 
 
 Int2
-pgtype_auto_increment(const ConnectionClass *conn, OID type)
+wdtype_auto_increment(const ConnectionClass *conn, OID type)
 {
 	switch (type)
 	{
-		case PG_TYPE_INT2:
-		case PG_TYPE_OID:
-		case PG_TYPE_XID:
-		case PG_TYPE_INT4:
-		case PG_TYPE_FLOAT4:
-		case PG_TYPE_MONEY:
-		case PG_TYPE_BOOL:
-		case PG_TYPE_FLOAT8:
-		case PG_TYPE_INT8:
-		case PG_TYPE_NUMERIC:
+		case WD_TYPE_INT2:
+		case WD_TYPE_OID:
+		case WD_TYPE_XID:
+		case WD_TYPE_INT4:
+		case WD_TYPE_FLOAT4:
+		case WD_TYPE_MONEY:
+		case WD_TYPE_BOOL:
+		case WD_TYPE_FLOAT8:
+		case WD_TYPE_INT8:
+		case WD_TYPE_NUMERIC:
 
-		case PG_TYPE_DATE:
-		case PG_TYPE_TIME_WITH_TMZONE:
-		case PG_TYPE_TIME:
-		case PG_TYPE_ABSTIME:
-		case PG_TYPE_DATETIME:
-		case PG_TYPE_TIMESTAMP_NO_TMZONE:
-		case PG_TYPE_TIMESTAMP:
+		case WD_TYPE_DATE:
+		case WD_TYPE_TIME_WITH_TMZONE:
+		case WD_TYPE_TIME:
+		case WD_TYPE_ABSTIME:
+		case WD_TYPE_DATETIME:
+		case WD_TYPE_TIMESTAMP_NO_TMZONE:
+		case WD_TYPE_TIMESTAMP:
 			return FALSE;
 
 		default:
@@ -1825,17 +1825,17 @@ pgtype_auto_increment(const ConnectionClass *conn, OID type)
 
 
 Int2
-pgtype_case_sensitive(const ConnectionClass *conn, OID type)
+wdtype_case_sensitive(const ConnectionClass *conn, OID type)
 {
 	switch (type)
 	{
-		case PG_TYPE_CHAR:
+		case WD_TYPE_CHAR:
 
-		case PG_TYPE_VARCHAR:
-		case PG_TYPE_BPCHAR:
-		case PG_TYPE_TEXT:
-		case PG_TYPE_NAME:
-		case PG_TYPE_REFCURSOR:
+		case WD_TYPE_VARCHAR:
+		case WD_TYPE_BPCHAR:
+		case WD_TYPE_TEXT:
+		case WD_TYPE_NAME:
+		case WD_TYPE_REFCURSOR:
 			return TRUE;
 
 		default:
@@ -1845,11 +1845,11 @@ pgtype_case_sensitive(const ConnectionClass *conn, OID type)
 
 
 Int2
-pgtype_money(const ConnectionClass *conn, OID type)
+wdtype_money(const ConnectionClass *conn, OID type)
 {
 	switch (type)
 	{
-		case PG_TYPE_MONEY:
+		case WD_TYPE_MONEY:
 			return TRUE;
 		default:
 			return FALSE;
@@ -1858,17 +1858,17 @@ pgtype_money(const ConnectionClass *conn, OID type)
 
 
 Int2
-pgtype_searchable(const ConnectionClass *conn, OID type)
+wdtype_searchable(const ConnectionClass *conn, OID type)
 {
 	switch (type)
 	{
-		case PG_TYPE_CHAR:
+		case WD_TYPE_CHAR:
 
-		case PG_TYPE_VARCHAR:
-		case PG_TYPE_BPCHAR:
-		case PG_TYPE_TEXT:
-		case PG_TYPE_NAME:
-		case PG_TYPE_REFCURSOR:
+		case WD_TYPE_VARCHAR:
+		case WD_TYPE_BPCHAR:
+		case WD_TYPE_TEXT:
+		case WD_TYPE_NAME:
+		case WD_TYPE_REFCURSOR:
 			return SQL_SEARCHABLE;
 
 		default:
@@ -1880,21 +1880,21 @@ pgtype_searchable(const ConnectionClass *conn, OID type)
 
 
 Int2
-pgtype_unsigned(const ConnectionClass *conn, OID type)
+wdtype_unsigned(const ConnectionClass *conn, OID type)
 {
 	switch (type)
 	{
-		case PG_TYPE_OID:
-		case PG_TYPE_XID:
+		case WD_TYPE_OID:
+		case WD_TYPE_XID:
 			return TRUE;
 
-		case PG_TYPE_INT2:
-		case PG_TYPE_INT4:
-		case PG_TYPE_INT8:
-		case PG_TYPE_NUMERIC:
-		case PG_TYPE_FLOAT4:
-		case PG_TYPE_FLOAT8:
-		case PG_TYPE_MONEY:
+		case WD_TYPE_INT2:
+		case WD_TYPE_INT4:
+		case WD_TYPE_INT8:
+		case WD_TYPE_NUMERIC:
+		case WD_TYPE_FLOAT4:
+		case WD_TYPE_FLOAT8:
+		case WD_TYPE_MONEY:
 			return FALSE;
 
 		default:
@@ -1904,19 +1904,19 @@ pgtype_unsigned(const ConnectionClass *conn, OID type)
 
 
 const char *
-pgtype_literal_prefix(const ConnectionClass *conn, OID type)
+wdtype_literal_prefix(const ConnectionClass *conn, OID type)
 {
 	switch (type)
 	{
-		case PG_TYPE_INT2:
-		case PG_TYPE_OID:
-		case PG_TYPE_XID:
-		case PG_TYPE_INT4:
-		case PG_TYPE_INT8:
-		case PG_TYPE_NUMERIC:
-		case PG_TYPE_FLOAT4:
-		case PG_TYPE_FLOAT8:
-		case PG_TYPE_MONEY:
+		case WD_TYPE_INT2:
+		case WD_TYPE_OID:
+		case WD_TYPE_XID:
+		case WD_TYPE_INT4:
+		case WD_TYPE_INT8:
+		case WD_TYPE_NUMERIC:
+		case WD_TYPE_FLOAT4:
+		case WD_TYPE_FLOAT8:
+		case WD_TYPE_MONEY:
 			return NULL;
 
 		default:
@@ -1926,19 +1926,19 @@ pgtype_literal_prefix(const ConnectionClass *conn, OID type)
 
 
 const char *
-pgtype_literal_suffix(const ConnectionClass *conn, OID type)
+wdtype_literal_suffix(const ConnectionClass *conn, OID type)
 {
 	switch (type)
 	{
-		case PG_TYPE_INT2:
-		case PG_TYPE_OID:
-		case PG_TYPE_XID:
-		case PG_TYPE_INT4:
-		case PG_TYPE_INT8:
-		case PG_TYPE_NUMERIC:
-		case PG_TYPE_FLOAT4:
-		case PG_TYPE_FLOAT8:
-		case PG_TYPE_MONEY:
+		case WD_TYPE_INT2:
+		case WD_TYPE_OID:
+		case WD_TYPE_XID:
+		case WD_TYPE_INT4:
+		case WD_TYPE_INT8:
+		case WD_TYPE_NUMERIC:
+		case WD_TYPE_FLOAT4:
+		case WD_TYPE_FLOAT8:
+		case WD_TYPE_MONEY:
 			return NULL;
 
 		default:
@@ -1948,14 +1948,14 @@ pgtype_literal_suffix(const ConnectionClass *conn, OID type)
 
 
 const char *
-pgtype_create_params(const ConnectionClass *conn, OID type)
+wdtype_create_params(const ConnectionClass *conn, OID type)
 {
 	switch (type)
 	{
-		case PG_TYPE_BPCHAR:
-		case PG_TYPE_VARCHAR:
+		case WD_TYPE_BPCHAR:
+		case WD_TYPE_VARCHAR:
 			return "max. length";
-		case PG_TYPE_NUMERIC:
+		case WD_TYPE_NUMERIC:
 			return "precision, scale";
 		default:
 			return NULL;

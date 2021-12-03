@@ -76,20 +76,20 @@ function buildPlatform([xml]$configInfo, [string]$Platform)
 		$platinfo=$configInfo.Configuration.x86
 	}
 	$BUILD_MACROS=$platinfo.build_macros
-	$PG_INC=getPGDir $configInfo $Platform "include"
-	$PG_LIB=getPGDir $configInfo $Platform "lib"
-	$PG_BIN=getPGDir $configInfo $Platform "bin"
+	$WD_INC=getPGDir $configInfo $Platform "include"
+	$WD_LIB=getPGDir $configInfo $Platform "lib"
+	$WD_BIN=getPGDir $configInfo $Platform "bin"
 
-	Write-Host "USE LIBPQ  : ($PG_INC $PG_LIB $PG_BIN)"
+	Write-Host "USE LIBPQ  : ($WD_INC $WD_LIB $WD_BIN)"
 
-	if (-not (Test-Path $PG_INC)) {
-		throw("`n!!!! include directory $PG_INC does not exist`nplease specify the correct folder name using editConfiguration")
+	if (-not (Test-Path $WD_INC)) {
+		throw("`n!!!! include directory $WD_INC does not exist`nplease specify the correct folder name using editConfiguration")
 	}
-	if (-not (Test-Path $PG_LIB)) {
-		throw("`n!!!! lib directory $PG_LIB does not exist`nplease specify the correct folder name using editConfiguration")
+	if (-not (Test-Path $WD_LIB)) {
+		throw("`n!!!! lib directory $WD_LIB does not exist`nplease specify the correct folder name using editConfiguration")
 	}
-	if (-not (Test-Path $PG_BIN)) {
-		throw("`n!!!! bin directory $PG_BIN does not exist`nplease specify the correct folder name using editConfiguration")
+	if (-not (Test-Path $WD_BIN)) {
+		throw("`n!!!! bin directory $WD_BIN does not exist`nplease specify the correct folder name using editConfiguration")
 	}
 	
 	$useSplit=$true
@@ -100,7 +100,7 @@ function buildPlatform([xml]$configInfo, [string]$Platform)
 		$BUILD_MACROS = $BUILD_MACROS -replace '"', '`"'
 		$macroList = iex "write-output $BUILD_MACROS"
 	}
-	& ${msbuildexe} ./platformbuild.vcxproj /tv:$MSToolsV "/p:Platform=$Platform;Configuration=$Configuration;PlatformToolset=${Toolset}" /t:$target /p:VisualStudioVersion=${VCVersion} /p:DRIVERVERSION=$DRIVERVERSION /p:PG_INC=$PG_INC /p:PG_LIB=$PG_LIB /p:PG_BIN=$PG_BIN $macroList
+	& ${msbuildexe} ./platformbuild.vcxproj /tv:$MSToolsV "/p:Platform=$Platform;Configuration=$Configuration;PlatformToolset=${Toolset}" /t:$target /p:VisualStudioVersion=${VCVersion} /p:DRIVERVERSION=$DRIVERVERSION /p:WD_INC=$WD_INC /p:WD_LIB=$WD_LIB /p:WD_BIN=$WD_BIN $macroList
 }
 
 $scriptPath = (Split-Path $MyInvocation.MyCommand.Path)

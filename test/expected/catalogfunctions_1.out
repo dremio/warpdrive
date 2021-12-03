@@ -182,10 +182,10 @@ contrib_regression	public	simple_add		1	4	int4	10	4	0	10	2	NULL	NULL	4	NULL	NULL
 contrib_regression	public	simple_add		1	4	int4	10	4	0	10	2	NULL	NULL	4	NULL	NULL	2	
 contrib_regression	public	simple_add		4	4	int4	10	4	0	10	2	NULL	NULL	4	NULL	NULL	3	
 Result set:
-contrib_regression	pg_catalog	set_byte		5	-4	bytea
-contrib_regression	pg_catalog	set_byte		1	-4	bytea
-contrib_regression	pg_catalog	set_byte		1	4	int4
-contrib_regression	pg_catalog	set_byte		1	4	int4
+contrib_regression	WD_catalog	set_byte		5	-4	bytea
+contrib_regression	WD_catalog	set_byte		1	-4	bytea
+contrib_regression	WD_catalog	set_byte		1	4	int4
+contrib_regression	WD_catalog	set_byte		1	4	int4
 Result set:
 contrib_regression	public	getfoo		1	4	int4
 contrib_regression	public	getfoo	id	4	4	int4

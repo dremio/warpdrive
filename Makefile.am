@@ -17,15 +17,15 @@ psqlodbcw_la_CFLAGS = -DUNICODE_SUPPORT # -DUNICODE_SUPPORTXX
 psqlodbca_la_SOURCES = \
 	info.c bind.c columninfo.c connection.c convert.c drvconn.c \
 	environ.c execute.c lobj.c misc.c options.c \
-	pgtypes.c psqlodbc.c qresult.c results.c parse.c \
+	wdtypes.c psqlodbc.c qresult.c results.c parse.c \
 	statement.c tuple.c dlg_specific.c \
 	multibyte.c odbcapi.c descriptor.c \
 	odbcapi30.c pgapi30.c mylog.c \
 \
 	bind.h catfunc.h columninfo.h connection.h convert.h \
 	descriptor.h dlg_specific.h environ.h unicode_support.h \
-	lobj.h misc.h multibyte.h pgapifunc.h pgtypes.h \
-	psqlodbc.h qresult.h resource.h statement.h tuple.h \
+	lobj.h misc.h multibyte.h pgapifunc.h wdtypes.h \
+	wdodbc.h qresult.h resource.h statement.h tuple.h \
 	version.h pgenlist.h mylog.h xalibname.h
 
 psqlodbcw_la_SOURCES = $(psqlodbca_la_SOURCES) \

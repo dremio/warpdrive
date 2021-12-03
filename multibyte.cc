@@ -23,13 +23,13 @@
 #define	TRUE	1
 #endif
 
-typedef struct pg_CS
+typedef struct WD_CS
 {
 	char   *name;
 	int		code;
-} pg_CS;
+} WD_CS;
 
-static pg_CS CS_Table[] =
+static WD_CS CS_Table[] =
 {
 	{ "SQL_ASCII",	SQL_ASCII },
 	{ "EUC_JP",	EUC_JP },
@@ -76,7 +76,7 @@ static pg_CS CS_Table[] =
 	{ "OTHER",	OTHER }
 };
 
-static pg_CS CS_Alias[] =
+static WD_CS CS_Alias[] =
 {
 	{ "UNICODE",	UTF8 },
 	{ "TCVN",	WIN1258 },
@@ -87,7 +87,7 @@ static pg_CS CS_Alias[] =
 };
 
 int
-pg_CS_code(const char *characterset_string)
+WD_CS_code(const char *characterset_string)
 {
 	int i, c = -1;
 
@@ -209,7 +209,7 @@ check_client_encoding(const pgNAME conn_settings)
 }
 
 int
-pg_mb_maxlen(int characterset_code)
+WD_mb_maxlen(int characterset_code)
 {
 	switch (characterset_code)
 	{
@@ -236,7 +236,7 @@ pg_mb_maxlen(int characterset_code)
 }
 
 static int
-pg_CS_stat(int stat,unsigned int character,int characterset_code)
+WD_CS_stat(int stat,unsigned int character,int characterset_code)
 {
 	if (character == 0)
 		stat = 0;
@@ -500,8 +500,8 @@ derive_locale_encoding(const char *dbencoding)
 		int enc_no;
 
 		ptr++;
-		if ((enc_no= pg_char_to_encoding(ptr)) >= 0)
-			wenc = pg_encoding_to_char(enc_no);
+		if ((enc_no= WD_char_to_encoding(ptr)) >= 0)
+			wenc = WD_encoding_to_char(enc_no);
 		MYLOG(0, "locale=%s enc=%s\n", loc, wenc ? wenc : "(null)");
 	}
 #endif /* WIN32 */
@@ -522,7 +522,7 @@ int encoded_nextchar(encoded_str *encstr)
 	if (encstr->pos >= 0 && !encstr->encstr[encstr->pos])
 		return 0;
 	chr = encstr->encstr[++encstr->pos];
-	encstr->ccst = pg_CS_stat(encstr->ccst, (unsigned int) chr, encstr->ccsc);
+	encstr->ccst = WD_CS_stat(encstr->ccst, (unsigned int) chr, encstr->ccsc);
 	return chr;
 }
 ssize_t encoded_position_shift(encoded_str *encstr, size_t shift)
@@ -535,6 +535,6 @@ int encoded_byte_check(encoded_str *encstr, size_t abspos)
 	int	chr;
 
 	chr = encstr->encstr[encstr->pos = abspos];
-	encstr->ccst = pg_CS_stat(encstr->ccst, (unsigned int) chr, encstr->ccsc);
+	encstr->ccst = WD_CS_stat(encstr->ccst, (unsigned int) chr, encstr->ccsc);
 	return chr;
 }

@@ -61,9 +61,9 @@ ConnectionClass * const *getConnList(void)
 }
 
 RETCODE		SQL_API
-PGAPI_AllocEnv(HENV * phenv)
+WD_AllocEnv(HENV * phenv)
 {
-	CSTR func = "PGAPI_AllocEnv";
+	CSTR func = "WD_AllocEnv";
 	SQLRETURN	ret = SQL_SUCCESS;
 
 	MYLOG(0, "entering\n");
@@ -91,9 +91,9 @@ PGAPI_AllocEnv(HENV * phenv)
 
 
 RETCODE		SQL_API
-PGAPI_FreeEnv(HENV henv)
+WD_FreeEnv(HENV henv)
 {
-	CSTR func = "PGAPI_FreeEnv";
+	CSTR func = "WD_FreeEnv";
 	SQLRETURN	ret = SQL_SUCCESS;
 	EnvironmentClass *env = (EnvironmentClass *) henv;
 
@@ -114,15 +114,15 @@ cleanup:
 #define	SIZEOF_SQLSTATE	6
 
 static void
-pg_sqlstate_set(const EnvironmentClass *env, UCHAR *szSqlState, const char *ver3str, const char *ver2str)
+WD_sqlstate_set(const EnvironmentClass *env, UCHAR *szSqlState, const char *ver3str, const char *ver2str)
 {
 	strncpy_null((char *) szSqlState, EN_is_odbc3(env) ? ver3str : ver2str, SIZEOF_SQLSTATE);
 }
 
-PG_ErrorInfo *
+WD_ErrorInfo *
 ER_Constructor(SDWORD errnumber, const char *msg)
 {
-	PG_ErrorInfo	*error;
+	WD_ErrorInfo	*error;
 	ssize_t		aladd, errsize;
 
 	if (DESC_OK == errnumber)
@@ -139,10 +139,10 @@ ER_Constructor(SDWORD errnumber, const char *msg)
 		errsize = -1;
 		aladd = 0;
 	}
-	error = (PG_ErrorInfo *) malloc(sizeof(PG_ErrorInfo) + aladd);
+	error = (WD_ErrorInfo *) malloc(sizeof(WD_ErrorInfo) + aladd);
 	if (error)
 	{
-		memset(error, 0, sizeof(PG_ErrorInfo));
+		memset(error, 0, sizeof(WD_ErrorInfo));
 		error->status = errnumber;
 		error->errorsize = (Int2) errsize;
 		if (errsize > 0)
@@ -154,23 +154,23 @@ ER_Constructor(SDWORD errnumber, const char *msg)
 }
 
 void
-ER_Destructor(PG_ErrorInfo *self)
+ER_Destructor(WD_ErrorInfo *self)
 {
 	free(self);
 }
 
-PG_ErrorInfo *
-ER_Dup(const PG_ErrorInfo *self)
+WD_ErrorInfo *
+ER_Dup(const WD_ErrorInfo *self)
 {
-	PG_ErrorInfo	*new;
+	WD_ErrorInfo	*new;
 	Int4		alsize;
 
 	if (!self)
 		return NULL;
-	alsize = sizeof(PG_ErrorInfo);
+	alsize = sizeof(WD_ErrorInfo);
 	if (self->errorsize  > 0)
 		alsize += self->errorsize;
-	new = (PG_ErrorInfo *) malloc(alsize);
+	new = (WD_ErrorInfo *) malloc(alsize);
 	if (new)
 		memcpy(new, self, alsize);
 
@@ -180,7 +180,7 @@ ER_Dup(const PG_ErrorInfo *self)
 #define	DRVMNGRDIV	511
 /*		Returns the next SQL error information. */
 RETCODE		SQL_API
-ER_ReturnError(PG_ErrorInfo *pgerror,
+ER_ReturnError(WD_ErrorInfo *pgerror,
 			   SQLSMALLINT	RecNumber,
 			   SQLCHAR * szSqlState,
 			   SQLINTEGER * pfNativeError,
@@ -190,7 +190,7 @@ ER_ReturnError(PG_ErrorInfo *pgerror,
 			   UWORD flag)
 {
 	/* CC: return an error of a hstmt  */
-	PG_ErrorInfo	*error;
+	WD_ErrorInfo	*error;
 	BOOL		partial_ok = ((flag & PODBC_ALLOW_PARTIAL_EXTRACT) != 0);
 	const char	*msg;
 	SWORD		msglen, stapos, wrtlen, pcblen;
@@ -265,7 +265,7 @@ ER_ReturnError(PG_ErrorInfo *pgerror,
 
 
 RETCODE		SQL_API
-PGAPI_ConnectError(HDBC hdbc,
+WD_ConnectError(HDBC hdbc,
 				   SQLSMALLINT	RecNumber,
 				   SQLCHAR * szSqlState,
 				   SQLINTEGER * pfNativeError,
@@ -322,64 +322,64 @@ PGAPI_ConnectError(HDBC hdbc,
 		switch (status)
 		{
 			case CONN_OPTION_VALUE_CHANGED:
-				pg_sqlstate_set(env, szSqlState, "01S02", "01S02");
+				WD_sqlstate_set(env, szSqlState, "01S02", "01S02");
 				break;
 			case CONN_TRUNCATED:
-				pg_sqlstate_set(env, szSqlState, "01004", "01004");
+				WD_sqlstate_set(env, szSqlState, "01004", "01004");
 				/* data truncated */
 				break;
 			case CONN_INIREAD_ERROR:
-				pg_sqlstate_set(env, szSqlState, "IM002", "IM002");
+				WD_sqlstate_set(env, szSqlState, "IM002", "IM002");
 				/* data source not found */
 				break;
 			case CONNECTION_SERVER_NOT_REACHED:
 			case CONN_OPENDB_ERROR:
-				pg_sqlstate_set(env, szSqlState, "08001", "08001");
+				WD_sqlstate_set(env, szSqlState, "08001", "08001");
 				/* unable to connect to data source */
 				break;
 			case CONN_INVALID_AUTHENTICATION:
 			case CONN_AUTH_TYPE_UNSUPPORTED:
-				pg_sqlstate_set(env, szSqlState, "28000", "28000");
+				WD_sqlstate_set(env, szSqlState, "28000", "28000");
 				break;
 			case CONN_STMT_ALLOC_ERROR:
-				pg_sqlstate_set(env, szSqlState, "HY001", "S1001");
+				WD_sqlstate_set(env, szSqlState, "HY001", "S1001");
 				/* memory allocation failure */
 				break;
 			case CONN_IN_USE:
-				pg_sqlstate_set(env, szSqlState, "HY000", "S1000");
+				WD_sqlstate_set(env, szSqlState, "HY000", "S1000");
 				/* general error */
 				break;
 			case CONN_UNSUPPORTED_OPTION:
-				pg_sqlstate_set(env, szSqlState, "HYC00", "IM001");
+				WD_sqlstate_set(env, szSqlState, "HYC00", "IM001");
 				/* driver does not support this function */
 				break;
 			case CONN_INVALID_ARGUMENT_NO:
-				pg_sqlstate_set(env, szSqlState, "HY009", "S1009");
+				WD_sqlstate_set(env, szSqlState, "HY009", "S1009");
 				/* invalid argument value */
 				break;
 			case CONN_TRANSACT_IN_PROGRES:
-				pg_sqlstate_set(env, szSqlState, "HY011", "S1011");
+				WD_sqlstate_set(env, szSqlState, "HY011", "S1011");
 				break;
 			case CONN_NO_MEMORY_ERROR:
-				pg_sqlstate_set(env, szSqlState, "HY001", "S1001");
+				WD_sqlstate_set(env, szSqlState, "HY001", "S1001");
 				break;
 			case CONN_NOT_IMPLEMENTED_ERROR:
-				pg_sqlstate_set(env, szSqlState, "HYC00", "S1C00");
+				WD_sqlstate_set(env, szSqlState, "HYC00", "S1C00");
 				break;
 			case CONN_ILLEGAL_TRANSACT_STATE:
-				pg_sqlstate_set(env, szSqlState, "25000", "S1010");
+				WD_sqlstate_set(env, szSqlState, "25000", "S1010");
 				break;
 			case CONN_VALUE_OUT_OF_RANGE:
-				pg_sqlstate_set(env, szSqlState, "HY019", "22003");
+				WD_sqlstate_set(env, szSqlState, "HY019", "22003");
 				break;
 			case CONNECTION_COULD_NOT_SEND:
 			case CONNECTION_COULD_NOT_RECEIVE:
 			case CONNECTION_COMMUNICATION_ERROR:
 			case CONNECTION_NO_RESPONSE:
-				pg_sqlstate_set(env, szSqlState, "08S01", "08S01");
+				WD_sqlstate_set(env, szSqlState, "08S01", "08S01");
 				break;
 			default:
-				pg_sqlstate_set(env, szSqlState, "HY000", "S1000");
+				WD_sqlstate_set(env, szSqlState, "HY000", "S1000");
 				/* general error */
 				break;
 		}
@@ -396,7 +396,7 @@ PGAPI_ConnectError(HDBC hdbc,
 }
 
 RETCODE		SQL_API
-PGAPI_EnvError(HENV henv,
+WD_EnvError(HENV henv,
 			   SQLSMALLINT	RecNumber,
 			   SQLCHAR * szSqlState,
 			   SQLINTEGER * pfNativeError,
@@ -419,7 +419,7 @@ PGAPI_EnvError(HENV henv,
 		MYLOG(0, "EN_get_error: msg = #%s#\n", msg);
 
 		if (NULL != szSqlState)
-			pg_sqlstate_set(env, szSqlState, "00000", "00000");
+			WD_sqlstate_set(env, szSqlState, "00000", "00000");
 		if (NULL != pcbErrorMsg)
 			*pcbErrorMsg = 0;
 		if ((NULL != szErrorMsg) && (cbErrorMsgMax > 0))
@@ -442,10 +442,10 @@ PGAPI_EnvError(HENV henv,
 		{
 			case ENV_ALLOC_ERROR:
 				/* memory allocation failure */
-				pg_sqlstate_set(env, szSqlState, "HY001", "S1001");
+				WD_sqlstate_set(env, szSqlState, "HY001", "S1001");
 				break;
 			default:
-				pg_sqlstate_set(env, szSqlState, "HY000", "S1000");
+				WD_sqlstate_set(env, szSqlState, "HY000", "S1000");
 				/* general error */
 				break;
 		}

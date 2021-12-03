@@ -36,7 +36,7 @@ for further details.</p>
 
 1.Fix the handling of *too small buffer* in the Unicode version.
 2.Fix the behavior of DiscardStatementSvp which resets the status too early.
-3.Fix the bug in PGAPI_ParamData which fails to count the number
+3.Fix the bug in WD_ParamData which fails to count the number
   of parameters.
 4.Allow blanks in password.
 5.Add an option to force abbreviation of connection string.
@@ -639,7 +639,7 @@ Diffs to version 1.2 (long / unified) <br>
 Diffs ignoring whitespace to version 1.2 (long / unified) <br>
  1) Change SQLDescribeCol or SQLColAttribute to return right ResultNumCols for<br>
 keyset/static cursors.<br>
-2) Change PG_TYPE_TEXT -> PG_TYPE_VARCHAR for character columns of the<br>
+2) Change WD_TYPE_TEXT -> WD_TYPE_VARCHAR for character columns of the<br>
 result of catalog functions (bug report from Mike Mascari). <br>
  <br>
 1.2 by hinoue   <br>

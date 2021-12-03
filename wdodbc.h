@@ -1,4 +1,4 @@
-/* File:			psqlodbc.h
+/* File:			wdodbc.h
  *
  * Description:		This file contains defines and declarations that are related to
  *					the entire driver.
@@ -6,8 +6,8 @@
  * Comments:		See "readme.txt" for copyright and license information.
  */
 
-#ifndef __PSQLODBC_H__
-#define __PSQLODBC_H__
+#ifndef __WDQLODBC_H__
+#define __WDQLODBC_H__
 
 /* #define	__MS_REPORTS_ANSI_CHAR__ */
 
@@ -49,14 +49,14 @@
 #else /* currently */
 #if defined(__GNUC__) || defined(__IBMC__)
 #if ((__GNUC__ * 100) + __GNUC_MINOR__) >= 404
-#define PG_PRINTF_ATTRIBUTE gnu_printf
+#define WD_PRINTF_ATTRIBUTE gnu_printf
 #else
-#define PG_PRINTF_ATTRIBUTE printf
+#define WD_PRINTF_ATTRIBUTE printf
 #endif
-#define pg_attribute_printf(f,a) __attribute__((format(PG_PRINTF_ATTRIBUTE, f, a)))
+#define WD_attribute_printf(f,a) __attribute__((format(WD_PRINTF_ATTRIBUTE, f, a)))
 #else
 #define	__attribute__(x)
-#define pg_attribute_printf(f,a)
+#define WD_attribute_printf(f,a)
 #endif  /* __GNUC__ || __IBMC__ */
 #endif  /* __INCLUDE_POSTGRES_FE_H__ */
 
@@ -360,8 +360,8 @@ BOOL isSqlServr(void);
 #define	ODBC_ESCAPE_END					'}'
 #define	DOLLAR_QUOTE					'$'
 #define	LITERAL_EXT					'E'
-#define	PG_CARRIAGE_RETURN				'\r'
-#define	PG_LINEFEED					'\n'
+#define	WD_CARRIAGE_RETURN				'\r'
+#define	WD_LINEFEED					'\n'
 
 /* Limits */
 #define MAXPGPATH					1024
@@ -399,7 +399,7 @@ BOOL isSqlServr(void);
 
 
 /*	These prefixes denote system tables */
-#define POSTGRES_SYS_PREFIX			"pg_"
+#define POSTGRES_SYS_PREFIX			"WD_"
 
 /*	Info limits */
 #define MAX_INFO_STRING				128
@@ -561,18 +561,18 @@ typedef struct
         char    sqlstate[6];
         SQLLEN	diag_row_count;
         char    __error_message[40];
-}       PG_ErrorInfo;
-PG_ErrorInfo	*ER_Constructor(SDWORD errornumber, const char *errormsg);
-PG_ErrorInfo	*ER_Dup(const PG_ErrorInfo *from);
-void ER_Destructor(PG_ErrorInfo *);
-RETCODE SQL_API ER_ReturnError(PG_ErrorInfo *, SQLSMALLINT, UCHAR *,
+}       WD_ErrorInfo;
+WD_ErrorInfo	*ER_Constructor(SDWORD errornumber, const char *errormsg);
+WD_ErrorInfo	*ER_Dup(const WD_ErrorInfo *from);
+void ER_Destructor(WD_ErrorInfo *);
+RETCODE SQL_API ER_ReturnError(WD_ErrorInfo *, SQLSMALLINT, UCHAR *,
 		SQLINTEGER *, UCHAR *, SQLSMALLINT, SQLSMALLINT *, UWORD);
 
 void		logs_on_off(int cnopen, int, int);
 
-#define PG_TYPE_LO_UNDEFINED			(-999)		/* hack until permanent
+#define WD_TYPE_LO_UNDEFINED			(-999)		/* hack until permanent
 												 * type available */
-#define PG_TYPE_LO_NAME				"lo"
+#define WD_TYPE_LO_NAME				"lo"
 #define CTID_ATTNUM				(-1)	/* the attnum of ctid */
 #define OID_ATTNUM				(-2)	/* the attnum of oid */
 #define XMIN_ATTNUM				(-3)	/* the attnum of xmin */
@@ -585,12 +585,12 @@ void		logs_on_off(int cnopen, int, int);
 #define INFO_VARCHAR_SIZE		254	/* varchar field size
 						 * used in info.c */
 
-#define PG_NUMERIC_MAX_PRECISION	1000
-#define PG_NUMERIC_MAX_SCALE		1000
+#define WD_NUMERIC_MAX_PRECISION	1000
+#define WD_NUMERIC_MAX_SCALE		1000
 
 /* Sufficient digits to recover original float values */
-#define PG_REAL_DIGITS			9
-#define PG_DOUBLE_DIGITS		17
+#define WD_REAL_DIGITS			9
+#define WD_DOUBLE_DIGITS		17
 
 #define INFO_INQUIRY_LEN		8192	/* this seems sufficiently big for
 										 * queries used in info.c inoue

@@ -12,7 +12,7 @@
  *-------
  */
 
-#include "psqlodbc.h"
+#include "wdodbc.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,7 +88,7 @@ paramRequired(const ConnInfo *ci, int reqs)
 }
 
 RETCODE		SQL_API
-PGAPI_DriverConnect(HDBC hdbc,
+WD_DriverConnect(HDBC hdbc,
 					HWND hwnd,
 					const SQLCHAR * szConnStrIn,
 					SQLSMALLINT cbConnStrIn,
@@ -97,7 +97,7 @@ PGAPI_DriverConnect(HDBC hdbc,
 					SQLSMALLINT * pcbConnStrOut,
 					SQLUSMALLINT fDriverCompletion)
 {
-	CSTR func = "PGAPI_DriverConnect";
+	CSTR func = "WD_DriverConnect";
 	ConnectionClass *conn = (ConnectionClass *) hdbc;
 	ConnInfo   *ci;
 
@@ -166,8 +166,8 @@ PGAPI_DriverConnect(HDBC hdbc,
 		connStrIn = NULL;
 	}
 
-	/* initialize pg_version */
-	CC_initialize_pg_version(conn);
+	/* initialize WD_version */
+	CC_initialize_WD_version(conn);
 	memset(salt, 0, sizeof(salt));
 
 #ifdef WIN32
