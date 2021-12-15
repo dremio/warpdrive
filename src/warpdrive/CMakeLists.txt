@@ -1,0 +1,291 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# Adapted from the warpdrive project
+
+add_custom_target(warpdrive-all)
+add_custom_target(warpdrive)
+add_custom_target(warpdrive-tests)
+add_dependencies(warpdrive-all
+                 warpdrive-tests
+                 warpdrive-integration)
+
+# Adding unit tests part of the "warpdrive" portion of the test suite
+function(ADD_WARPDRIVE_TEST REL_TEST_NAME)
+  set(options)
+  set(one_value_args PREFIX)
+  set(multi_value_args LABELS PRECOMPILED_HEADERS)
+  cmake_parse_arguments(ARG
+                        "${options}"
+                        "${one_value_args}"
+                        "${multi_value_args}"
+                        ${ARGN})
+
+  if(ARG_PREFIX)
+    set(PREFIX ${ARG_PREFIX})
+  else()
+    set(PREFIX "warpdrive")
+  endif()
+
+  if(ARG_LABELS)
+    set(LABELS ${ARG_LABELS})
+  else()
+    set(LABELS "warpdrive-tests")
+  endif()
+
+  # Because of https://gitlab.kitware.com/cmake/cmake/issues/20289,
+  # we must generate the precompiled header on an executable target.
+  # Do that on the first unit test target (here "warpdrive-array-test")
+  # and reuse the PCH for the other tests.
+  if(ARG_PRECOMPILED_HEADERS)
+    set(PCH_ARGS PRECOMPILED_HEADERS ${ARG_PRECOMPILED_HEADERS})
+  else()
+    set(PCH_ARGS PRECOMPILED_HEADER_LIB "warpdrive-array-test")
+  endif()
+
+  add_test_case(${REL_TEST_NAME}
+                PREFIX
+                ${PREFIX}
+                LABELS
+                ${LABELS}
+                ${PCH_ARGS}
+                ${ARG_UNPARSED_ARGUMENTS})
+endfunction()
+
+function(ADD_WARPDRIVE_FUZZ_TARGET REL_FUZZING_NAME)
+  set(options)
+  set(one_value_args PREFIX)
+  set(multi_value_args)
+  cmake_parse_arguments(ARG
+                        "${options}"
+                        "${one_value_args}"
+                        "${multi_value_args}"
+                        ${ARGN})
+
+  if(ARG_PREFIX)
+    set(PREFIX ${ARG_PREFIX})
+  else()
+    set(PREFIX "warpdrive")
+  endif()
+
+  if(WARPDRIVE_BUILD_STATIC)
+    set(LINK_LIBS warpdrive_static)
+  else()
+    set(LINK_LIBS warpdrive_shared)
+  endif()
+  add_fuzz_target(${REL_FUZZING_NAME}
+                  PREFIX
+                  ${PREFIX}
+                  LINK_LIBS
+                  ${LINK_LIBS}
+                  ${ARG_UNPARSED_ARGUMENTS})
+endfunction()
+
+function(ADD_WARPDRIVE_BENCHMARK REL_TEST_NAME)
+  set(options)
+  set(one_value_args PREFIX)
+  set(multi_value_args)
+  cmake_parse_arguments(ARG
+                        "${options}"
+                        "${one_value_args}"
+                        "${multi_value_args}"
+                        ${ARGN})
+  if(ARG_PREFIX)
+    set(PREFIX ${ARG_PREFIX})
+  else()
+    set(PREFIX "warpdrive")
+  endif()
+  add_benchmark(${REL_TEST_NAME}
+                PREFIX
+                ${PREFIX}
+                LABELS
+                "warpdrive-benchmarks"
+                ${ARG_UNPARSED_ARGUMENTS})
+endfunction()
+
+set(WARPDRIVE_SRCS
+    bind.cc
+    columninfo.cc
+    connection.cc
+    convert.cc
+    descriptor.cc
+    dlg_specific.cc
+#    dlg_wingui.cc
+    drvconn.cc
+    environ.cc
+    execute.cc
+    info.cc
+    inouealc.cc
+    loadlib.cc
+    lobj.cc
+    misc.cc
+    multibyte.cc
+    mylog.cc
+    odbcapi.cc
+    odbcapi30.cc
+    odbcapi30w.cc
+    odbcapiw.cc
+    options.cc
+    parse.cc
+    psqlodbc.cc
+    psqlsetup.cc
+    qresult.cc
+    results.cc
+    setup.cc
+    statement.cc
+    tuple.cc
+    wdapi30.cc
+    wdtypes.cc
+    win_unicode.cc
+    xalibname.cc
+)
+
+append_avx2_src(util/bpacking_avx2.cc)
+append_avx512_src(util/bpacking_avx512.cc)
+
+if(WARPDRIVE_HAVE_NEON)
+  list(APPEND WARPDRIVE_SRCS util/bpacking_neon.cc)
+endif()
+
+set(WARPDRIVE_C_SRCS
+    vendored/musl/strptime.c
+    vendored/uriparser/UriCommon.c
+    vendored/uriparser/UriCompare.c
+    vendored/uriparser/UriEscape.c
+    vendored/uriparser/UriFile.c
+    vendored/uriparser/UriIp4Base.c
+    vendored/uriparser/UriIp4.c
+    vendored/uriparser/UriMemory.c
+    vendored/uriparser/UriNormalizeBase.c
+    vendored/uriparser/UriNormalize.c
+    vendored/uriparser/UriParseBase.c
+    vendored/uriparser/UriParse.c
+    vendored/uriparser/UriQuery.c
+    vendored/uriparser/UriRecompose.c
+    vendored/uriparser/UriResolve.c
+    vendored/uriparser/UriShorten.c)
+
+#
+# Configure the base warpdrive libraries
+#
+
+if(CXX_LINKER_SUPPORTS_VERSION_SCRIPT)
+  set(WARPDRIVE_VERSION_SCRIPT_FLAGS
+      "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/symbols.map")
+  set(WARPDRIVE_SHARED_LINK_FLAGS ${WARPDRIVE_VERSION_SCRIPT_FLAGS})
+endif()
+
+set(WARPDRIVE_ALL_SRCS ${WARPDRIVE_SRCS} ${WARPDRIVE_C_SRCS})
+
+if(WARPDRIVE_BUILD_STATIC AND WARPDRIVE_BUNDLED_STATIC_LIBS)
+  set(WARPDRIVE_BUILD_BUNDLED_DEPENDENCIES TRUE)
+else()
+  set(WARPDRIVE_BUILD_BUNDLED_DEPENDENCIES FALSE)
+endif()
+
+
+add_warpdrive_lib(warpdrive
+              CMAKE_PACKAGE_NAME
+              warpdrive
+              PKG_CONFIG_NAME
+              warpdrive
+              SOURCES
+              ${WARPDRIVE_ALL_SRCS}
+              OUTPUTS
+              WARPDRIVE_LIBRARIES
+              PRECOMPILED_HEADERS
+              "$<$<COMPILE_LANGUAGE:CXX>:warpdrive/pch.h>"
+              DEPENDENCIES
+              arrow_dependencies
+              SHARED_LINK_FLAGS
+              ${WARPDRIVE_SHARED_LINK_FLAGS}
+              SHARED_LINK_LIBS
+              ${WARPDRIVE_LINK_LIBS}
+              SHARED_PRIVATE_LINK_LIBS
+              ${WARPDRIVE_SHARED_PRIVATE_LINK_LIBS}
+              STATIC_LINK_LIBS
+              ${WARPDRIVE_STATIC_LINK_LIBS}
+              SHARED_INSTALL_INTERFACE_LIBS
+              ${WARPDRIVE_SHARED_INSTALL_INTERFACE_LIBS}
+              STATIC_INSTALL_INTERFACE_LIBS
+              ${WARPDRIVE_STATIC_INSTALL_INTERFACE_LIBS})
+
+add_dependencies(warpdrive ${WARPDRIVE_LIBRARIES})
+
+if(WARPDRIVE_BUILD_STATIC AND WIN32)
+  target_compile_definitions(arrow_static PUBLIC WARPDRIVE_STATIC)
+endif()
+
+foreach(LIB_TARGET ${WARPDRIVE_LIBRARIES})
+  target_compile_definitions(${LIB_TARGET} PRIVATE WARPDRIVE_EXPORTING)
+endforeach()
+
+if(WARPDRIVE_BUILD_BUNDLED_DEPENDENCIES)
+  warpdrive_car(_FIRST_LIB ${WARPDRIVE_BUNDLED_STATIC_LIBS})
+  warpdrive_cdr(_OTHER_LIBS ${WARPDRIVE_BUNDLED_STATIC_LIBS})
+  create_merged_static_lib(warpdrive_bundled_dependencies
+                           NAME
+                           warpdrive_bundled_dependencies
+                           ROOT
+                           ${_FIRST_LIB}
+                           TO_MERGE
+                           ${_OTHER_LIBS})
+endif()
+
+if(WARPDRIVE_TESTING)
+  # that depend on gtest
+  add_warpdrive_lib(warpdrive_testing
+                CMAKE_PACKAGE_NAME
+                WarpdriveTesting
+                PKG_CONFIG_NAME
+                warpdrive-testing
+                SOURCES
+                ${WARPDRIVE_TESTING_SRCS}
+                OUTPUTS
+                WARPDRIVE_TESTING_LIBRARIES
+                PRECOMPILED_HEADERS
+                "$<$<COMPILE_LANGUAGE:CXX>:warpdrive/pch.h>"
+                DEPENDENCIES
+                warpdrive_test_dependencies
+                SHARED_LINK_LIBS
+                warpdrive_shared
+                GTest::gtest
+                STATIC_LINK_LIBS
+                warpdrive_static)
+
+  add_custom_target(warpdrive_testing)
+  add_dependencies(warpdrive_testing ${WARPDRIVE_TESTING_LIBRARIES})
+
+  if(WARPDRIVE_BUILD_STATIC AND WIN32)
+    target_compile_definitions(warpdrive_testing_static PUBLIC WARPDRIVE_TESTING_STATIC)
+  endif()
+
+  foreach(LIB_TARGET ${WARPDRIVE_TESTING_LIBRARIES})
+    target_compile_definitions(${LIB_TARGET} PRIVATE WARPDRIVE_TESTING_EXPORTING)
+  endforeach()
+endif()
+
+arrow_install_all_headers("warpdrive")
+
+config_summary_cmake_setters("${CMAKE_CURRENT_BINARY_DIR}/WarpdriveOptions.cmake")
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/WarpdriveOptions.cmake
+        DESTINATION "${WARPDRIVE_CMAKE_INSTALL_DIR}")
+
+# For backward compatibility for find_package(warpdrive)
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/warpdrive-config.cmake
+        DESTINATION "${WARPDRIVE_CMAKE_INSTALL_DIR}")
+
