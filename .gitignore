@@ -435,3 +435,15 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 .DS_Store
+
+# CMake files
+CMakeCache.txt
+CTestTestfile.cmake
+cmake_summary.json
+cmake_install.cmake
+build.ninja
+.cmake/
+CMakeTmp/
+CMakeFiles/
+build/
+Makefile
