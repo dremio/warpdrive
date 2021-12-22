@@ -1,3 +1,4 @@
+#ifdef _WIN32
 #include	<windows.h>
 
 #include	"wdodbc.h"
@@ -138,3 +139,4 @@ DllMain(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 
 	UNREFERENCED_PARAMETER(lpReserved);
 }
+#endif

@@ -24,7 +24,7 @@
 
 #include "loadlib.h"
 
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 #ifdef _HANDLE_ENLIST_IN_DTC_
 #include "xalibname.h"
 #include "connexp.h"

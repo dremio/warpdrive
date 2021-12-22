@@ -126,7 +126,7 @@ make_string(const SQLCHAR *s, SQLINTEGER len, char *buf, size_t bufsize)
 	}
 
 MYLOG(DETAIL_LOG_LEVEL, "malloc size=" FORMAT_SIZE_T "\n", length);
-	str = malloc(length + 1);
+	str = static_cast<char*>(malloc(length + 1));
 MYLOG(DETAIL_LOG_LEVEL, "str=%p\n", str);
 	if (!str)
 		return NULL;

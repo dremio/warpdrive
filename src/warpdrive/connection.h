@@ -10,8 +10,8 @@
 #define __CONNECTION_H__
 
 #include "wdodbc.h"
-#include <libpq-fe.h>
-#include "pqexpbuffer.h"
+//#include <libpq-fe.h>
+//#include "pqexpbuffer.h"
 
 #include <time.h>
 
@@ -118,7 +118,7 @@ typedef enum
 
 #define CC_MALLOC_return_with_error(t, tp, s, x, m, ret) \
 do { \
-	if (t = malloc(s), NULL == t) \
+	if (t = static_cast<char*>(malloc(s)), NULL == t) \
 	{ \
 		CC_set_error(x, CONN_NO_MEMORY_ERROR, m, ""); \
 		return ret; \
@@ -293,7 +293,7 @@ struct ConnectionClass_
 	Int2		num_stmts;
 	Int2		ncursors;
 	PGconn	   *pqconn;
-	Int4		lobj_type;
+	UInt4		lobj_type;
 	Int2		coli_allocated;
 	Int2		ntables;
 	COL_INFO	**col_info;
@@ -357,7 +357,7 @@ struct ConnectionClass_
 
 
 /* Accessor functions */
-#define CC_get_env(x)				((x)->henv)
+#define CC_get_env(x)				(static_cast<EnvironmentClass*>((x)->henv))
 #define CC_get_database(x)			(x->connInfo.database)
 #define CC_get_server(x)			(x->connInfo.server)
 #define CC_get_DSN(x)				(x->connInfo.dsn)

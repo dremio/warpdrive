@@ -166,20 +166,6 @@ endif()
 # cmake options
 include(DefineOptions)
 
-# Needed for linting targets, etc.
-if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
-  find_package(PythonInterp)
-else()
-  # Use the first Python installation on PATH, not the newest one
-  set(Python3_FIND_STRATEGY "LOCATION")
-  # On Windows, use registry last, not first
-  set(Python3_FIND_REGISTRY "LAST")
-  # On macOS, use framework last, not first
-  set(Python3_FIND_FRAMEWORK "LAST")
-
-  find_package(Python3)
-  set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
-endif()
 
 if(WARPDRIVE_USE_PRECOMPILED_HEADERS AND ${CMAKE_VERSION} VERSION_LESS "3.16.0")
   message(WARNING "Precompiled headers need CMake 3.16.0 or later, disabling")
@@ -300,77 +286,6 @@ endif(UNIX)
 # Set up various options
 #
 
-if(WARPDRIVE_BUILD_BENCHMARKS
-   OR WARPDRIVE_BUILD_TESTS
-   OR WARPDRIVE_BUILD_INTEGRATION
-   OR WARPDRIVE_FUZZING)
-  set(WARPDRIVE_JSON ON)
-  set(WARPDRIVE_TESTING ON)
-endif()
-
-if(WARPDRIVE_GANDIVA)
-  set(WARPDRIVE_WITH_RE2 ON)
-endif()
-
-if(WARPDRIVE_CUDA
-   OR WARPDRIVE_FLIGHT
-   OR WARPDRIVE_PARQUET
-   OR WARPDRIVE_BUILD_TESTS
-   OR WARPDRIVE_BUILD_BENCHMARKS)
-  set(WARPDRIVE_IPC ON)
-endif()
-
-if(WARPDRIVE_ENGINE)
-  set(WARPDRIVE_COMPUTE ON)
-endif()
-
-if(WARPDRIVE_SKYHOOK)
-  set(WARPDRIVE_DATASET ON)
-  set(WARPDRIVE_PARQUET ON)
-  set(WARPDRIVE_WITH_LZ4 ON)
-  set(WARPDRIVE_WITH_SNAPPY ON)
-endif()
-
-if(WARPDRIVE_DATASET)
-  set(WARPDRIVE_COMPUTE ON)
-  set(WARPDRIVE_FILESYSTEM ON)
-endif()
-
-if(WARPDRIVE_PARQUET)
-  set(WARPDRIVE_COMPUTE ON)
-endif()
-
-if(WARPDRIVE_PYTHON)
-  set(WARPDRIVE_COMPUTE ON)
-  set(WARPDRIVE_CSV ON)
-  set(WARPDRIVE_DATASET ON)
-  set(WARPDRIVE_FILESYSTEM ON)
-  set(WARPDRIVE_HDFS ON)
-  set(WARPDRIVE_JSON ON)
-endif()
-
-if(MSVC_TOOLCHAIN)
-  # ORC doesn't build on windows
-  set(WARPDRIVE_ORC OFF)
-  # Plasma using glog is not fully tested on windows.
-  set(WARPDRIVE_USE_GLOG OFF)
-endif()
-
-if(WARPDRIVE_JNI)
-  set(WARPDRIVE_BUILD_STATIC ON)
-endif()
-
-if(WARPDRIVE_ORC)
-  set(WARPDRIVE_WITH_LZ4 ON)
-  set(WARPDRIVE_WITH_SNAPPY ON)
-  set(WARPDRIVE_WITH_ZLIB ON)
-  set(WARPDRIVE_WITH_ZSTD ON)
-endif()
-
-# datetime code used by iOS requires zlib support
-if(IOS)
-  set(WARPDRIVE_WITH_ZLIB ON)
-endif()
 
 if(NOT WARPDRIVE_BUILD_TESTS)
   set(NO_TESTS 1)
@@ -387,17 +302,6 @@ endif()
 
 if(WARPDRIVE_ENABLE_TIMING_TESTS)
   add_definitions(-DWARPDRIVE_WITH_TIMING_TESTS)
-endif()
-
-if(NOT WARPDRIVE_BUILD_BENCHMARKS)
-  set(NO_BENCHMARKS 1)
-else()
-  add_custom_target(all-benchmarks)
-  add_custom_target(benchmark ctest -L benchmark)
-  add_dependencies(benchmark all-benchmarks)
-  if(WARPDRIVE_BUILD_BENCHMARKS_REFERENCE)
-    add_definitions(-DWARPDRIVE_WITH_BENCHMARKS_REFERENCE)
-  endif()
 endif()
 
 if(NOT WARPDRIVE_BUILD_EXAMPLES)
@@ -719,10 +623,10 @@ endif()
 
 set(WARPDRIVE_SYSTEM_LINK_LIBS)
 
-list(APPEND WARPDRIVE_SYSTEM_LINK_LIBS Threads::Threads)
-if(CMAKE_THREAD_LIBS_INIT)
-  string(APPEND WARPDRIVE_PC_LIBS_PRIVATE " ${CMAKE_THREAD_LIBS_INIT}")
-endif()
+#list(APPEND WARPDRIVE_SYSTEM_LINK_LIBS Threads::Threads)
+##if(CMAKE_THREAD_LIBS_INIT)
+ # string(APPEND WARPDRIVE_PC_LIBS_PRIVATE " ${CMAKE_THREAD_LIBS_INIT}")
+#endif()
 
 if(WIN32)
   # Winsock
@@ -738,9 +642,11 @@ list(APPEND WARPDRIVE_LINK_LIBS ${WARPDRIVE_SYSTEM_LINK_LIBS})
 list(APPEND WARPDRIVE_STATIC_LINK_LIBS ${WARPDRIVE_SYSTEM_LINK_LIBS})
 list(APPEND WARPDRIVE_STATIC_INSTALL_INTERFACE_LIBS ${WARPDRIVE_SYSTEM_LINK_LIBS})
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE.txt
-              ${CMAKE_CURRENT_SOURCE_DIR}/../NOTICE.txt
-              ${CMAKE_CURRENT_SOURCE_DIR}/README.md DESTINATION "${WARPDRIVE_DOC_DIR}")
+#install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/../LICENSE.txt
+ #             ${CMAKE_CURRENT_SOURCE_DIR}/../NOTICE.txt
+ #             ${CMAKE_CURRENT_SOURCE_DIR}/README.md DESTINATION "${WARPDRIVE_DOC_DIR}")
+
+add_subdirectory(src/warpdrive)
 
 #
 # Validate and print out Warpdrive configuration options

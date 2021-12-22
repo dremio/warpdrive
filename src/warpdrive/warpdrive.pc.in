@@ -15,12 +15,17 @@
 # specific language governing permissions and limitations
 # under the License.
 
-brew "automake"
-brew "boost"
-brew "cmake"
-brew "git"
-brew "glog"
-brew "ninja"
-brew "openssl@1.1"
-brew "wget"
-brew "libiodbc@3.52.15"
+libdir=@CMAKE_INSTALL_FULL_LIBDIR@
+includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
+
+so_version=@WARPDRIVE_SO_VERSION@
+abi_version=@WARPDRIVE_SO_VERSION@
+full_so_version=@WARPDRIVE_FULL_SO_VERSION@
+
+Name: Warpdrive
+Description: Warpdrive is a framework for building an ODBC driver.
+Version: @WAPRDRIVE_VERSION@
+Requires.private:@WARPDRIVE_PC_REQUIRES_PRIVATE@
+Libs: -L${libdir} -lwarpdrive
+Libs.private:@WARPDRIVE_PC_LIBS_PRIVATE@
+Cflags: -I${includedir}

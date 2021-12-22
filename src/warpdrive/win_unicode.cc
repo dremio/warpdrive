@@ -1002,7 +1002,7 @@ SQLLEN bindpara_msg_to_utf8(const char *ldt, char **wcsbuf, SQLLEN used)
 			ldt_nts = ntsbuf;
 		else
 		{
-			if (NULL == (alloc_nts = malloc(used + 1)))
+			if (NULL == (alloc_nts = static_cast<char*>(malloc(used + 1))))
 				return l;
 			ldt_nts = alloc_nts;
 		}

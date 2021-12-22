@@ -27,7 +27,7 @@
 #include "environ.h"
 #include "connection.h"
 #include "statement.h"
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 
 /*	SQLAllocConnect/SQLAllocEnv/SQLAllocStmt -> SQLAllocHandle */
 RETCODE		SQL_API
@@ -142,7 +142,7 @@ SQLColAttribute(SQLHSTMT StatementHandle,
 	StartRollbackState(stmt);
 	ret = WD_ColAttributes(StatementHandle, ColumnNumber,
 					   FieldIdentifier, CharacterAttribute, BufferLength,
-							   StringLength, NumericAttribute);
+							   StringLength, static_cast<SQLLEN*>(NumericAttribute));
 	ret = DiscardStatementSvp(stmt,ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	return ret;

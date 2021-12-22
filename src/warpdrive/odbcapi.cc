@@ -31,7 +31,7 @@
 #include <string.h>
 
 #include "misc.h"
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 #include "environ.h"
 #include "connection.h"
 #include "statement.h"

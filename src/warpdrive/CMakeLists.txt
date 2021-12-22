@@ -21,8 +21,22 @@ add_custom_target(warpdrive-all)
 add_custom_target(warpdrive)
 add_custom_target(warpdrive-tests)
 add_dependencies(warpdrive-all
-                 warpdrive-tests
-                 warpdrive-integration)
+                 warpdrive-tests)
+
+# Add ODBC dependencies.
+if(APPLE)
+  set(ODBC_INCLUDE_DIRS /usr/local/Cellar/libiodbc/3.52.15/include)
+  set(ODBC_LIBRARIES /usr/local/Cellar/libiodbc/3.52.15/lib/libiodbc.dylib)
+  add_compile_definitions(HAVE_LONG_LONG)
+else()
+  find_package(ODBC REQUIRED)
+endif()
+
+# Enable unicode driver build
+add_compile_definitions(UNICODE_SUPPORT)
+
+include_directories(${ODBC_INCLUDE_DIRS})
+
 
 # Adding unit tests part of the "warpdrive" portion of the test suite
 function(ADD_WARPDRIVE_TEST REL_TEST_NAME)
@@ -47,45 +61,11 @@ function(ADD_WARPDRIVE_TEST REL_TEST_NAME)
     set(LABELS "warpdrive-tests")
   endif()
 
-  # Because of https://gitlab.kitware.com/cmake/cmake/issues/20289,
-  # we must generate the precompiled header on an executable target.
-  # Do that on the first unit test target (here "warpdrive-array-test")
-  # and reuse the PCH for the other tests.
-  if(ARG_PRECOMPILED_HEADERS)
-    set(PCH_ARGS PRECOMPILED_HEADERS ${ARG_PRECOMPILED_HEADERS})
-  else()
-    set(PCH_ARGS PRECOMPILED_HEADER_LIB "warpdrive-array-test")
-  endif()
-
-  add_test_case(${REL_TEST_NAME}
-                PREFIX
-                ${PREFIX}
-                LABELS
-                ${LABELS}
-                ${PCH_ARGS}
-                ${ARG_UNPARSED_ARGUMENTS})
-endfunction()
-
-function(ADD_WARPDRIVE_FUZZ_TARGET REL_FUZZING_NAME)
-  set(options)
-  set(one_value_args PREFIX)
-  set(multi_value_args)
-  cmake_parse_arguments(ARG
-                        "${options}"
-                        "${one_value_args}"
-                        "${multi_value_args}"
-                        ${ARGN})
-
-  if(ARG_PREFIX)
-    set(PREFIX ${ARG_PREFIX})
-  else()
-    set(PREFIX "warpdrive")
-  endif()
 
   if(WARPDRIVE_BUILD_STATIC)
-    set(LINK_LIBS warpdrive_static)
+    set(LINK_LIBS warpdrive_static ${ODBC_LIBRARIES})
   else()
-    set(LINK_LIBS warpdrive_shared)
+    set(LINK_LIBS warpdrive_shared ${ODBC_LIBRARIES})
   endif()
   add_fuzz_target(${REL_FUZZING_NAME}
                   PREFIX
@@ -93,28 +73,6 @@ function(ADD_WARPDRIVE_FUZZ_TARGET REL_FUZZING_NAME)
                   LINK_LIBS
                   ${LINK_LIBS}
                   ${ARG_UNPARSED_ARGUMENTS})
-endfunction()
-
-function(ADD_WARPDRIVE_BENCHMARK REL_TEST_NAME)
-  set(options)
-  set(one_value_args PREFIX)
-  set(multi_value_args)
-  cmake_parse_arguments(ARG
-                        "${options}"
-                        "${one_value_args}"
-                        "${multi_value_args}"
-                        ${ARGN})
-  if(ARG_PREFIX)
-    set(PREFIX ${ARG_PREFIX})
-  else()
-    set(PREFIX "warpdrive")
-  endif()
-  add_benchmark(${REL_TEST_NAME}
-                PREFIX
-                ${PREFIX}
-                LABELS
-                "warpdrive-benchmarks"
-                ${ARG_UNPARSED_ARGUMENTS})
 endfunction()
 
 set(WARPDRIVE_SRCS
@@ -154,31 +112,6 @@ set(WARPDRIVE_SRCS
     xalibname.cc
 )
 
-append_avx2_src(util/bpacking_avx2.cc)
-append_avx512_src(util/bpacking_avx512.cc)
-
-if(WARPDRIVE_HAVE_NEON)
-  list(APPEND WARPDRIVE_SRCS util/bpacking_neon.cc)
-endif()
-
-set(WARPDRIVE_C_SRCS
-    vendored/musl/strptime.c
-    vendored/uriparser/UriCommon.c
-    vendored/uriparser/UriCompare.c
-    vendored/uriparser/UriEscape.c
-    vendored/uriparser/UriFile.c
-    vendored/uriparser/UriIp4Base.c
-    vendored/uriparser/UriIp4.c
-    vendored/uriparser/UriMemory.c
-    vendored/uriparser/UriNormalizeBase.c
-    vendored/uriparser/UriNormalize.c
-    vendored/uriparser/UriParseBase.c
-    vendored/uriparser/UriParse.c
-    vendored/uriparser/UriQuery.c
-    vendored/uriparser/UriRecompose.c
-    vendored/uriparser/UriResolve.c
-    vendored/uriparser/UriShorten.c)
-
 #
 # Configure the base warpdrive libraries
 #
@@ -210,7 +143,7 @@ add_warpdrive_lib(warpdrive
               PRECOMPILED_HEADERS
               "$<$<COMPILE_LANGUAGE:CXX>:warpdrive/pch.h>"
               DEPENDENCIES
-              arrow_dependencies
+              warpdrive_dependencies
               SHARED_LINK_FLAGS
               ${WARPDRIVE_SHARED_LINK_FLAGS}
               SHARED_LINK_LIBS
@@ -279,7 +212,7 @@ if(WARPDRIVE_TESTING)
   endforeach()
 endif()
 
-arrow_install_all_headers("warpdrive")
+warpdrive_install_all_headers("warpdrive")
 
 config_summary_cmake_setters("${CMAKE_CURRENT_BINARY_DIR}/WarpdriveOptions.cmake")
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/WarpdriveOptions.cmake

@@ -12,6 +12,7 @@
  *-------
  */
 
+#include "wdodbc.h"
 #ifdef	WIN_MULTITHREAD_SUPPORT
 #ifndef	_WIN32_WINNT
 #define	_WIN32_WINNT	0x0400
@@ -33,14 +34,14 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 
 
 /*	Map sql commands to statement types */
 static const struct
 {
 	int			type;
-	char	   *s;
+	const char	   *s;
 }	Statement_Type[] =
 
 {
@@ -1800,7 +1801,8 @@ MYLOG(DETAIL_LOG_LEVEL, "stmt=%p ommitted++\n", self);
 
 			MYLOG(0, "type = %d, atttypmod = %d\n", type, atttypmod);
 
-			if (useCursor)
+#if 0			
+if (useCursor)
 				value = QR_get_value_backend(res, lf);
 			else
 			{
@@ -1809,6 +1811,7 @@ MYLOG(DETAIL_LOG_LEVEL, "%p->base=" FORMAT_LEN " curr=" FORMAT_LEN " st=" FORMAT
 MYLOG(DETAIL_LOG_LEVEL, "curt=" FORMAT_LEN "\n", curt);
 				value = QR_get_value_backend_row(res, curt, lf);
 			}
+#endif
 
 			MYLOG(0, "value = '%s'\n", (value == NULL) ? "<NULL>" : value);
 
@@ -2123,7 +2126,7 @@ SC_execute(StatementClass *self)
 	}
 
 	if (CONN_DOWN != conn->status)
-		conn->status = oldstatus;
+		conn->status = static_cast<CONN_Status>(oldstatus);
 	self->status = STMT_FINISHED;
 MYLOG(0, "set %p STMT_FINISHED\n", self);
 	LEAVE_INNER_CONN_CS(func_cs_count, conn);
@@ -2251,7 +2254,7 @@ MYLOG(DETAIL_LOG_LEVEL, "!!%p->miscinfo=%x res=%p\n", self, self->miscinfo, firs
 
 			ipdopts = SC_get_IPDF(self);
 			self->bind_row = 0;
-			ret = SC_fetch(hstmt);
+			ret = SC_fetch(static_cast<StatementClass*>(hstmt));
 MYLOG(DETAIL_LOG_LEVEL, "!!SC_fetch return =%d\n", ret);
 			if (SQL_SUCCEEDED(ret))
 			{
@@ -2318,7 +2321,7 @@ MYLOG(DETAIL_LOG_LEVEL, "!!SC_fetch return =%d\n", ret);
 						break;
 					}
 
-					STR_TO_NAME(self->cursor_name, QR_get_value_backend_text(rhold.first, 0, i));
+					STR_TO_NAME(self->cursor_name, static_cast<char*>(QR_get_value_backend_text(rhold.first, 0, i)));
 					SC_set_fetchcursor(self);
 					qi.result_in = NULL;
 					qi.cursor = SC_cursor_name(self);
@@ -2359,7 +2362,7 @@ cleanup:
 	SC_SetExecuting(self, FALSE);
 	CLEANUP_FUNC_CONN_CS(func_cs_count, conn);
 	if (CONN_DOWN != conn->status)
-		conn->status = oldstatus;
+		conn->status = static_cast<CONN_Status>(oldstatus);
 	/* self->status = STMT_FINISHED; */
 	errnum = SC_get_errornumber(self);
 	if (errnum_sav > STMT_OK)
@@ -2566,6 +2569,7 @@ static void log_params(int nParams, const Oid *paramTypes, const UCHAR * const *
 	}
 }
 
+#if 0
 static
 QResultClass *add_libpq_notice_receiver(StatementClass *stmt, notice_receiver_arg *nrarg)
 {
@@ -2776,6 +2780,7 @@ cleanup:
 
 	return res;
 }
+#endif
 
 /*
  * Parse a query using libpq.
@@ -2847,7 +2852,7 @@ MYLOG(0, "sta_pidx=%d end_pidx=%d num_p=%d\n", sta_pidx, end_pidx, num_params);
 		int j;
 		IPDFields	*ipdopts = SC_get_IPDF(stmt);
 
-		paramTypes = malloc(sizeof(Oid) * num_params);
+		paramTypes = static_cast<Oid*>(malloc(sizeof(Oid) * num_params));
 		if (paramTypes == NULL)
 		{
 			SC_set_errornumber(stmt, STMT_NO_MEMORY_ERROR);
@@ -2879,13 +2884,14 @@ MYLOG(0, "sta_pidx=%d end_pidx=%d num_p=%d\n", sta_pidx, end_pidx, num_params);
 
 	/* Prepare */
 	QLOG(0, "PQprepare: %p '%s' plan=%s nParams=%d\n", conn->pqconn, query, plan_name, num_params);
-	pgres = PQprepare(conn->pqconn, plan_name, query, num_params, paramTypes);
-	if (PQresultStatus(pgres) != PGRES_COMMAND_OK)
+//	pgres = PQprepare(conn->pqconn, plan_name, query, num_params, paramTypes);
+	if (0)
+//	if (PQresultStatus(pgres) != PGRES_COMMAND_OK)
 	{
 		handle_pgres_error(conn, pgres, "ParseWithlibpq", res, TRUE);
 		goto cleanup;
 	}
-	cstatus = PQcmdStatus(pgres);
+//	cstatus = PQcmdStatus(pgres);
 	QLOG(0, "\tok: - 'C' - %s\n", cstatus);
 	if (stmt->plan_name)
 		SC_set_prepared(stmt, PREPARED_PERMANENTLY);
@@ -2901,8 +2907,8 @@ cleanup:
 	if (paramTypes)
 		free(paramTypes);
 
-	if (pgres)
-		PQclear(pgres);
+//	if (pgres)
+//		PQclear(pgres);
 
 	return retval;
 }
@@ -2918,6 +2924,7 @@ cleanup:
  * NB: The caller must set stmt->current_exec_param before calling this
  * function!
  */
+ #if 0
 QResultClass *
 ParseAndDescribeWithLibpq(StatementClass *stmt, const char *plan_name,
 						  const char *query_param,
@@ -3076,6 +3083,7 @@ cleanup:
 
 	return res;
 }
+#endif
 
 enum {
 	CancelRequestSet	= 1L

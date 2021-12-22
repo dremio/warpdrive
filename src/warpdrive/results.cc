@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include <limits.h>
 
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 
 /*	Helper macro */
 #define getEffectiveOid(conn, fi) WD_true_type((conn), (fi)->columntype, FI_type(fi))
@@ -2058,11 +2058,11 @@ static void KeySetSet(const TupleField *tuple, int num_fields, int num_key_field
 {
 	if (statusInit)
 		keyset->status = 0;
-	sscanf(tuple[num_fields - num_key_fields].value, "(%u,%hu)",
+	sscanf(static_cast<const char*>(tuple[num_fields - num_key_fields].value), "(%u,%hu)",
 			&keyset->blocknum, &keyset->offset);
 	if (num_key_fields > 1)
 	{
-		const char *oval = tuple[num_fields - 1].value;
+		const char *oval = static_cast<const char*>(tuple[num_fields - 1].value);
 
 		if ('-' == oval[0])
 			sscanf(oval, "%d", &keyset->oid);
@@ -2085,7 +2085,7 @@ MYLOG(DETAIL_LOG_LEVEL, "entering " FORMAT_LEN "(%u,%u) %s\n", index, keyset->bl
 	{
 		res->rb_count = 0;
 		res->rb_alloc = 10;
-		rollback = res->rollback = malloc(sizeof(Rollback) * res->rb_alloc);
+		rollback = res->rollback = static_cast<Rollback*>(malloc(sizeof(Rollback) * res->rb_alloc));
 		if (!rollback)
 		{
 			res->rb_alloc = res->rb_count = 0;
@@ -2097,7 +2097,8 @@ MYLOG(DETAIL_LOG_LEVEL, "entering " FORMAT_LEN "(%u,%u) %s\n", index, keyset->bl
 		if (res->rb_count >= res->rb_alloc)
 		{
 			res->rb_alloc *= 2;
-			if (rollback = realloc(res->rollback, sizeof(Rollback) * res->rb_alloc), !rollback)
+			if (1)
+		//	if (rollback = realloc(res->rollback, sizeof(Rollback) * res->rb_alloc), !rollback)
 			{
 				res->rb_alloc = res->rb_count = 0;
 				return;
@@ -2152,7 +2153,7 @@ MYLOG(DETAIL_LOG_LEVEL, "entering %p num_fields=%d num_rows=" FORMAT_LEN "\n", o
 		}
 		if (ituple->value)
 {
-			otuple->value = strdup(ituple->value);
+			otuple->value = strdup(static_cast<const char*>(ituple->value));
 MYLOG(DETAIL_LOG_LEVEL, "[" FORMAT_LEN "," FORMAT_LEN "] %s copied\n", i / num_fields, i % num_fields, (const char *) otuple->value);
 }
 		if (otuple->value)
@@ -2211,8 +2212,8 @@ ti_quote(StatementClass *stmt, OID tableoid, char *buf, int buf_size)
 		{
 			pgNAME	schema_name, table_name;
 
-			SET_NAME_DIRECTLY(schema_name, QR_get_value_backend_text(res, 0, 1));
-			SET_NAME_DIRECTLY(table_name, QR_get_value_backend_text(res, 0, 0));
+			SET_NAME_DIRECTLY(schema_name, static_cast<char*>(QR_get_value_backend_text(res, 0, 1)));
+			SET_NAME_DIRECTLY(table_name, static_cast<char*>(QR_get_value_backend_text(res, 0, 0)));
 			ret = quote_table(schema_name, table_name, buf, buf_size);
 			TI_Ins_IH(ti, tableoid, ret);
 		}
@@ -2990,7 +2991,7 @@ MYPRINTF(DETAIL_LOG_LEVEL, "->(%u, %u)", wkey->blocknum, wkey->offset);
 
 					SPRINTF_FIXED(tidval,
 							 "(%u,%u)", wkey->blocknum, wkey->offset);
-					qres = positioned_load(stmt, 0, &oid, tidval);
+					//qres = positioned_load(stmt, 0, &oid, tidval);
 					if (QR_command_maybe_successful(qres) &&
 					    QR_get_num_cached_tuples(qres) == 1)
 					{
@@ -3287,7 +3288,7 @@ SC_pos_reload_with_key(StatementClass *stmt, SQLULEN global_ridx, UInt2 *count, 
 			QR_set_position(qres, 0);
 			tuple_new = qres->tupleField;
 			if (SQL_CURSOR_KEYSET_DRIVEN == stmt->options.cursor_type &&
-				strcmp(tuple_new[qres->num_fields - res->num_key_fields].value, tidval))
+				strcmp(static_cast<const char*>(tuple_new[qres->num_fields - res->num_key_fields].value), tidval))
 				res->keyset[kres_ridx].status |= SQL_ROW_UPDATED;
 			KeySetSet(tuple_new, qres->num_fields, res->num_key_fields, res->keyset + kres_ridx, FALSE);
 			MoveCachedRows(tuple_old, tuple_new, effective_fields, 1);

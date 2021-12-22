@@ -22,7 +22,7 @@
 #include "connection.h"
 #include "statement.h"
 #include "qresult.h"
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 
 static RETCODE
 set_statement_option(ConnectionClass *conn,

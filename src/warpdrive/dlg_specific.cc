@@ -21,7 +21,7 @@
 #include "dlg_specific.h"
 #include "misc.h"
 
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 
 #define	NULL_IF_NULL(a) ((a) ? ((const char *)(a)) : "(null)")
 CSTR	ENTRY_TEST = " @@@ ";
@@ -634,6 +634,7 @@ copyConnAttributes(ConnInfo *ci, const char *attribute, const char *value)
 		STRCPY_FIXED(ci->port, value);
 	else if (stricmp(attribute, INI_READONLY) == 0 || stricmp(attribute, ABBR_READONLY) == 0)
 		STRCPY_FIXED(ci->onlyread, value);
+		#if 0
 	else if (stricmp(attribute, INI_PROTOCOL) == 0 || stricmp(attribute, ABBR_PROTOCOL) == 0)
 	{
 		char	*ptr;
@@ -658,6 +659,7 @@ copyConnAttributes(ConnInfo *ci, const char *attribute, const char *value)
 			printed = TRUE;
 		}
 	}
+	#endif
 	else if (stricmp(attribute, INI_SHOWOIDCOLUMN) == 0 || stricmp(attribute, ABBR_SHOWOIDCOLUMN) == 0)
 		STRCPY_FIXED(ci->show_oid_column, value);
 	else if (stricmp(attribute, INI_FAKEOIDINDEX) == 0 || stricmp(attribute, ABBR_FAKEOIDINDEX) == 0)
@@ -1742,7 +1744,7 @@ char *extract_extra_attribute_setting(const pgNAME setting, const char *attr)
 	}
 	if (!sptr)
 		return NULL;
-	rptr = malloc(len + 1);
+	rptr = static_cast<char*>(malloc(len + 1));
 	if (!rptr)
 		return NULL;
 	memcpy(rptr, sptr, len);

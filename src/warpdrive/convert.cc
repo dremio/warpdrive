@@ -45,7 +45,7 @@
 #include "lobj.h"
 #include "connection.h"
 #include "catfunc.h"
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 
 CSTR	NAN_STRING = "NaN";
 CSTR	INFINITY_STRING = "Infinity";
@@ -74,8 +74,8 @@ static const struct
 	 * the digit after the % indicates the number of arguments. Otherwise,
 	 * the entry matches any number of args.
 	 */
-	char *odbc_name;
-	char *pgsql_name;
+	const char *odbc_name;
+	const char *pgsql_name;
 } mapFuncs[] = {
 /*	{ "ASCII",		 "ascii"	  }, built_in */
 	{"CHAR", "chr($*)" },
@@ -195,9 +195,9 @@ typedef struct
 	int			fr;
 } SIMPLE_TIME;
 
-static const char *mapFunction(const char *func, int param_count, const char * keyword);
+//static const char *mapFunction(const char *func, int param_count, const char * keyword);
 static BOOL convert_money(const char *s, char *sout, size_t soutmax);
-static char parse_datetime(const char *buf, SIMPLE_TIME *st);
+//static char parse_datetime(const char *buf, SIMPLE_TIME *st);
 size_t convert_linefeeds(const char *s, char *dst, size_t max, BOOL convlf, BOOL *changed);
 static size_t convert_from_pgbinary(const char *value, char *rgbValue, SQLLEN cbValueMax);
 static int convert_lo(StatementClass *stmt, const void *value, SQLSMALLINT fCType,
@@ -269,7 +269,7 @@ static unsigned ODBCINT64 ATOI64U(const char *val)
 #endif /* WIN32 */
 #endif /* ODBCINT64 */
 
-static void ResolveNumericParam(const SQL_NUMERIC_STRUCT *ns, char *chrform);
+//static void ResolveNumericParam(const SQL_NUMERIC_STRUCT *ns, char *chrform);
 static void parse_to_numeric_struct(const char *wv, SQL_NUMERIC_STRUCT *ns, BOOL *overflow);
 
 /*
@@ -496,7 +496,7 @@ stime2timestamp(const SIMPLE_TIME *st, char *str, size_t bufsize, BOOL bZone,
 static
 SQLINTERVAL	interval2itype(SQLSMALLINT ctype)
 {
-	SQLINTERVAL	sqlitv = 0;
+	SQLINTERVAL	sqlitv;
 
 	switch (ctype)
 	{
@@ -550,7 +550,7 @@ SQLINTERVAL	interval2itype(SQLSMALLINT ctype)
 static int getPrecisionPart(int precision, const char * precPart)
 {
 	char	fraction[] = "000000000";
-	int		fracs = sizeof(fraction) - 1;
+	size_t		fracs = sizeof(fraction) - 1;
 	size_t	cpys;
 
 	if (precision < 0)
@@ -766,8 +766,8 @@ static void set_client_decimal_point(char *num)
 	}
 }
 #else
-static void set_server_decimal_point(char *num) {}
-static void set_client_decimal_point(char *num, BOOL) {}
+//static void set_server_decimal_point(char *num, BOOL) {}
+//static void set_client_decimal_point(char *num, BOOL) {}
 #endif /* HAVE_LOCALE_H */
 
 /*	This is called by SQLFetch() */
@@ -797,6 +797,7 @@ copy_and_convert_field_bindinfo(StatementClass *stmt, OID field_type, int atttyp
  * We don't check for overflow here. This is just to decide if we need to
  * quote the value.
  */
+ #if 0
 static BOOL
 valid_int_literal(const char *str, SQLLEN len, BOOL *negative)
 {
@@ -825,6 +826,7 @@ valid_int_literal(const char *str, SQLLEN len, BOOL *negative)
 
 	return TRUE;
 }
+#endif
 
 static double get_double_value(const char *str)
 {
@@ -1040,7 +1042,7 @@ setup_getdataclass(SQLLEN * const length_return, const char ** const ptr_return,
 	{
 		if (needbuflen > (SQLLEN) pgdc->ttlbuflen)
 		{
-			pgdc->ttlbuf = realloc(pgdc->ttlbuf, needbuflen + len_for_wcs_term);
+			pgdc->ttlbuf = static_cast<char*>(realloc(pgdc->ttlbuf, needbuflen + len_for_wcs_term));
 			pgdc->ttlbuflen = needbuflen;
 		}
 
@@ -1145,7 +1147,7 @@ convert_text_field_to_sql_c(GetDataInfo * const gdata, const int current_col,
 		case WD_TYPE_FLOAT4:
 		case WD_TYPE_FLOAT8:
 		case WD_TYPE_NUMERIC:
-			set_client_decimal_point((char *) neut_str);
+			//set_client_decimal_point((char *) neut_str);
 			break;
 	}
 
@@ -1251,7 +1253,7 @@ copy_and_convert_field(StatementClass *stmt,
 		SQLLEN *pcbValue, SQLLEN *pIndicator)
 {
 	CSTR func = "copy_and_convert_field";
-	const char *value = valuei;
+	const char *value = static_cast<const char*>(valuei);
 	ARDFields	*opts = SC_get_ARDF(stmt);
 	GetDataInfo	*gdata = SC_get_GDTI(stmt);
 	SQLLEN		len = 0;
@@ -1357,7 +1359,7 @@ MYLOG(0, "null_cvt_date_string=%d\n", conn->connInfo.cvt_null_date_string);
 				case SQL_C_DATE:
 				case SQL_C_TYPE_DATE:
 				case SQL_C_DEFAULT:
-					if (rgbValueBindRow && cbValueMax >= sizeof(DATE_STRUCT))
+					if (static_cast<size_t>(rgbValueBindRow && cbValueMax) >= sizeof(DATE_STRUCT))
 					{
 						memset(rgbValueBindRow, 0, cbValueMax);
 						if (pcbValueBindRow)
@@ -1368,7 +1370,7 @@ MYLOG(0, "null_cvt_date_string=%d\n", conn->connInfo.cvt_null_date_string);
 					break;
 #ifdef	UNICODE_SUPPORT
 				case SQL_C_WCHAR:
-					if (rgbValueBindRow && cbValueMax >= WCLEN)
+					if (rgbValueBindRow && static_cast<size_t>(cbValueMax) >= WCLEN)
 						memset(rgbValueBindRow, 0, WCLEN);
 					else
 						result = COPY_RESULT_TRUNCATED;
@@ -1828,7 +1830,7 @@ MYLOG(DETAIL_LOG_LEVEL, "2stime fr=%d\n", std_time.fr);
 				break;
 
 			case SQL_C_FLOAT:
-				set_client_decimal_point((char *) neut_str);
+			//	set_client_decimal_point((char *) neut_str);
 				len = 4;
 				if (bind_size > 0)
 					*((SFLOAT *) rgbValueBindRow) = (float) get_double_value(neut_str);
@@ -1837,7 +1839,7 @@ MYLOG(DETAIL_LOG_LEVEL, "2stime fr=%d\n", std_time.fr);
 				break;
 
 			case SQL_C_DOUBLE:
-				set_client_decimal_point((char *) neut_str);
+			//	set_client_decimal_point((char *) neut_str);
 				len = 8;
 				if (bind_size > 0)
 					*((SDOUBLE *) rgbValueBindRow) = get_double_value(neut_str);
@@ -1922,7 +1924,7 @@ MYLOG(DETAIL_LOG_LEVEL, "2stime fr=%d\n", std_time.fr);
 MYLOG(DETAIL_LOG_LEVEL, "SQL_C_VARBOOKMARK value=%d\n", ival);
 					if (pcbValue)
 						*pcbValueBindRow = sizeof(ival);
-					if (cbValueMax >= sizeof(ival))
+					if (static_cast<size_t>(cbValueMax) >= sizeof(ival))
 					{
 						memcpy(rgbValueBindRow, &ival, sizeof(ival));
 						return COPY_OK;
@@ -1938,7 +1940,7 @@ MYLOG(DETAIL_LOG_LEVEL, "SQL_C_VARBOOKMARK value=%d\n", ival);
 						return rtn;
 					if (pcbValue)
 						*pcbValueBindRow = sizeof(g);
-					if (cbValueMax >= sizeof(g))
+					if (static_cast<size_t>(cbValueMax) >= sizeof(g))
 					{
 						memcpy(rgbValueBindRow, &g, sizeof(g));
 						return COPY_OK;
@@ -2182,7 +2184,7 @@ QB_initialize(QueryBuild *qb, size_t size, StatementClass *stmt, ResolveParamMod
 	while (newsize <= size)
 		newsize *= 2;
 
-	if ((qb->query_statement = malloc(newsize)) == NULL)
+	if ((qb->query_statement = static_cast<char*>(malloc(newsize))) == NULL)
 	{
 		qb->str_alsize = 0;
 		return -1;
@@ -2198,13 +2200,13 @@ QB_initialize(QueryBuild *qb, size_t size, StatementClass *stmt, ResolveParamMod
 
 	return newsize;
 }
-
+#if 0
 static int
 QB_initialize_copy(QueryBuild *qb_to, const QueryBuild *qb_from, UInt4 size)
 {
 	memcpy(qb_to, qb_from, sizeof(QueryBuild));
 
-	if ((qb_to->query_statement = malloc(size)) == NULL)
+	if ((qb_to->query_statement = static_cast<char*>(malloc(size))) == NULL)
 	{
 		qb_to->str_alsize = 0;
 		return -1;
@@ -2215,6 +2217,7 @@ QB_initialize_copy(QueryBuild *qb_to, const QueryBuild *qb_from, UInt4 size)
 
 	return size;
 }
+#endif
 
 static void
 QB_replace_SC_error(StatementClass *stmt, const QueryBuild *qb, const char *func)
@@ -2276,13 +2279,16 @@ do { \
 #define F_NewPos(qb) ((qb)->npos)
 
 
-static int
-convert_escape(QueryParse *qp, QueryBuild *qb);
+//static int
+//convert_escape(QueryParse *qp, QueryBuild *qb);
 static int
 inner_process_tokens(QueryParse *qp, QueryBuild *qb);
+
+#if 0
 static int
 ResolveOneParam(QueryBuild *qb, QueryParse *qp, BOOL *isnull, BOOL *usebinary,
 				Oid *wdtype);
+#endif
 static int
 processParameters(QueryParse *qp, QueryBuild *qb,
 	size_t *output_count, SQLLEN param_pos[][2]);
@@ -2302,7 +2308,7 @@ enlarge_query_statement(QueryBuild *qb, size_t newsize)
 
 	while (newalsize <= newsize)
 		newalsize *= 2;
-	if (!(qb->query_statement = realloc(qb->query_statement, newalsize)))
+	if (!(qb->query_statement = static_cast<char*>(realloc(qb->query_statement, newalsize))))
 	{
 		qb->str_alsize = 0;
 		if (qb->stmt)
@@ -2416,7 +2422,7 @@ enlarge_query_statement(QueryBuild *qb, size_t newsize)
 		}													\
 	} while (0)
 
-
+#if 0
 static RETCODE
 QB_start_brace(QueryBuild *qb)
 {
@@ -2492,6 +2498,7 @@ cleanup:
 
 	return retval;
 }
+#endif
 
 /*----------
  *	Check if the statement is
@@ -2683,12 +2690,12 @@ buildProcessedStmt(const char *srvquery, ssize_t endp, int num_params)
 
 	qlen = (endp == SQL_NTS) ? strlen(srvquery) : endp;
 
-	pstmt = malloc(sizeof(ProcessedStmt));
+	pstmt = static_cast<ProcessedStmt*>(malloc(sizeof(ProcessedStmt)));
 	if (!pstmt)
 		return NULL;
 
 	pstmt->next = NULL;
-	pstmt->query = malloc(qlen + 1);
+	pstmt->query = static_cast<char*>(malloc(qlen + 1));
 	if (!pstmt->query)
 	{
 		free(pstmt);
@@ -2743,7 +2750,7 @@ MYLOG(DETAIL_LOG_LEVEL, "entering\n");
 	if (param_cast)
 		qb->flags |= FLGB_PARAM_CAST;
 
-	for (qp->opos = 0; qp->opos < qp->stmt_len; qp->opos++)
+	for (qp->opos = 0; qp->opos < static_cast<size_t>(qp->stmt_len); qp->opos++)
 	{
 		retval = inner_process_tokens(qp, qb);
 		if (SQL_ERROR == retval)
@@ -2818,9 +2825,9 @@ desc_params_and_sync(StatementClass *stmt)
 {
 	CSTR		func = "desc_params_and_sync";
 	RETCODE		retval;
-	ConnectionClass *conn = SC_get_conn(stmt);
+//	ConnectionClass *conn = SC_get_conn(stmt);
 	QResultClass	*res;
-	char	   *plan_name;
+	const char	   *plan_name;
 	int		func_cs_count = 0;
 	SQLSMALLINT	num_pa = 0;
 	ProcessedStmt *pstmt;
@@ -3071,7 +3078,7 @@ MYLOG(DETAIL_LOG_LEVEL, "type=" FORMAT_UINTEGER " concur=" FORMAT_UINTEGER "\n",
 		}
 	}
 
-	for (qp->opos = 0; qp->opos < qp->stmt_len; qp->opos++)
+	for (qp->opos = 0; qp->opos < static_cast<size_t>(qp->stmt_len); qp->opos++)
 	{
 		retval = inner_process_tokens(qp, qb);
 		if (SQL_ERROR == retval)
@@ -3163,7 +3170,7 @@ MYLOG(DETAIL_LOG_LEVEL, "type=" FORMAT_UINTEGER " concur=" FORMAT_UINTEGER "\n",
 			}
 		}
 		npos -= qp->declare_pos;
-		stmt->load_statement = malloc(npos + 1);
+		stmt->load_statement = static_cast<char*>(malloc(npos + 1));
 		if (!stmt->load_statement)
 		{
 			retval = SQL_ERROR;
@@ -3297,9 +3304,9 @@ static pgNAME lower_or_remove_dquote(pgNAME nm, const UCHAR *src, int srclen, in
 	encoded_str	encstr;
 
 	if (nm.name)
-		tc = realloc(nm.name, srclen + 1);
+		tc = static_cast<char*>(realloc(nm.name, srclen + 1));
 	else
-		tc = malloc(srclen + 1);
+		tc = static_cast<char*>(malloc(srclen + 1));
 	if (!tc)
 	{
 		NULL_THE_NAME(nm);
@@ -3391,7 +3398,7 @@ static int token_finish(QueryParse *qp, char oldchar, char *finished_token)
 	int ret = -1;
 	if (!qp->prev_token_end)
 	{
-		if (oldchar && qp->token_len + 1 < sizeof(qp->token_curr))
+		if (static_cast<size_t>(oldchar && qp->token_len) + 1 < sizeof(qp->token_curr))
 			qp->token_curr[qp->token_len++] = oldchar;
 		qp->prev_token_end = TRUE;
 		qp->token_curr[qp->token_len] = '\0';
@@ -3415,7 +3422,7 @@ static int token_continue(QueryParse *qp, char oldchar)
 {
 	if (qp->prev_token_end)
 		token_start(qp, oldchar);
-	else if (qp->token_len + 1 < sizeof(qp->token_curr))
+	else if (static_cast<size_t>(qp->token_len) + 1 < sizeof(qp->token_curr))
 		qp->token_curr[qp->token_len++] = oldchar;
 
 	return qp->token_len;
@@ -3487,6 +3494,8 @@ static int PT_token_continue(ParseToken *pt, char oldchar)
 static int
 inner_process_tokens(QueryParse *qp, QueryBuild *qb)
 {
+	return SQL_ERROR;
+	#if 0
 	CSTR func = "inner_process_tokens";
 	BOOL	lf_conv = ((qb->flags & FLGB_CONVERT_LF) != 0);
 	const char *bestitem = NULL;
@@ -3671,7 +3680,7 @@ inner_process_tokens(QueryParse *qp, QueryBuild *qb)
 	/* Squeeze carriage-return/linefeed pairs to linefeed only */
 	if (lf_conv &&
 		 WD_CARRIAGE_RETURN == oldchar &&
-		 qp->opos + 1 < qp->stmt_len &&
+		 qp->opos + 1 < static_cast<size_t>(qp->stmt_len) &&
 		 WD_LINEFEED == qp->statement[qp->opos + 1])
 		return SQL_SUCCESS;
 
@@ -3991,7 +4000,8 @@ inner_process_tokens(QueryParse *qp, QueryBuild *qb)
 	/*
 	 * It's a '?' parameter alright
 	 */
-	retval = ResolveOneParam(qb, qp, &isnull, &isbinary, &dummy);
+//	retval = ResolveOneParam(qb, qp, &isnull, &isbinary, &dummy);
+	retval = SQL_ERROR;
 	if (retval < 0)
 		return retval;
 
@@ -4001,10 +4011,10 @@ inner_process_tokens(QueryParse *qp, QueryBuild *qb)
 	retval = SQL_SUCCESS;
 cleanup:
 	return retval;
+	#endif
 }
 
 #define	MIN_ALC_SIZE	128
-
 /*
  * Build an array of parameters to pass to libpq's PQexecPrepared
  * function.
@@ -4056,17 +4066,17 @@ build_libpq_bind_params(StatementClass *stmt,
 
 	if (num_params > 0)
 	{
-		*paramTypes = malloc(sizeof(OID) * num_params);
+		*paramTypes = static_cast<OID*>(malloc(sizeof(OID) * num_params));
 		if (*paramTypes == NULL)
 			goto cleanup;
-		*paramValues = malloc(sizeof(char *) * num_params);
+		*paramValues = static_cast<char**>(malloc(sizeof(char *) * num_params));
 		if (*paramValues == NULL)
 			goto cleanup;
 		memset(*paramValues, 0, sizeof(char *) * num_params);
-		*paramLengths = malloc(sizeof(int) * num_params);
+		*paramLengths = static_cast<int*>(malloc(sizeof(int) * num_params));
 		if (*paramLengths == NULL)
 			goto cleanup;
-		*paramFormats = malloc(sizeof(int) * num_params);
+		*paramFormats = static_cast<int*>(malloc(sizeof(int) * num_params));
 		if (*paramFormats == NULL)
 			goto cleanup;
 	}
@@ -4083,10 +4093,10 @@ MYLOG(DETAIL_LOG_LEVEL, "num_p=%d\n", num_p);
 		ParameterImplClass	*parameters = ipdopts->parameters;
 		int	pno;
 
-		BOOL	isnull;
-		BOOL	isbinary;
+		BOOL	isnull = FALSE;
+		BOOL	isbinary = FALSE;
 		char	*val_copy;
-		OID	wdtype;
+		OID	wdtype = WD_TYPE_UNKNOWN;
 
 		/*
 		 * Now build the parameter values.
@@ -4094,7 +4104,8 @@ MYLOG(DETAIL_LOG_LEVEL, "num_p=%d\n", num_p);
 		for (i = 0, pno = 0; i < stmt->num_params; i++)
 		{
 			qb.npos = 0;
-			retval = ResolveOneParam(&qb, NULL, &isnull, &isbinary, &wdtype);
+			//retval = ResolveOneParam(&qb, NULL, &isnull, &isbinary, &wdtype);
+			retval = SQL_ERROR;
 			if (SQL_ERROR == retval)
 			{
 				QB_replace_SC_error(stmt, &qb, func);
@@ -4119,7 +4130,7 @@ MYLOG(DETAIL_LOG_LEVEL, "num_p=%d\n", num_p);
 			}
 			if (!isnull)
 			{
-				val_copy = malloc(qb.npos + 1);
+				val_copy = static_cast<char*>(malloc(qb.npos + 1));
 				if (!val_copy)
 					goto cleanup;
 				memcpy(val_copy, qb.query_statement, qb.npos);
@@ -4164,6 +4175,7 @@ cleanup:
  */
 #define MAX_NUMERIC_DIGITS 39
 
+#if 0
 /*
  * Convert a SQL_NUMERIC_STRUCT into string representation.
  */
@@ -4266,6 +4278,7 @@ MYPRINTF(DETAIL_LOG_LEVEL, " len2=%d", len);
 	chrform[newlen] = '\0';
 MYLOG(DETAIL_LOG_LEVEL, " convval(2) len=%d %s\n", newlen, chrform);
 }
+#endif
 
 /*
  * Convert a string representation of a numeric into SQL_NUMERIC_STRUCT.
@@ -4273,7 +4286,8 @@ MYLOG(DETAIL_LOG_LEVEL, " convval(2) len=%d %s\n", newlen, chrform);
 static void
 parse_to_numeric_struct(const char *wv, SQL_NUMERIC_STRUCT *ns, BOOL *overflow)
 {
-	int			i, nlen, dig;
+	size_t 		i, nlen;
+	unsigned int			dig;
 	char		calv[SQL_MAX_NUMERIC_LEN * 3];
 	BOOL		dot_exist;
 
@@ -4352,6 +4366,7 @@ parse_to_numeric_struct(const char *wv, SQL_NUMERIC_STRUCT *ns, BOOL *overflow)
 	}
 }
 
+#if 0
 static BOOL
 parameter_is_with_cast(const QueryParse *qp)
 {
@@ -4367,22 +4382,30 @@ parameter_is_with_cast(const QueryParse *qp)
 		return TRUE;
 	return FALSE;
 }
+#endif
 
 #ifdef	UNICODE_SUPPORT
 enum {
 	ErrorOutConversionErrors	/* error out conversion errors */
 	, ReturnZeroLengthString	/* simply returns zero length strings */
 };
+#endif
+
+#if 0
 static int convert_err_flag =
 #ifdef	WIN32
 	 ReturnZeroLengthString;
 #else
 	 ErrorOutConversionErrors;
 #endif /* WIN32 */
+#endif
 
+#if 0
 static BOOL
 handle_lu_onvert_error(QueryBuild *qb, int flag, char *buffer, SQLLEN paralen)
 {
+	return FALSE;
+	#if 0
 	int	blen = paralen;
 
 	if (!buffer)
@@ -4428,6 +4451,7 @@ handle_lu_onvert_error(QueryBuild *qb, int flag, char *buffer, SQLLEN paralen)
 			qb->errornumber = STMT_EXEC_ERROR;
 			return FALSE;
 	}
+	#endif
 }
 #endif /* UNICODE_SUPPORT */
 
@@ -4440,6 +4464,7 @@ handle_lu_onvert_error(QueryBuild *qb, int flag, char *buffer, SQLLEN paralen)
  * *wdtype is set to the PostgreSQL type OID that should be used when binding
  * (or 0, to let the server decide)
  */
+ #if 0
 static int
 ResolveOneParam(QueryBuild *qb, QueryParse *qp, BOOL *isnull, BOOL *isbinary,
 				OID *wdtype)
@@ -4460,7 +4485,8 @@ ResolveOneParam(QueryBuild *qb, QueryParse *qp, BOOL *isnull, BOOL *isbinary,
 	SQLLEN		used;
 	const char	*send_buf;
 
-	char		*buffer, *allocbuf = NULL, *lastadd = NULL;
+	char		*buffer, *allocbuf = NULL;
+	const char* lastadd = NULL;
 	OID			lobj_oid;
 	int			lobj_fd;
 	SQLULEN		offset = apdopts->param_offset_ptr ? *apdopts->param_offset_ptr : 0;
@@ -4794,7 +4820,7 @@ MYLOG(0, " C_WCHAR=%d contents=%s(" FORMAT_LEN ")\n", param_ctype, buffer, used)
 #endif /* WIN32 */
 			{
 				SPRINTF_FIXED(param_string, "%.*g", WD_DOUBLE_DIGITS, dbv);
-				set_server_decimal_point(param_string, SQL_NTS);
+				//set_server_decimal_point(param_string, SQL_NTS);
 			}
 #ifdef	WIN32
 			else if (_isnan(dbv))
@@ -5171,7 +5197,7 @@ MYLOG(0, "cvt_null_date_string=%d wdtype=%d send_buf=%p\n", conn->connInfo.cvt_n
 							used = strlen(send_buf);
 							break;
 					}
-					allocbuf = malloc(used / 2 + 1);
+					allocbuf = static_cast<char*>(malloc(used / 2 + 1));
 					if (allocbuf)
 					{
 						WD_hex2bin(send_buf, allocbuf, used);
@@ -5386,8 +5412,9 @@ cleanup:
 		free(allocbuf);
 	return retval;
 }
+#endif
 
-
+#if 0
 static const char *
 mapFunction(const char *func, int param_count, const char *keyword)
 {
@@ -5408,7 +5435,7 @@ mapFunction(const char *func, int param_count, const char *keyword)
 		{
 			int len = (int) (p2 - mapFuncs[i].odbc_name);
 
-			if (strlen(func) == len &&
+			if (strlen(func) == static_cast<size_t>(len) &&
 			    !strnicmp(p1, func, len) &&
 			    !stricmp(p2 + 1, keyword))
 				return mapFuncs[i].pgsql_name;
@@ -5435,7 +5462,7 @@ processParameters(QueryParse *qp, QueryBuild *qb,
 	if (NULL != output_count)
 		*output_count = 0;
 	stop = FALSE;
-	for (; F_OldPos(qp) < qp->stmt_len; F_OldNext(qp))
+	for (; F_OldPos(qp) < static_cast<size_t>(qp->stmt_len); F_OldNext(qp))
 	{
 		retval = inner_process_tokens(qp, qb);
 		if (retval == SQL_ERROR)
@@ -5514,11 +5541,13 @@ processParameters(QueryParse *qp, QueryBuild *qb,
 
 	return SQL_SUCCESS;
 }
+#endif
 
 /*
  * convert_escape()
  * This function doesn't return a pointer to static memory any longer !
  */
+ #if 0
 static int
 convert_escape(QueryParse *qp, QueryBuild *qb)
 {
@@ -5641,7 +5670,7 @@ convert_escape(QueryParse *qp, QueryBuild *qb)
 	else if (stricmp(key, "fn") == 0)
 	{
 		const char *mapExpr;
-		int	i, param_count;
+		unsigned int	i, param_count;
 		SQLLEN	from, to;
 		size_t	param_consumed;
 		SQLLEN	param_pos[16][2];
@@ -5716,7 +5745,7 @@ convert_escape(QueryParse *qp, QueryBuild *qb)
 				{
 					int	len = to - from + 1;
 
-					if (len < sizeof(keyword))
+					if (static_cast<size_t>(len) < sizeof(keyword))
 					{
 						memcpy(keyword, nqb.query_statement + from, len);
 						keyword[len] = '\0';
@@ -5761,7 +5790,7 @@ convert_escape(QueryParse *qp, QueryBuild *qb)
 					from = param_pos[1][0];
 					to = param_pos[1][1];
 					typel = to - from + 1;
-					if (typel < sizeof(sqltype))
+					if (static_cast<size_t>(typel) < sizeof(sqltype))
 					{
 						const char *type;
 
@@ -5900,6 +5929,7 @@ cleanup:
 		QB_Destructor(&nqb);
 	return retval;
 }
+#endif
 
 static BOOL
 convert_money(const char *s, char *sout, size_t soutmax)
@@ -5959,6 +5989,7 @@ convert_money(const char *s, char *sout, size_t soutmax)
  *	This function parses a character string for date/time info and fills in SIMPLE_TIME
  *	It does not zero out SIMPLE_TIME in case it is desired to initialize it with a value
  */
+ #if 0
 static char
 parse_datetime(const char *buf, SIMPLE_TIME *st)
 {
@@ -6034,7 +6065,7 @@ parse_datetime(const char *buf, SIMPLE_TIME *st)
 
 	return FALSE;
 }
-
+#endif
 
 /*	Change linefeed to carriage-return/linefeed */
 size_t
@@ -6087,6 +6118,7 @@ convert_linefeeds(const char *si, char *dst, size_t max, BOOL convlf, BOOL *chan
  *	Change carriage-return/linefeed to just linefeed
  *	Plus, escape any special characters.
  */
+ #if 0
 static BOOL
 convert_special_chars(QueryBuild *qb, const char *si, size_t used)
 {
@@ -6099,7 +6131,7 @@ convert_special_chars(QueryBuild *qb, const char *si, size_t used)
 	int		ccsc = qb->ccsc;
 	char		escape_in_literal = CC_get_escape(qb->conn);
 
-	if (used == SQL_NTS)
+	if (used == static_cast<size_t>(SQL_NTS))
 		max = strlen(si);
 	else
 		max = used;
@@ -6149,6 +6181,7 @@ convert_special_chars(QueryBuild *qb, const char *si, size_t used)
 
 	return TRUE;
 }
+#endif
 
 static int
 conv_from_octal(const char *s)
@@ -6262,6 +6295,7 @@ conv_to_octal2(UCHAR val, char *octal)
 
 
 /*	convert non-ascii bytes to octal escape sequences */
+#if 0
 static size_t
 convert_to_pgbinary(const char *in, char *out, size_t len, QueryBuild *qb)
 {
@@ -6305,7 +6339,7 @@ convert_to_pgbinary(const char *in, char *out, size_t len, QueryBuild *qb)
 
 	return o;
 }
-
+#endif
 
 static const char *hextbl = "0123456789ABCDEF";
 
@@ -6409,6 +6443,8 @@ static int
 convert_lo(StatementClass *stmt, const void *value, SQLSMALLINT fCType, PTR rgbValue,
 		   SQLLEN cbValueMax, SQLLEN *pcbValue)
 {
+	return 0;
+	#if 0
 	CSTR	func = "convert_lo";
 	OID			oid;
 	int			result;
@@ -6550,4 +6586,5 @@ convert_lo(StatementClass *stmt, const void *value, SQLSMALLINT fCType, PTR rgbV
 	}
 
 	return result;
+	#endif
 }

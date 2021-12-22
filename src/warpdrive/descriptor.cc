@@ -22,7 +22,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 
 
 void	TI_Constructor(TABLE_INFO *self, const ConnectionClass *conn)
@@ -151,7 +151,7 @@ const pgNAME	TI_From_IH(TABLE_INFO *ti, OID tableoid)
 const pgNAME	TI_Ins_IH(TABLE_INFO *ti, OID tableoid, const char *fullName)
 {
 	InheritanceClass	*ih;
-	int			count;
+	unsigned int			count;
 
 	if (NULL == (ih = ti->ih))
 	{
@@ -450,7 +450,7 @@ static void ARDFields_copy(const ARDFields *src, ARDFields *target)
 	{
 		int	i;
 
-		target->bindings = malloc(target->allocated * sizeof(BindInfoClass));
+		target->bindings = static_cast<BindInfoClass*>(malloc(target->allocated * sizeof(BindInfoClass)));
 		if (!target->bindings)
 			target->allocated = 0;
 		for (i = 0; i < target->allocated; i++)
@@ -467,7 +467,7 @@ static void APDFields_copy(const APDFields *src, APDFields *target)
 	memcpy(target, src, sizeof(APDFields));
 	if (src->bookmark)
 	{
-		target->bookmark = malloc(sizeof(ParameterInfoClass));
+		target->bookmark = static_cast<ParameterInfoClass*>(malloc(sizeof(ParameterInfoClass)));
 		if (target->bookmark)
 			ParameterInfoClass_copy(src->bookmark, target->bookmark);
 	}
@@ -480,7 +480,7 @@ static void APDFields_copy(const APDFields *src, APDFields *target)
 	{
 		int	i;
 
-		target->parameters = malloc(target->allocated * sizeof(ParameterInfoClass));
+		target->parameters = static_cast<ParameterInfoClass*>(malloc(target->allocated * sizeof(ParameterInfoClass)));
 		if (!target->parameters)
 			target->allocated = 0;
 		for (i = 0; i < target->allocated; i++)
@@ -710,7 +710,7 @@ static	WD_ErrorInfo	*DC_create_errorinfo(const DescriptorClass *self)
 		env_is_odbc3 = EN_is_odbc3(env);
 	errornum -= LOWEST_DESC_ERROR;
 	if (errornum < 0 ||
-	    errornum >= sizeof(Descriptor_sqlstate) / sizeof(Descriptor_sqlstate[0]))
+	    static_cast<size_t>(errornum) >= sizeof(Descriptor_sqlstate) / sizeof(Descriptor_sqlstate[0]))
 		errornum = 1 - LOWEST_DESC_ERROR;
 	STRCPY_FIXED(error->sqlstate, env_is_odbc3 ? Descriptor_sqlstate[errornum].ver3str : Descriptor_sqlstate[errornum].ver2str);
         return error;

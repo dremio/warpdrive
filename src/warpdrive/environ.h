@@ -24,7 +24,7 @@ extern "C" {
 /**********		Environment Handle	*************/
 struct EnvironmentClass_
 {
-	char	   *errormsg;
+	const char	   *errormsg;
 	int		errornumber;
 	Int4	flag;
 #if defined(WIN_MULTITHREAD_SUPPORT)
@@ -40,7 +40,7 @@ char		EN_Destructor(EnvironmentClass *self);
 char		EN_get_error(EnvironmentClass *self, int *number, char **message);
 char		EN_add_connection(EnvironmentClass *self, ConnectionClass *conn);
 char		EN_remove_connection(EnvironmentClass *self, ConnectionClass *conn);
-void		EN_log_error(const char *func, char *desc, EnvironmentClass *self);
+void		EN_log_error(const char *func, const char *desc, EnvironmentClass *self);
 int	getConnCount(void);
 ConnectionClass * const *getConnList(void);
 

@@ -19,7 +19,7 @@
 #include "qresult.h"
 #include "statement.h"
 
-#include <libpq-fe.h>
+//#include <libpq-fe.h>
 
 #include "misc.h"
 #include <stdio.h>
@@ -388,7 +388,7 @@ QR_add_message(QResultClass *self, const char *msg)
 		pos = 0;
 		alsize = addlen + 1;
 	}
-	if (message = realloc(message, alsize), NULL == message)
+	if (message = static_cast<char*>(realloc(message, alsize)), NULL == message)
 		return;
 	if (pos > 0)
 		message[pos - 1] = ';';
@@ -425,7 +425,7 @@ QR_add_notice(QResultClass *self, const char *msg)
 		pos = 0;
 		alsize = addlen + 1;
 	}
-	if (message = realloc(message, alsize), NULL == message)
+	if (message = static_cast<char*>(realloc(message, alsize)), NULL == message)
 		return;
 	if (pos > 0)
 		message[pos - 1] = ';';
@@ -600,7 +600,7 @@ QR_from_PGresult(QResultClass *self, StatementClass *stmt, ConnectionClass *conn
 		QR_set_conn(self, conn);
 
 	/* at first read in the number of fields that are in the query */
-	new_num_fields = PQnfields(*pgres);
+//	new_num_fields = PQnfields(*pgres);
 	QLOG(0, "\tnFields: %d\n", new_num_fields);
 
 	/* according to that allocate memory */
@@ -611,13 +611,13 @@ QR_from_PGresult(QResultClass *self, StatementClass *stmt, ConnectionClass *conn
 	/* now read in the descriptions */
 	for (lf = 0; lf < new_num_fields; lf++)
 	{
-		new_field_name = PQfname(*pgres, lf);
+/*		new_field_name = PQfname(*pgres, lf);
 		new_relid = PQftable(*pgres, lf);
 		new_attid = PQftablecol(*pgres, lf);
 		new_adtid = (OID) PQftype(*pgres, lf);
 		new_adtsize = (Int2) PQfsize(*pgres, lf);
 		new_atttypmod = (Int4) PQfmod(*pgres, lf);
-
+*/
 		/* Subtract the header length */
 		switch (new_adtid)
 		{
@@ -696,7 +696,7 @@ MYLOG(DETAIL_LOG_LEVEL, "!!%p->cursTup=" FORMAT_LEN " total_read=" FORMAT_ULEN "
 	 * Also fill in command tag. (Typically, it's SELECT, but can also be
 	 * a FETCH.)
 	 */
-	QR_set_command(self, PQcmdStatus(*pgres));
+//	QR_set_command(self, PQcmdStatus(*pgres));
 	QR_set_cursor(self, cursor);
 	if (NULL == cursor)
 		QR_set_reached_eof(self);
@@ -1334,6 +1334,7 @@ QR_read_tuples_from_pgres(QResultClass *self, PGresult **pgres)
 	flds = QR_get_fields(self);
 
 nextrow:
+#if 0
 	resStatus = PQresultStatus(*pgres);
 	switch (resStatus)
 	{
@@ -1352,7 +1353,10 @@ nextrow:
 			return FALSE;
 	}
 
-	nrows = PQntuples(*pgres);
+#endif
+
+	nrows = 0;
+	//nrows = PQntuples(*pgres);
 	numTotalRows += nrows;
 
 	for (rowno = 0; rowno < nrows; rowno++)
@@ -1376,7 +1380,7 @@ nextrow:
 		{
 			BOOL isnull = FALSE;
 
-			isnull = PQgetisnull(*pgres, rowno, field_lf);
+		//	isnull = PQgetisnull(*pgres, rowno, field_lf);
 
 			if (isnull)
 			{
@@ -1387,8 +1391,8 @@ nextrow:
 			}
 			else
 			{
-				len = PQgetlength(*pgres, rowno, field_lf);
-				value = PQgetvalue(*pgres, rowno, field_lf);
+//				len = PQgetlength(*pgres, rowno, field_lf);
+//				value = PQgetvalue(*pgres, rowno, field_lf);
 				if (field_lf >= effective_cols)
 					buffer = tidoidbuf;
 				else
@@ -1449,6 +1453,7 @@ nextrow:
 			self->num_total_read = self->cursTuple + 1;
 	}
 
+#if 0
 	if (resStatus == PGRES_SINGLE_TUPLE)
 	{
 		/* Process next row */
@@ -1457,6 +1462,7 @@ nextrow:
 		*pgres = PQgetResult(self->conn->pqconn);
 		goto nextrow;
 	}
+#endif
 
 	self->dataFilled = TRUE;
 	self->tupleField = self->backend_tuples + (self->fetch_number * self->num_fields);

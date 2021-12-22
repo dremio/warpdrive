@@ -1507,7 +1507,7 @@ getAtttypmodEtc(const StatementClass *stmt, int col, int *adtsize_or_longestlen)
 
 						for (i = 0; i < res->num_cached_rows; i++)
 						{
-							tval = QR_get_value_backend_text(res, i, col);
+							tval = static_cast<const char*>(QR_get_value_backend_text(res, i, col));
 							if (NULL != tval)
 							{
 								sptr = strchr(tval, '.');

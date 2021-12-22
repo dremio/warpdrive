@@ -11,7 +11,7 @@
 
 #include "wdodbc.h"
 
-#include <libpq-fe.h>
+//#include <libpq-fe.h>
 
 struct ColumnInfoClass_
 {

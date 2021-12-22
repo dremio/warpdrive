@@ -32,7 +32,7 @@
 #include "connection.h"
 #include "qresult.h"
 #include "wdtypes.h"
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 #include "catfunc.h"
 
 #include "multibyte.h"
@@ -290,12 +290,12 @@ getColInfo(COL_INFO *col_info, FIELD_INFO *fi, int k)
 
 MYLOG(DETAIL_LOG_LEVEL, "entering non-manual result\n");
 	fi->dquote = TRUE;
-	STR_TO_NAME(fi->column_name, QR_get_value_backend_text(col_info->result, k, COLUMNS_COLUMN_NAME));
+	STR_TO_NAME(fi->column_name, static_cast<const char*>(QR_get_value_backend_text(col_info->result, k, COLUMNS_COLUMN_NAME)));
 
 	fi->columntype = (OID) QR_get_value_backend_int(col_info->result, k, COLUMNS_FIELD_TYPE, NULL);
 	fi->column_size = QR_get_value_backend_int(col_info->result, k, COLUMNS_PRECISION, NULL);
 	fi->length = QR_get_value_backend_int(col_info->result, k, COLUMNS_LENGTH, NULL);
-	if (str = QR_get_value_backend_text(col_info->result, k, COLUMNS_SCALE), str)
+	if (str = static_cast<char*>(QR_get_value_backend_text(col_info->result, k, COLUMNS_SCALE)), str)
 		fi->decimal_digits = atoi(str);
 	else
 		fi->decimal_digits = -1;
@@ -321,8 +321,8 @@ MYLOG(DETAIL_LOG_LEVEL, "entering num_cols=" FORMAT_ULEN " col=%s\n", QR_get_num
 		if (fi->attnum > 0)
 		{
 			attnum = QR_get_value_backend_int(col_info->result, k, COLUMNS_PHYSICAL_NUMBER, NULL);
-			if (basetype = (OID) strtoul(QR_get_value_backend_text(col_info->result, k, COLUMNS_BASE_TYPEID), NULL, 10), 0 == basetype)
-				basetype = (OID) strtoul(QR_get_value_backend_text(col_info->result, k, COLUMNS_FIELD_TYPE), NULL, 10);
+			if (basetype = (OID) strtoul(static_cast<const char*>(QR_get_value_backend_text(col_info->result, k, COLUMNS_BASE_TYPEID)), NULL, 10), 0 == basetype)
+				basetype = (OID) strtoul(static_cast<const char*>(QR_get_value_backend_text(col_info->result, k, COLUMNS_FIELD_TYPE)), NULL, 10);
 			atttypmod = QR_get_value_backend_int(col_info->result, k, COLUMNS_ATTTYPMOD, NULL);
 MYLOG(DETAIL_LOG_LEVEL, "%d attnum=%d\n", k, attnum);
 			if (attnum == fi->attnum &&
@@ -336,7 +336,7 @@ MYLOG(DETAIL_LOG_LEVEL, "%d attnum=%d\n", k, attnum);
 		}
 		else if (NAME_IS_VALID(fi->column_name))
 		{
-			col = QR_get_value_backend_text(col_info->result, k, COLUMNS_COLUMN_NAME);
+			col = static_cast<const char*>(QR_get_value_backend_text(col_info->result, k, COLUMNS_COLUMN_NAME));
 MYLOG(DETAIL_LOG_LEVEL, "%d col=%s\n", k, col);
 			if (fi->dquote)
 				cmp = strcmp(col, GET_NAME(fi->column_name));
@@ -443,7 +443,7 @@ MYLOG(0, "Entering\n");
 					{
 						char		query[512];
 
-						STR_TO_NAME(ti->bestitem, QR_get_value_backend_text(res, i, COLUMNS_COLUMN_NAME));
+						STR_TO_NAME(ti->bestitem, static_cast<const char*>(QR_get_value_backend_text(res, i, COLUMNS_COLUMN_NAME)));
 						SPRINTF_FIXED(query, "\"%s\" = %%d", SAFE_NAME(ti->bestitem));
 						STRX_TO_NAME(ti->bestqual, query);
 						break;
@@ -764,7 +764,7 @@ COL_INFO **coli)
 				if (QR_get_num_total_tuples(res) == 1)
 				{
 					tblFound = TRUE;
-					STR_TO_NAME(*schema_name, QR_get_value_backend_text(res, 0, 0));
+					STR_TO_NAME(*schema_name, static_cast<const char*>(QR_get_value_backend_text(res, 0, 0)));
 				}
 			}
 			QR_Destructor(res);
@@ -922,15 +922,15 @@ getColumnsInfo(ConnectionClass *conn, TABLE_INFO *wti, OID greloid, StatementCla
 			int i;
 
 			if (!greloid)
-				greloid = (OID) strtoul(QR_get_value_backend_text(res, 0, COLUMNS_TABLE_OID), NULL, 10);
+				greloid = (OID) strtoul(static_cast<const char*>(QR_get_value_backend_text(res, 0, COLUMNS_TABLE_OID)), NULL, 10);
 			if (!wti->table_oid)
 				wti->table_oid = greloid;
 			if (NAME_IS_NULL(wti->schema_name))
 				STR_TO_NAME(wti->schema_name,
-					QR_get_value_backend_text(res, 0, COLUMNS_SCHEMA_NAME));
+					static_cast<const char*>(QR_get_value_backend_text(res, 0, COLUMNS_SCHEMA_NAME)));
 			if (NAME_IS_NULL(wti->table_name))
 				STR_TO_NAME(wti->table_name,
-					QR_get_value_backend_text(res, 0, COLUMNS_TABLE_NAME));
+					static_cast<const char*>(QR_get_value_backend_text(res, 0, COLUMNS_TABLE_NAME)));
 			for (i = 0; i < num_tuples; i++)
 			{
 				if (NULL != QR_get_value_backend_text(res, 0, COLUMNS_TABLE_INFO))
@@ -1070,15 +1070,15 @@ cleanup:
 		if (res && QR_get_num_cached_tuples(res) > 0)
 		{
 			if (!greloid)
-				greloid = (OID) strtoul(QR_get_value_backend_text(res, 0, COLUMNS_TABLE_OID), NULL, 10);
+				greloid = (OID) strtoul(static_cast<const char*>(QR_get_value_backend_text(res, 0, COLUMNS_TABLE_OID)), NULL, 10);
 			if (!wti->table_oid)
 				wti->table_oid = greloid;
 			if (NAME_IS_NULL(wti->schema_name))
 				STR_TO_NAME(wti->schema_name,
-					QR_get_value_backend_text(res, 0, COLUMNS_SCHEMA_NAME));
+					static_cast<const char*>(QR_get_value_backend_text(res, 0, COLUMNS_SCHEMA_NAME)));
 			if (NAME_IS_NULL(wti->table_name))
 				STR_TO_NAME(wti->table_name,
-					QR_get_value_backend_text(res, 0, COLUMNS_TABLE_NAME));
+					static_cast<const char*>(QR_get_value_backend_text(res, 0, COLUMNS_TABLE_NAME)));
 		}
 MYLOG(DETAIL_LOG_LEVEL, "#1 %p->table_name=%s(%u)\n", wti, PRINT_NAME(wti->table_name), wti->table_oid);
 		if (colatt /* SQLColAttribute case */
@@ -1215,7 +1215,7 @@ static char *insert_as_to_the_statement(char *stmt, const char **pptr, const cha
 {
 	size_t	stsize = strlen(stmt), ppos = *pptr - stmt, remsize = stsize - ppos;
 	const int  ins_size = 3;
-	char	*newstmt = realloc(stmt, stsize + ins_size + 1);
+	char	*newstmt = static_cast<char*>(realloc(stmt, stsize + ins_size + 1));
 
 	if (newstmt)
 	{

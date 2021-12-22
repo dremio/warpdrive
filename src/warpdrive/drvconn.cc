@@ -33,7 +33,7 @@
 #include <windowsx.h>
 #include "resource.h"
 #endif
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 
 #include "dlg_specific.h"
 
@@ -453,9 +453,10 @@ dconn_get_attributes(copyfunc func, const char *connect_string, ConnInfo *ci)
 	const	char	*pair,
 			*attribute,
 			*value,
+			*equals,
+			*delp,
 			*termp;
 	BOOL	eoftok;
-	char	*equals, *delp;
 	char	*strtok_arg;
 #ifdef	HAVE_STRTOK_R
 	char	*last = NULL;
@@ -497,7 +498,7 @@ dconn_get_attributes(copyfunc func, const char *connect_string, ConnInfo *ci)
 		if (!equals)
 			continue;
 
-		*equals = '\0';
+		//*equals = '\0';
 		attribute = pair;		/* ex. DSN */
 		value = equals + 1;		/* ex. 'CEO co1' */
 		/*
@@ -541,7 +542,7 @@ dconn_get_attributes(copyfunc func, const char *connect_string, ConnInfo *ci)
 							ret = FALSE;
 							goto cleanup;
 						}
-						*delp = ATTRIBUTE_DELIMITER;	/* restore delimiter */
+//						*delp = ATTRIBUTE_DELIMITER;	/* restore delimiter */
 						delp = NULL;
 					}
 					if (CLOSING_BRACKET == closep[1])
@@ -551,7 +552,7 @@ dconn_get_attributes(copyfunc func, const char *connect_string, ConnInfo *ci)
 							break;
 						else if (valuen == delp)
 						{
-							*delp = ATTRIBUTE_DELIMITER;
+							//*delp = ATTRIBUTE_DELIMITER;
 							delp = NULL;
 						}
 						continue;
@@ -561,8 +562,8 @@ dconn_get_attributes(copyfunc func, const char *connect_string, ConnInfo *ci)
 						 delp == closep + 1)
 					{
 						delp = (char *) (closep + 1);
-						*delp = '\0';
-						strtok_arg = delp + 1;
+//						*delp = '\0';
+//						strtok_arg = delp + 1;
 						if (strtok_arg + 1 >= termp)
 							eoftok = TRUE;
 						break;

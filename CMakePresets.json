@@ -1,0 +1,106 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+      "major": 3,
+      "minor": 21,
+      "patch": 0
+    },
+    "configurePresets": [
+      {
+        "name": "base",
+        "hidden": true,
+        "generator": "Ninja",
+        "cacheVariables": {
+          "WARPDRIVE_BUILD_STATIC": "OFF"
+        }
+      },
+      {
+        "name": "base-debug",
+        "inherits": "base",
+        "hidden": true,
+        "cacheVariables": {
+          "WARPDRIVE_BUILD_INTEGRATION": "ON",
+          "WARPDRIVE_BUILD_TESTS": "ON",
+          "WARPDRIVE_EXTRA_ERROR_CONTEXT": "ON",
+          "CMAKE_BUILD_TYPE": "Debug"
+        }
+      },
+      {
+        "name": "base-release",
+        "inherits": "base",
+        "hidden": true,
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Release"
+        }
+      },
+      {
+        "name": "base-benchmarks",
+        "inherits": "base",
+        "hidden": true,
+        "cacheVariables": {
+          "WARPDRIVE_BUILD_BENCHMARKS": "ON",
+          "WARPDRIVE_BUILD_BENCHMARKS_REFERENCE": "ON",
+          "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+        }
+      },
+      {
+        "name": "features-minimal",
+        "hidden": true,
+        "cacheVariables": {
+        }
+      },
+      {
+        "name": "features-basic",
+        "inherits": "features-minimal",
+        "hidden": true,
+        "cacheVariables": {
+        }
+      },
+      {
+        "name": "features-main",
+        "inherits": "features-basic",
+        "hidden": true,
+        "cacheVariables": {
+        }
+      },
+      {
+        "name": "ninja-debug-minimal",
+        "inherits": ["base-debug", "features-minimal"],
+        "displayName": "Debug build without anything enabled",
+        "cacheVariables": {
+          "WARPDRIVE_BUILD_INTEGRATION": "OFF",
+          "WARPDRIVE_BUILD_TESTS": "OFF"
+        }
+      },
+      {
+        "name": "ninja-debug-basic",
+        "inherits": ["base-debug", "features-basic"],
+        "displayName": "Debug build with tests and reduced dependencies",
+        "cacheVariables": {}
+      },
+      {
+        "name": "ninja-debug",
+        "inherits": ["base-debug", "features-main"],
+        "displayName": "Debug build with tests and more optional components",
+        "cacheVariables": {}
+      },  
+      {
+        "name": "ninja-release-minimal",
+        "inherits": ["base-release", "features-minimal"],
+        "displayName": "Release build without anything enabled",
+        "cacheVariables": {}
+      },
+      {
+        "name": "ninja-release-basic",
+        "inherits": ["base-release", "features-basic"],
+        "displayName": "Release build with reduced dependencies",
+        "cacheVariables": {}
+      },
+      {
+        "name": "ninja-release",
+        "inherits": ["base-release", "features-main"],
+        "displayName": "Release build with more optional components",
+        "cacheVariables": {}
+      }
+    ]
+  }

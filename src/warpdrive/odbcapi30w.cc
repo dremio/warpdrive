@@ -12,12 +12,13 @@
  *-------
  */
 
+#include "sqltypes.h"
 #include "wdodbc.h"
 #include "unicode_support.h"
 #include <stdio.h>
 #include <string.h>
 
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 #include "connection.h"
 #include "statement.h"
 #include "misc.h"
@@ -130,14 +131,14 @@ SQLSetDescFieldW(SQLHDESC DescriptorHandle, SQLSMALLINT RecNumber,
 			case SQL_DESC_SCHEMA_NAME:
 			case SQL_DESC_TABLE_NAME:
 			case SQL_DESC_TYPE_NAME:
-				uval = ucs2_to_utf8(Value, BufferLength > 0 ? BufferLength / WCLEN : BufferLength, &vallen, FALSE);
+				uval = ucs2_to_utf8(static_cast<SQLWCHAR*>(Value), BufferLength > 0 ? BufferLength / WCLEN : BufferLength, &vallen, FALSE);
 				val_alloced = TRUE;
 			break;
 		}
 	}
 	if (!val_alloced)
 	{
-		uval = Value;
+		uval = static_cast<char*>(Value);
 		vallen = BufferLength;
 	}
 	ret = WD_SetDescField(DescriptorHandle, RecNumber, FieldIdentifier,
@@ -171,9 +172,9 @@ SQLGetDescFieldW(SQLHDESC hdesc, SQLSMALLINT iRecord, SQLSMALLINT iField,
 		case SQL_DESC_TABLE_NAME:
 		case SQL_DESC_TYPE_NAME:
 			bMax = cbValueMax * 3 / WCLEN;
-			rgbV = malloc(bMax + 1);
+			rgbV = static_cast<char*>(malloc(bMax + 1));
 			pcbV = &blen;
-			for (rgbVt = rgbV;; bMax = blen + 1, rgbVt = realloc(rgbV, bMax))
+			for (rgbVt = rgbV;; bMax = blen + 1, rgbVt = static_cast<char*>(realloc(rgbV, bMax)))
 			{
 				if (!rgbVt)
 				{
@@ -188,10 +189,10 @@ SQLGetDescFieldW(SQLHDESC hdesc, SQLSMALLINT iRecord, SQLSMALLINT iField,
 			if (SQL_SUCCEEDED(ret))
 			{
 				blen = (SQLINTEGER) utf8_to_ucs2(rgbV, blen, (SQLWCHAR *) rgbValue, cbValueMax / WCLEN);
-				if (SQL_SUCCESS == ret && blen * WCLEN >= cbValueMax)
+				if (SQL_SUCCESS == ret && static_cast<SQLINTEGER>(blen * WCLEN) >= cbValueMax)
 				{
 					ret = SQL_SUCCESS_WITH_INFO;
-					DC_set_error(hdesc, STMT_TRUNCATED, "The buffer was too small for the rgbDesc.");
+					DC_set_error(static_cast<DescriptorClass*>(hdesc), STMT_TRUNCATED, "The buffer was too small for the rgbDesc.");
 				}
 				if (pcbValue)
 					*pcbValue = blen * WCLEN;
@@ -200,7 +201,7 @@ SQLGetDescFieldW(SQLHDESC hdesc, SQLSMALLINT iRecord, SQLSMALLINT iField,
 				free(rgbV);
 			break;
 		default:
-			rgbV = rgbValue;
+			rgbV = static_cast<char*>(rgbValue);
 			bMax = cbValueMax;
 			pcbV = pcbValue;
 			ret = WD_GetDescField(hdesc, iRecord, iField, rgbV, bMax, pcbV);
@@ -229,7 +230,7 @@ SQLGetDiagRecW(SQLSMALLINT fHandleType,
         if (szErrorMsg && cbErrorMsgMax > 0)
 	{
 		buflen = cbErrorMsgMax;
-                mtxt = malloc(buflen);
+                mtxt = static_cast<char*>(malloc(buflen));
 	}
 	ret = WD_GetDiagRec(fHandleType, handle, iRecord, (SQLCHAR *) qstr_ansi,
 						   pfNativeError, (SQLCHAR *) mtxt, buflen, &tlen);
@@ -304,9 +305,9 @@ SQLColAttributeW(SQLHSTMT	hstmt,
 		case SQL_DESC_TYPE_NAME:
 		case SQL_COLUMN_NAME:
 			bMax = cbCharAttrMax * 3 / WCLEN;
-			rgbD = malloc(bMax);
+			rgbD = static_cast<char*>(malloc(bMax));
 			rgbL = &blen;
-			for (rgbDt = rgbD;; bMax = blen + 1, rgbDt = realloc(rgbD, bMax))
+			for (rgbDt = rgbD;; bMax = blen + 1, rgbDt = static_cast<char*>(realloc(rgbD, bMax)))
 			{
 				if (!rgbDt)
 				{
@@ -315,14 +316,14 @@ SQLColAttributeW(SQLHSTMT	hstmt,
 				}
 				rgbD = rgbDt;
 				ret = WD_ColAttributes(hstmt, iCol, iField, rgbD,
-					bMax, rgbL, pNumAttr);
+					bMax, rgbL, static_cast<SQLLEN*>(pNumAttr));
 				if (SQL_SUCCESS_WITH_INFO != ret || blen < bMax)
 					break;
 			}
 			if (SQL_SUCCEEDED(ret))
 			{
 				blen = (SQLSMALLINT) utf8_to_ucs2(rgbD, blen, (SQLWCHAR *) pCharAttr, cbCharAttrMax / WCLEN);
-				if (SQL_SUCCESS == ret && blen * WCLEN >= cbCharAttrMax)
+				if (SQL_SUCCESS == ret && static_cast<SQLSMALLINT>(blen * WCLEN) >= cbCharAttrMax)
 				{
 					ret = SQL_SUCCESS_WITH_INFO;
 					SC_set_error(stmt, STMT_TRUNCATED, "The buffer was too small for the pCharAttr.", func);
@@ -334,11 +335,11 @@ SQLColAttributeW(SQLHSTMT	hstmt,
 				free(rgbD);
 			break;
 		default:
-			rgbD = pCharAttr;
+			rgbD = static_cast<char*>(pCharAttr);
 			bMax = cbCharAttrMax;
 			rgbL = pcbCharAttr;
 			ret = WD_ColAttributes(hstmt, iCol, iField, rgbD,
-					bMax, rgbL, pNumAttr);
+					bMax, rgbL, static_cast<SQLLEN*>(pNumAttr));
 			break;
 	}
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
@@ -372,10 +373,10 @@ SQLGetDiagFieldW(SQLSMALLINT	fHandleType,
 		case SQL_DIAG_SQLSTATE:
 		case SQL_DIAG_SUBCLASS_ORIGIN:
 			bMax = cbDiagInfoMax * 3 / WCLEN + 1;
-			if (rgbD = malloc(bMax), !rgbD)
+			if (rgbD = static_cast<char*>(malloc(bMax)), !rgbD)
 				return SQL_ERROR;
 			rgbL = &blen;
-			for (rgbDt = rgbD;; bMax = blen + 1, rgbDt = realloc(rgbD, bMax))
+			for (rgbDt = rgbD;; bMax = blen + 1, rgbDt = static_cast<char*>(realloc(rgbD, bMax)))
 			{
 				if (!rgbDt)
 				{
@@ -395,7 +396,7 @@ SQLGetDiagFieldW(SQLSMALLINT	fHandleType,
 					blen = (SQLSMALLINT) locale_to_sqlwchar((SQLWCHAR *) rgbDiagInfo, rgbD, cbDiagInfoMax / WCLEN, FALSE);
 				else
 					blen = (SQLSMALLINT) ulen;
-				if (SQL_SUCCESS == ret && blen * WCLEN >= cbDiagInfoMax)
+				if (SQL_SUCCESS == ret && blen * WCLEN >= static_cast<unsigned long>(cbDiagInfoMax))
 					ret = SQL_SUCCESS_WITH_INFO;
 				if (pcbDiagInfo)
 				{
@@ -406,7 +407,7 @@ SQLGetDiagFieldW(SQLSMALLINT	fHandleType,
 				free(rgbD);
 			break;
 		default:
-			rgbD = rgbDiagInfo;
+			rgbD = static_cast<char*>(rgbDiagInfo);
 			bMax = cbDiagInfoMax;
 			rgbL = pcbDiagInfo;
 			ret = WD_GetDiagField(fHandleType, handle, iRecord, fDiagField, rgbD,

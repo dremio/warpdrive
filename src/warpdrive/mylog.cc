@@ -221,7 +221,7 @@ int	get_qlog(void)
 
 const char *po_basename(const char *path)
 {
-	char *p;
+	const char *p;
 
 	if (p = strrchr(path,  DIRSEPARATOR[0]), NULL != p)
 		return p + 1;
@@ -450,7 +450,7 @@ qlog_misc(unsigned int option, const char *fmt, va_list args)
 	return 1;
 }
 int
-qlog(char *fmt,...)
+qlog(const char *fmt,...)
 {
 	int	ret = 0;
 	unsigned int option = 1;
@@ -464,7 +464,7 @@ qlog(char *fmt,...)
 	return	ret;
 }
 int
-qprintf(char *fmt,...)
+qprintf(const char *fmt,...)
 {
 	int	ret = 0;
 	va_list	args;

@@ -11,7 +11,7 @@
 
 #include "wdodbc.h"
 
-#include "libpq-fe.h"
+//#include "libpq-fe.h"
 
 #include "connection.h"
 #include "columninfo.h"
@@ -132,7 +132,7 @@ enum {
 #define QR_get_value_backend(self, fieldno)	(self->tupleField[fieldno].value)
 #define QR_get_value_backend_row(self, tupleno, fieldno) ((self->backend_tuples + (tupleno * self->num_fields))[fieldno].value)
 #define QR_get_value_backend_text(self, tupleno, fieldno) QR_get_value_backend_row(self, tupleno, fieldno)
-#define QR_get_value_backend_int(self, tupleno, fieldno, isNull) atoi(QR_get_value_backend_row(self, tupleno, fieldno))
+#define QR_get_value_backend_int(self, tupleno, fieldno, isNull) atoi(static_cast<const char*>(QR_get_value_backend_row(self, tupleno, fieldno)))
 
 /*	These functions are used by both manual and backend results */
 #define QR_NumResultCols(self)		(CI_get_num_fields(self->fields))

@@ -21,7 +21,7 @@
 #include "statement.h"
 #include <stdlib.h>
 #include <string.h>
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 #ifdef	WIN32
 #include <winsock2.h>
 #endif /* WIN32 */
@@ -162,7 +162,7 @@ ER_Destructor(WD_ErrorInfo *self)
 WD_ErrorInfo *
 ER_Dup(const WD_ErrorInfo *self)
 {
-	WD_ErrorInfo	*new;
+	WD_ErrorInfo	*newErr;
 	Int4		alsize;
 
 	if (!self)
@@ -170,11 +170,11 @@ ER_Dup(const WD_ErrorInfo *self)
 	alsize = sizeof(WD_ErrorInfo);
 	if (self->errorsize  > 0)
 		alsize += self->errorsize;
-	new = (WD_ErrorInfo *) malloc(alsize);
-	if (new)
-		memcpy(new, self, alsize);
+	newErr = (WD_ErrorInfo *) malloc(alsize);
+	if (newErr)
+		memcpy(newErr, self, alsize);
 
-	return new;
+	return newErr;
 }
 
 #define	DRVMNGRDIV	511
@@ -563,7 +563,7 @@ EN_Destructor(EnvironmentClass *self)
 
 
 char
-EN_get_error(EnvironmentClass *self, int *number, char **message)
+EN_get_error(EnvironmentClass *self, int *number, const char **message)
 {
 	if (self && self->errormsg && self->errornumber)
 	{
@@ -639,7 +639,7 @@ EN_remove_connection(EnvironmentClass *self, ConnectionClass *conn)
 
 
 void
-EN_log_error(const char *func, char *desc, EnvironmentClass *self)
+EN_log_error(const char *func, const char *desc, EnvironmentClass *self)
 {
 	if (self)
 		MYLOG(0, "ENVIRON ERROR: func=%s, desc='%s', errnum=%d, errmsg='%s'\n", func, desc, self->errornumber, self->errormsg);

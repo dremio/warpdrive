@@ -14,6 +14,7 @@
  *-------
  */
 
+#include "sqltypes.h"
 #include "wdodbc.h"
 #include "misc.h"
 
@@ -26,7 +27,7 @@
 #include "statement.h"
 #include "descriptor.h"
 #include "qresult.h"
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 #include "loadlib.h"
 #include "dlg_specific.h"
 
@@ -110,7 +111,7 @@ WD_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 					break;
 				case SQL_DIAG_MESSAGE_TEXT:
 					ret = WD_EnvError(Handle, RecNumber,
-										 NULL, NULL, DiagInfoPtr,
+										 NULL, NULL, static_cast<SQLCHAR*>(DiagInfoPtr),
 										 BufferLength, StringLengthPtr, 0);
 					break;
 				case SQL_DIAG_NATIVE:
@@ -132,7 +133,7 @@ WD_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 				case SQL_DIAG_SQLSTATE:
 					rtnlen = 5;
 					ret = WD_EnvError(Handle, RecNumber,
-										 DiagInfoPtr, NULL, NULL,
+										 static_cast<SQLCHAR*>(DiagInfoPtr), NULL, NULL,
 										 0, NULL, 0);
 					if (SQL_SUCCESS_WITH_INFO == ret)
 						ret = SQL_SUCCESS;
@@ -167,7 +168,7 @@ WD_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 					rtnlen = strlen(CC_get_DSN(conn));
 					if (DiagInfoPtr)
 					{
-						strncpy_null(DiagInfoPtr, CC_get_DSN(conn), BufferLength);
+						strncpy_null(static_cast<char*>(DiagInfoPtr), CC_get_DSN(conn), BufferLength);
 						ret = (BufferLength > rtnlen ? SQL_SUCCESS : SQL_SUCCESS_WITH_INFO);
 					}
 					else
@@ -175,7 +176,7 @@ WD_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 					break;
 				case SQL_DIAG_MESSAGE_TEXT:
 					ret = WD_ConnectError(Handle, RecNumber,
-											 NULL, NULL, DiagInfoPtr,
+											 NULL, NULL, static_cast<SQLCHAR*>(DiagInfoPtr),
 											 BufferLength, StringLengthPtr, 0);
 					break;
 				case SQL_DIAG_NATIVE:
@@ -204,7 +205,7 @@ WD_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 				case SQL_DIAG_SQLSTATE:
 					rtnlen = 5;
 					ret = WD_ConnectError(Handle, RecNumber,
-											 DiagInfoPtr, NULL, NULL,
+											 static_cast<SQLCHAR*>(DiagInfoPtr), NULL, NULL,
 											 0, NULL, 0);
 					if (SQL_SUCCESS_WITH_INFO == ret)
 						ret = SQL_SUCCESS;
@@ -239,7 +240,7 @@ WD_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 					rtnlen = strlen(CC_get_DSN(conn));
 					if (DiagInfoPtr)
 					{
-						strncpy_null(DiagInfoPtr, CC_get_DSN(conn), BufferLength);
+						strncpy_null(static_cast<char*>(DiagInfoPtr), CC_get_DSN(conn), BufferLength);
 						ret = (BufferLength > rtnlen ? SQL_SUCCESS : SQL_SUCCESS_WITH_INFO);
 					}
 					else
@@ -247,7 +248,7 @@ WD_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 					break;
 				case SQL_DIAG_MESSAGE_TEXT:
 					ret = WD_StmtError(Handle, RecNumber,
-										  NULL, NULL, DiagInfoPtr,
+										  NULL, NULL, static_cast<SQLCHAR*>(DiagInfoPtr),
 										  BufferLength, StringLengthPtr, 0);
 					break;
 				case SQL_DIAG_NATIVE:
@@ -279,7 +280,7 @@ WD_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 				case SQL_DIAG_SQLSTATE:
 					rtnlen = 5;
 					ret = WD_StmtError(Handle, RecNumber,
-										  DiagInfoPtr, NULL, NULL,
+										  static_cast<SQLCHAR*>(DiagInfoPtr), NULL, NULL,
 										  0, NULL, 0);
 					if (SQL_SUCCESS_WITH_INFO == ret)
 						ret = SQL_SUCCESS;
@@ -343,7 +344,7 @@ MYLOG(DETAIL_LOG_LEVEL, "rc=" FORMAT_LEN "\n", rc);
 					rtnlen = strlen(CC_get_DSN(conn));
 					if (DiagInfoPtr)
 					{
-						strncpy_null(DiagInfoPtr, CC_get_DSN(conn), BufferLength);
+						strncpy_null(static_cast<char*>(DiagInfoPtr), CC_get_DSN(conn), BufferLength);
 						ret = (BufferLength > rtnlen ? SQL_SUCCESS : SQL_SUCCESS_WITH_INFO);
 					}
 					else
@@ -356,7 +357,7 @@ MYLOG(DETAIL_LOG_LEVEL, "rc=" FORMAT_LEN "\n", rc);
 				case SQL_DIAG_SQLSTATE:
 					rtnlen = 5;
 					ret = WD_DescError(Handle, RecNumber,
-										  DiagInfoPtr, NULL, NULL,
+										  static_cast<SQLCHAR*>(DiagInfoPtr), NULL, NULL,
 										  0, NULL, 0);
 					if (SQL_SUCCESS_WITH_INFO == ret)
 						ret = SQL_SUCCESS;
@@ -536,16 +537,16 @@ ARDSetField(DescriptorClass *desc, SQLSMALLINT RecNumber,
 			opts->size_of_rowset = CAST_UPTR(SQLULEN, Value);
 			return ret;
 		case SQL_DESC_ARRAY_STATUS_PTR:
-			opts->row_operation_ptr = Value;
+			opts->row_operation_ptr = static_cast<SQLUSMALLINT*>(Value);
 			return ret;
 		case SQL_DESC_BIND_OFFSET_PTR:
-			opts->row_offset_ptr = Value;
+			opts->row_offset_ptr = static_cast<SQLULEN*>(Value);
 			return ret;
 		case SQL_DESC_BIND_TYPE:
-			opts->bind_size = CAST_UPTR(SQLUINTEGER, Value);
+			opts->bind_size = reinterpret_cast<SQLULEN>(Value);
 			return ret;
 		case SQL_DESC_COUNT:
-			column_bindings_set(opts, CAST_PTR(SQLSMALLINT, Value), FALSE);
+			column_bindings_set(opts, static_cast<SQLSMALLINT>(reinterpret_cast<SQLLEN>(Value)), FALSE);
 			return ret;
 
 		case SQL_DESC_TYPE:
@@ -566,13 +567,13 @@ ARDSetField(DescriptorClass *desc, SQLSMALLINT RecNumber,
 		switch (FieldIdentifier)
 		{
 			case SQL_DESC_DATA_PTR:
-				bookmark->buffer = Value;
+				bookmark->buffer = static_cast<char*>(Value);
 				break;
 			case SQL_DESC_INDICATOR_PTR:
-				bookmark->indicator = Value;
+				bookmark->indicator = static_cast<SQLLEN*>(Value);
 				break;
 			case SQL_DESC_OCTET_LENGTH_PTR:
-				bookmark->used = Value;
+				bookmark->used = static_cast<SQLLEN*>(Value);
 				break;
 			default:
 				DC_set_error(desc, DESC_INVALID_COLUMN_NUMBER_ERROR, "invalid column number");
@@ -584,7 +585,7 @@ ARDSetField(DescriptorClass *desc, SQLSMALLINT RecNumber,
 	switch (FieldIdentifier)
 	{
 		case SQL_DESC_TYPE:
-			opts->bindings[row_idx].returntype = CAST_PTR(SQLSMALLINT, Value);
+			opts->bindings[row_idx].returntype = static_cast<SQLSMALLINT>(reinterpret_cast<SQLLEN>(Value));
 			break;
 		case SQL_DESC_DATETIME_INTERVAL_CODE:
 			switch (opts->bindings[row_idx].returntype)
@@ -613,15 +614,15 @@ ARDSetField(DescriptorClass *desc, SQLSMALLINT RecNumber,
 			break;
 		case SQL_DESC_DATA_PTR:
 			unbind = FALSE;
-			opts->bindings[row_idx].buffer = Value;
+			opts->bindings[row_idx].buffer = static_cast<char*>(Value);
 			break;
 		case SQL_DESC_INDICATOR_PTR:
 			unbind = FALSE;
-			opts->bindings[row_idx].indicator = Value;
+			opts->bindings[row_idx].indicator = static_cast<SQLLEN*>(Value);
 			break;
 		case SQL_DESC_OCTET_LENGTH_PTR:
 			unbind = FALSE;
-			opts->bindings[row_idx].used = Value;
+			opts->bindings[row_idx].used = static_cast<SQLLEN*>(Value);
 			break;
 		case SQL_DESC_OCTET_LENGTH:
 			opts->bindings[row_idx].buflen = CAST_PTR(SQLLEN, Value);
@@ -703,19 +704,19 @@ APDSetField(DescriptorClass *desc, SQLSMALLINT RecNumber,
 	switch (FieldIdentifier)
 	{
 		case SQL_DESC_ARRAY_SIZE:
-			opts->paramset_size = CAST_UPTR(SQLUINTEGER, Value);
+			opts->paramset_size = static_cast<SQLUINTEGER>(reinterpret_cast<SQLULEN>(Value));
 			return ret;
 		case SQL_DESC_ARRAY_STATUS_PTR:
-			opts->param_operation_ptr = Value;
+			opts->param_operation_ptr = static_cast<SQLUSMALLINT*>(Value);
 			return ret;
 		case SQL_DESC_BIND_OFFSET_PTR:
-			opts->param_offset_ptr = Value;
+			opts->param_offset_ptr = static_cast<SQLULEN*>(Value);
 			return ret;
 		case SQL_DESC_BIND_TYPE:
-			opts->param_bind_type = CAST_UPTR(SQLUINTEGER, Value);
+			opts->param_bind_type = static_cast<SQLUINTEGER>(reinterpret_cast<SQLULEN>(Value));
 			return ret;
 		case SQL_DESC_COUNT:
-			parameter_bindings_set(opts, CAST_PTR(SQLSMALLINT, Value), FALSE);
+			parameter_bindings_set(opts, static_cast<SQLSMALLINT>(reinterpret_cast<SQLLEN>(Value)), FALSE);
 			return ret;
 
 		case SQL_DESC_TYPE:
@@ -772,18 +773,18 @@ MYLOG(DETAIL_LOG_LEVEL, "RecN=%d allocated=%d\n", RecNumber, opts->allocated);
 			break;
 		case SQL_DESC_DATA_PTR:
 			unbind = FALSE;
-			opts->parameters[para_idx].buffer = Value;
+			opts->parameters[para_idx].buffer = static_cast<char*>(Value);
 			break;
 		case SQL_DESC_INDICATOR_PTR:
 			unbind = FALSE;
-			opts->parameters[para_idx].indicator = Value;
+			opts->parameters[para_idx].indicator = static_cast<SQLLEN*>(Value);
 			break;
 		case SQL_DESC_OCTET_LENGTH:
 			opts->parameters[para_idx].buflen = CAST_PTR(Int4, Value);
 			break;
 		case SQL_DESC_OCTET_LENGTH_PTR:
 			unbind = FALSE;
-			opts->parameters[para_idx].used = Value;
+			opts->parameters[para_idx].used = static_cast<SQLLEN*>(Value);
 			break;
 		case SQL_DESC_PRECISION:
 			opts->parameters[para_idx].precision = CAST_PTR(SQLSMALLINT, Value);
@@ -937,7 +938,7 @@ MYLOG(DETAIL_LOG_LEVEL, "RecN=%d allocated=%d\n", RecNumber, ipdopts->allocated)
 			break;
 		case SQL_DESC_NAME:
 			if (Value)
-				STR_TO_NAME(ipdopts->parameters[para_idx].paramName, Value);
+				STR_TO_NAME(ipdopts->parameters[para_idx].paramName, static_cast<const char*>(Value));
 			else
 				NULL_THE_NAME(ipdopts->parameters[para_idx].paramName);
 			break;
@@ -1990,7 +1991,7 @@ MYLOG(DETAIL_LOG_LEVEL, "set ard=%p\n", stmt->ard);
 			SC_get_APDF(stmt)->param_bind_type = CAST_UPTR(SQLUINTEGER, Value);
 			break;
 		case SQL_ATTR_PARAM_OPERATION_PTR:		/* 19 */
-			SC_get_APDF(stmt)->param_operation_ptr = Value;
+			SC_get_APDF(stmt)->param_operation_ptr = static_cast<SQLUSMALLINT*>(Value);
 			break;
 		case SQL_ATTR_PARAM_STATUS_PTR:			/* 20 */
 			SC_get_IPDF(stmt)->param_status_ptr = (SQLUSMALLINT *) Value;
@@ -2005,7 +2006,7 @@ MYLOG(DETAIL_LOG_LEVEL, "set ard=%p\n", stmt->ard);
 			SC_get_ARDF(stmt)->row_offset_ptr = (SQLULEN *) Value;
 			break;
 		case SQL_ATTR_ROW_OPERATION_PTR:		/* 24 */
-			SC_get_ARDF(stmt)->row_operation_ptr = Value;
+			SC_get_ARDF(stmt)->row_operation_ptr = static_cast<SQLUSMALLINT*>(Value);
 			break;
 		case SQL_ATTR_ROW_STATUS_PTR:	/* 25 */
 			SC_get_IRDF(stmt)->rowStatusArray = (SQLUSMALLINT *) Value;

@@ -12,7 +12,7 @@
 #include "wdodbc.h"
 #include <time.h>
 
-#include "pqexpbuffer.h"
+//#include "pqexpbuffer.h"
 #include "wdtypes.h"
 #include "bind.h"
 #include "descriptor.h"
@@ -376,7 +376,7 @@ StatementClass *SC_get_ancestor(StatementClass *);
 do { \
 	if (t = (tp *) malloc(s), NULL == t) \
 	{ \
-		SC_set_error(a, STMT_NO_MEMORY_ERROR, m, "SC_MALLOC"); \
+		SC_set_error(static_cast<StatementClass*>(a), STMT_NO_MEMORY_ERROR, m, "SC_MALLOC"); \
 		return r; \
 	} \
 } while (0)
@@ -384,7 +384,7 @@ do { \
 do { \
 	if (t = (tp *) malloc(s), NULL == t) \
 	{ \
-		SC_set_error(a, STMT_NO_MEMORY_ERROR, m, "SC_MALLOC"); \
+		SC_set_error(static_cast<StatementClass*>(a), STMT_NO_MEMORY_ERROR, m, "SC_MALLOC"); \
 		r; \
 		goto cleanup; \
 	} \
@@ -394,7 +394,7 @@ do { \
 	tp *tmp; \
 	if (tmp = (tp *) realloc(t, s), NULL == tmp) \
 	{ \
-		SC_set_error(a, STMT_NO_MEMORY_ERROR, m, "SC_REALLOC"); \
+		SC_set_error(static_cast<StatementClass*>(a), STMT_NO_MEMORY_ERROR, m, "SC_REALLOC"); \
 		return r; \
 	} \
 	t = tmp; \
@@ -404,7 +404,7 @@ do { \
 	tp *tmp; \
 	if (tmp = (tp *) realloc(t, s), NULL == tmp) \
 	{ \
-		SC_set_error(a, STMT_NO_MEMORY_ERROR, m, __FUNCTION__); \
+		SC_set_error(static_cast<StatementClass*>(a), STMT_NO_MEMORY_ERROR, m, __FUNCTION__); \
 		r; \
 		goto cleanup; \
 	} \

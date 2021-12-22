@@ -12,7 +12,7 @@
 /* #define	__MS_REPORTS_ANSI_CHAR__ */
 
 #ifndef WIN32
-#include "config.h"
+//#include "config.h"
 #else
 #define	WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -108,7 +108,6 @@ void		debug_memory_check(void);
 #undef	WIN_MULTITHREAD_SUPPORT
 #endif
 
-#if defined(WIN32) || defined(WITH_UNIXODBC) || defined(WITH_IODBC)
 #include <sql.h>
 #include <sqlext.h>
 #if defined(WIN32) && (_MSC_VER < 1300) /* in case of VC6 or under */
@@ -122,18 +121,13 @@ void		debug_memory_check(void);
 #define SetWindowLongPtr(hdlg, DWLP_USER, lParam) SetWindowLong(hdlg, DWLP_USER, lParam)
 #define GetWindowLongPtr(hdlg, DWLP_USER) GetWindowLong(hdlg, DWLP_USER);
 #endif
-#else
-#include "iodbc.h"
-#include "isql.h"
-#include "isqlext.h"
-#endif /* WIN32 */
 
 #if defined(WIN32)
 #include <odbcinst.h>
-#elif defined(WITH_UNIXODBC)
-#include <odbcinst.h>
-#elif defined(WITH_IODBC)
+#elif defined(__APPLE__)
 #include <iodbcinst.h>
+#else
+#include <odbcinst.h>
 #endif
 
 #ifdef	__cplusplus
@@ -180,7 +174,7 @@ typedef	UInt4	OID;
 #define	FORMAT_SIZE_T	"%zu"	/* size_t */
 #define	FORMAT_SSIZE_T	"%zd"	/* ssize_t */
 #ifndef	HAVE_SSIZE_T
-typedef	long	ssize_t
+typedef	long	ssize_t;
 #endif /* HAVE_SSIZE_T */
 
 #if (SIZEOF_VOID_P == SIZEOF_LONG) /* ILP32 or LP64 */
@@ -437,6 +431,45 @@ typedef struct QResultHold_struct {
 	QResultClass *last;
 } QResultHold;
 
+/* Dummy structs to get compilation to work with libpq-fe.h */
+typedef struct {
+	const char* data;
+} PQExpBufferData;
+
+inline int PQExpBufferDataBroken(PQExpBufferData) {
+  return 0;
+}
+
+inline void initPQExpBuffer(PQExpBufferData*) {
+
+}
+
+inline void termPQExpBuffer(PQExpBufferData*) {
+
+}
+
+inline void appendPQExpBuffer(PQExpBufferData*, const char*, ...) {
+
+}
+
+inline void appendPQExpBufferStr(PQExpBufferData*, const char*, ...) {
+
+}
+
+inline void printfPQExpBuffer(PQExpBufferData*, const char*, ...) {
+
+}
+
+typedef struct {
+	int foo;
+} PGresult;
+
+typedef struct {
+	int foo;
+} PGconn;
+
+typedef int Oid;
+ 
 /*	pgNAME type define */
 typedef struct
 {
@@ -471,7 +504,7 @@ do { \
 		free((the_name).name); \
 	if (str) \
 	{ \
-		(the_name).name = malloc((n) + 1); \
+		(the_name).name = static_cast<char*>(malloc((n) + 1)); \
 		if ((the_name).name) \
 		{ \
 			memcpy((the_name).name, str, (n));	\
@@ -570,7 +603,7 @@ RETCODE SQL_API ER_ReturnError(WD_ErrorInfo *, SQLSMALLINT, UCHAR *,
 
 void		logs_on_off(int cnopen, int, int);
 
-#define WD_TYPE_LO_UNDEFINED			(-999)		/* hack until permanent
+#define WD_TYPE_LO_UNDEFINED			(0xFFFF)		/* hack until permanent
 												 * type available */
 #define WD_TYPE_LO_NAME				"lo"
 #define CTID_ATTNUM				(-1)	/* the attnum of ctid */

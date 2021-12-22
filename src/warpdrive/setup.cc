@@ -14,6 +14,7 @@
  */
 
 #include  "wdodbc.h"
+#ifdef _WIN32
 #include  "pgenlist.h"
 #include  "loadlib.h"
 #include  "misc.h" // strncpy_null
@@ -767,3 +768,4 @@ ChangeDriverName(HWND hwndParent, LPSETUPDLG lpsetupdlg, LPCSTR driver_name)
 }
 
 #endif /* WIN32 */
+#endif

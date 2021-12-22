@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 #include "connection.h"
 #include "statement.h"
 
@@ -149,7 +149,7 @@ SQLDriverConnectW(HDBC hdbc,
 	if (maxlen > 0)
 	{
 		obuflen = maxlen + 1;
-		szOut = malloc(obuflen);
+		szOut = static_cast<char*>(malloc(obuflen));
 		if (!szOut)
 		{
 			CC_set_error(conn, CONN_NO_MEMORY_ERROR, "Could not allocate memory for output buffer", func);
@@ -215,7 +215,7 @@ SQLBrowseConnectW(HDBC			hdbc,
 	CC_set_in_unicode_driver(conn);
 	szIn = ucs2_to_utf8(szConnStrIn, cbConnStrIn, &inlen, FALSE);
 	obuflen = cbConnStrOutMax + 1;
-	szOut = malloc(obuflen);
+	szOut = static_cast<char*>(malloc(obuflen));
 	if (szOut)
 		ret = WD_BrowseConnect(hdbc, (SQLCHAR *) szIn, (SQLSMALLINT) inlen,
 								  (SQLCHAR *) szOut, cbConnStrOutMax, &olen);
@@ -276,11 +276,11 @@ SQLDescribeColW(HSTMT StatementHandle,
 	else if (NameLength)
 		buflen = 32;
 	if (buflen > 0)
-		clNamet = malloc(buflen);
+		clNamet = static_cast<char*>(malloc(buflen));
 	ENTER_STMT_CS(stmt);
 	SC_clear_error(stmt);
 	StartRollbackState(stmt);
-	for (;; buflen = nmlen + 1, clNamet = realloc(clName, buflen))
+	for (;; buflen = nmlen + 1, clNamet = static_cast<char*>(realloc(clName, buflen)))
 	{
 		if (!clNamet)
 		{
@@ -365,11 +365,11 @@ SQLGetCursorNameW(HSTMT StatementHandle,
 		buflen = BufferLength * 3;
 	else
 		buflen = 32;
-	crNamet = malloc(buflen);
+	crNamet = static_cast<char*>(malloc(buflen));
 	ENTER_STMT_CS(stmt);
 	SC_clear_error(stmt);
 	StartRollbackState(stmt);
-	for (;; buflen = clen + 1, crNamet = realloc(crName, buflen))
+	for (;; buflen = clen + 1, crNamet = static_cast<char*>(realloc(crName, buflen)))
 	{
 		if (!crNamet)
 		{
@@ -763,8 +763,8 @@ SQLNativeSqlW(HDBC			hdbc,
 	szIn = ucs2_to_utf8(szSqlStrIn, cbSqlStrIn, &slen, FALSE);
 	buflen = 3 * cbSqlStrMax;
 	if (buflen > 0)
-		szOutt = malloc(buflen);
-	for (;; buflen = olen + 1, szOutt = realloc(szOut, buflen))
+		szOutt = static_cast<char*>(malloc(buflen));
+	for (;; buflen = olen + 1, szOutt = static_cast<char*>(realloc(szOut, buflen)))
 	{
 		if (!szOutt)
 		{

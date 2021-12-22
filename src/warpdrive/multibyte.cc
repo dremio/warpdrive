@@ -11,7 +11,7 @@
 #include "multibyte.h"
 #include "misc.h"
 #include "connection.h"
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -25,7 +25,7 @@
 
 typedef struct WD_CS
 {
-	char   *name;
+	const char   *name;
 	int		code;
 } WD_CS;
 
@@ -199,7 +199,7 @@ check_client_encoding(const pgNAME conn_settings)
 	}
 	if (!sptr)
 		return NULL;
-	rptr = malloc(len + 1);
+	rptr = static_cast<char*>(malloc(len + 1));
 	if (!rptr)
 		return NULL;
 	memcpy(rptr, sptr, len);
@@ -500,8 +500,8 @@ derive_locale_encoding(const char *dbencoding)
 		int enc_no;
 
 		ptr++;
-		if ((enc_no= WD_char_to_encoding(ptr)) >= 0)
-			wenc = WD_encoding_to_char(enc_no);
+//		if ((enc_no= WD_char_to_encoding(ptr)) >= 0)
+//			wenc = WD_encoding_to_char(enc_no);
 		MYLOG(0, "locale=%s enc=%s\n", loc, wenc ? wenc : "(null)");
 	}
 #endif /* WIN32 */

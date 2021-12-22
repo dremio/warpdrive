@@ -43,7 +43,7 @@
 
 #include "multibyte.h"
 
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 
 #define	SAFE_STR(s)	(NULL != (s) ? (s) : "(null)")
 
@@ -591,7 +591,7 @@ CC_set_locale_encoding(ConnectionClass *self, const char * encoding)
 static void
 CC_determine_locale_encoding(ConnectionClass *self)
 {
-	const char *dbencoding = PQparameterStatus(self->pqconn, "client_encoding");
+	const char *dbencoding = NULL;//PQparameterStatus(self->pqconn, "client_encoding");
 	const char *encoding;
 
 	QLOG(0, "PQparameterStatus(%p, \"client_encoding\")=%s\n", self->pqconn, SAFE_STR(dbencoding));
@@ -626,7 +626,8 @@ CC_set_client_encoding(ConnectionClass *self, const char * encoding)
 int
 CC_send_client_encoding(ConnectionClass *self, const char * encoding)
 {
-	const char *dbencoding = PQparameterStatus(self->pqconn, "client_encoding");
+	const char *dbencoding = NULL;
+//	const char *dbencoding = PQparameterStatus(self->pqconn, "client_encoding");
 
 	if (encoding && (!dbencoding || stricmp(encoding, dbencoding)))
 	{
@@ -667,7 +668,7 @@ CC_cleanup(ConnectionClass *self, BOOL keepCommunication)
 	if (self->pqconn)
 	{
 		QLOG(0, "PQfinish: %p\n", self->pqconn);
-		PQfinish(self->pqconn);
+		//PQfinish(self->pqconn);
 		self->pqconn = NULL;
 	}
 
@@ -805,6 +806,7 @@ handle_pgres_error(ConnectionClass *self, const PGresult *pgres,
 				   const char *comment,
 				   QResultClass *res, BOOL error_not_a_notice)
 {
+	#if 0
 	char	   *errseverity;
 	char	   *errseverity_nonloc = NULL;
 	char	   *errprimary = NULL;
@@ -982,6 +984,8 @@ cleanup:
 	if (!PQExpBufferDataBroken(errbuf))
 		termPQExpBuffer(&errbuf);
 	LIBPQ_update_transaction_status(self);
+
+#endif
 }
 
 void
@@ -1294,7 +1298,7 @@ char CC_get_escape(const ConnectionClass *self)
 	const char	   *scf;
 	static const ConnectionClass *conn = NULL;
 
-	scf = PQparameterStatus(self->pqconn, "standard_conforming_strings");
+//	scf = PQparameterStatus(self->pqconn, "standard_conforming_strings");
 	if (self != conn)
 	{
 		QLOG(0, "PQparameterStatus(%p, \"standard_conforming_strings\")=%s\n", self->pqconn, SAFE_STR(scf));
@@ -1346,6 +1350,7 @@ isolation_str_to_enum(const char *str_isolation)
 	return isolation;
 }
 
+#if 0
 static int handle_show_results(const QResultClass *res)
 {
 	int			count = 0;
@@ -1371,10 +1376,13 @@ static int handle_show_results(const QResultClass *res)
 
 	return count;
 }
+#endif
+
 /*
  *	This function may not be called as long as ISOLATION_SHOW_QUERY is
  *	issued in LIBPQ_CC_connect.
  */
+ #if 0 
 SQLUINTEGER	CC_get_isolation(ConnectionClass *self)
 {
 	SQLUINTEGER	isolation = 0;
@@ -1390,6 +1398,7 @@ SQLUINTEGER	CC_get_isolation(ConnectionClass *self)
 MYLOG(0, "isolation=" FORMAT_UINTEGER "\n", isolation);
 	return isolation;
 }
+#endif
 
 void
 CC_set_error(ConnectionClass *self, int number, const char *message, const char *func)
@@ -1602,7 +1611,7 @@ MYLOG(0, "entering opt=%x\n", opt);
 		{
 			CONNLOCK_RELEASE(conn);
 			QLOG(0, "PQfinish: %p\n", conn->pqconn);
-			PQfinish(conn->pqconn);
+			//PQfinish(conn->pqconn);
 			CONNLOCK_ACQUIRE(conn);
 			conn->pqconn = NULL;
 		}
@@ -1685,6 +1694,7 @@ CC_from_PGresult(QResultClass *res, StatementClass *stmt,
 	return success;
 }
 
+#if 0
 int
 CC_internal_rollback(ConnectionClass *self, int rollback_type, BOOL ignore_abort)
 {
@@ -1746,10 +1756,11 @@ CC_internal_rollback(ConnectionClass *self, int rollback_type, BOOL ignore_abort
 			break;
 	}
 	if (pgres)
-		PQclear(pgres);
+		//PQclear(pgres);
 
 	return ret;
 }
+#endif
 
 /*
  *	The "result_in" is only used by QR_next_tuple() to fetch another group of rows into
@@ -1766,6 +1777,7 @@ CC_internal_rollback(ConnectionClass *self, int rollback_type, BOOL ignore_abort
  * * Send appendq, read result.
  *
  */
+ #if 0
 QResultHold
 CC_send_query_append(ConnectionClass *self, const char *query, QueryInfo *qi, UDWORD flag, StatementClass *stmt, const char *appendq)
 {
@@ -1930,17 +1942,18 @@ CC_send_query_append(ConnectionClass *self, const char *query, QueryInfo *qi, UD
 	nrarg.comment = func;
 	nrarg.res = NULL;
 	nrarg.stmt = stmt;
-	PQsetNoticeReceiver(self->pqconn, receive_libpq_notice, &nrarg);
+	//PQsetNoticeReceiver(self->pqconn, receive_libpq_notice, &nrarg);
 
 	QLOG(0, "PQsendQuery: %p '%s'\n", self->pqconn, query_buf.data);
-	if (!PQsendQuery(self->pqconn, query_buf.data))
+	if (1)
+//	if (!PQsendQuery(self->pqconn, query_buf.data))
 	{
-		char *errmsg = PQerrorMessage(self->pqconn);
-		QLOG(0, "\nCommunication Error: %s\n", SAFE_STR(errmsg));
-		CC_set_error(self, CONNECTION_COMMUNICATION_ERROR, errmsg, func);
+		//char *errmsg = PQerrorMessage(self->pqconn);
+		//QLOG(0, "\nCommunication Error: %s\n", SAFE_STR(errmsg));
+		//CC_set_error(self, CONNECTION_COMMUNICATION_ERROR, errmsg, func);
 		goto cleanup;
 	}
-	PQsetSingleRowMode(self->pqconn);
+//	PQsetSingleRowMode(self->pqconn);
 
 	cmdres = qi ? qi->result_in : NULL;
 	if (cmdres)
@@ -2344,6 +2357,7 @@ MYLOG(DETAIL_LOG_LEVEL, " ignored abort_on_conn\n");
 	rhold.last = res;
 	return rhold;
 }
+#endif
 
 #define MAX_SEND_FUNC_ARGS	3
 static const char *func_param_str[MAX_SEND_FUNC_ARGS + 1] =
@@ -2386,6 +2400,7 @@ Int8 odbc_ntoh64(Int8 n64)
 }
 
 
+#if 0
 int
 CC_send_function(ConnectionClass *self, const char *fn_name, void *result_buf, int *actual_result_len, int result_is_int, LO_ARG *args, int nargs)
 {
@@ -2494,6 +2509,7 @@ cleanup:
 		PQclear(pgres);
 	return ret;
 }
+#endif
 
 
 char
@@ -2581,7 +2597,7 @@ CC_lookup_lo(ConnectionClass *self)
 	{
 		OID	basetype;
 
-		self->lobj_type = QR_get_value_backend_int(res, 0, 0, NULL);
+//		self->lobj_type = QR_get_value_backend_int(res, 0, 0, NULL);
 		basetype = QR_get_value_backend_int(res, 0, 1, NULL);
 		if (WD_TYPE_OID == basetype)
 			self->lo_is_domain = 1;
@@ -2641,7 +2657,7 @@ CC_get_current_schema(ConnectionClass *conn)
 		{
 			if (QR_get_num_total_tuples(res) == 1)
 			{
-				char *curschema = QR_get_value_backend_text(res, 0, 0);
+				const char *curschema = static_cast<const char*>(QR_get_value_backend_text(res, 0, 0));
 				if (curschema)
 					conn->current_schema = strdup(curschema);
 			}
@@ -2694,6 +2710,7 @@ int	CC_discard_marked_objects(ConnectionClass *conn)
 	return 1;
 }
 
+#if 0
 static void
 LIBPQ_update_transaction_status(ConnectionClass *self)
 {
@@ -2950,7 +2967,9 @@ cleanup:
 	MYLOG(0, "leaving %d\n", ret);
 	return ret;
 }
+#endif
 
+#if 0
 int
 CC_send_cancel_request(const ConnectionClass *conn)
 {
@@ -2972,6 +2991,7 @@ CC_send_cancel_request(const ConnectionClass *conn)
 	else
 		return FALSE;
 }
+#endif
 
 const char *CurrCat(const ConnectionClass *conn)
 {
@@ -3032,7 +3052,7 @@ make_lstring_ifneeded(ConnectionClass *conn, const SQLCHAR *s, ssize_t len, BOOL
 			{
 				if (!str)
 				{
-					str = malloc(length + 1);
+					str = static_cast<char*>(malloc(length + 1));
 					if (!str) return NULL;
 					memcpy(str, s, length);
 					str[length] = '\0';

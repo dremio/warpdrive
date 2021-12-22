@@ -18,9 +18,9 @@
 #include "connection.h"
 #include <stdlib.h>
 #include <string.h>
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 
-#include <libpq-fe.h>
+//#include <libpq-fe.h>
 
 ColumnInfoClass *
 CI_Constructor(void)
@@ -64,7 +64,7 @@ CI_read_fields_from_pgres(ColumnInfoClass *self, PGresult *pgres)
 	char	   *new_field_name;
 
 	/* at first read in the number of fields that are in the query */
-	new_num_fields = PQnfields(pgres);
+//	new_num_fields = PQnfields(pgres);
 
 	QLOG(0, "\tnFields: %d\n", new_num_fields);
 
@@ -79,14 +79,14 @@ CI_read_fields_from_pgres(ColumnInfoClass *self, PGresult *pgres)
 	/* now read in the descriptions */
 	for (lf = 0; lf < new_num_fields; lf++)
 	{
-		new_field_name = PQfname(pgres, lf);
+/*		new_field_name = PQfname(pgres, lf);
 		new_relid = PQftable(pgres, lf);
 		new_attid = PQftablecol(pgres, lf);
 		new_adtid = PQftype(pgres, lf);
 		new_adtsize = PQfsize(pgres, lf);
 
 		MYLOG(0, "READING ATTTYPMOD\n");
-		new_atttypmod = PQfmod(pgres, lf);
+		new_atttypmod = PQfmod(pgres, lf);*/
 
 		/* Subtract the header length */
 		switch (new_adtid)
@@ -143,7 +143,7 @@ CI_set_num_fields(ColumnInfoClass *self, int new_num_fields)
 
 	self->num_fields = new_num_fields;
 
-	self->coli_array = (struct srvr_info *) calloc(sizeof(struct srvr_info), self->num_fields);
+//	self->coli_array = (struct srvr_info *) calloc(sizeof(struct srvr_info), self->num_fields);
 }
 
 

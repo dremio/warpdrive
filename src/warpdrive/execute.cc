@@ -31,7 +31,7 @@
 #include "bind.h"
 #include "wdtypes.h"
 #include "lobj.h"
-#include "pgapifunc.h"
+#include "wdapifunc.h"
 
 /*		Perform a Prepare on the SQL statement */
 RETCODE		SQL_API
@@ -547,17 +547,17 @@ MYLOG(0, "about to begin SC_execute exec_type=%d\n", exec_type);
 	}
 	else
 	{
-		if (VALID_EXPBUFFER)
+/*		if (VALID_EXPBUFFER)
 		{
 			if (NULL != stmt_with_params)
 				appendPQExpBuffer(&stmt->stmt_deffered, ";%s", stmt_with_params);
 			stmt->stmt_with_params = stmt->stmt_deffered.data;
-		}
+		}*/
 		retval = SC_execute(stmt);
 		stmt->stmt_with_params = stmt_with_params;
 		stmt->count_of_deffered = 0;
-		if (VALID_EXPBUFFER)
-			resetPQExpBuffer(&stmt->stmt_deffered);
+//		if (VALID_EXPBUFFER)
+//			resetPQExpBuffer(&stmt->stmt_deffered);
 	}
 	if (retval == SQL_ERROR)
 	{
@@ -1359,7 +1359,7 @@ WD_NativeSql(HDBC hdbc,
 {
 	CSTR func = "WD_NativeSql";
 	size_t		len = 0;
-	char	   *ptr;
+	const char	   *ptr;
 	ConnectionClass *conn = (ConnectionClass *) hdbc;
 	RETCODE		result;
 
@@ -1389,8 +1389,8 @@ WD_NativeSql(HDBC hdbc,
 	if (pcbSqlStr)
 		*pcbSqlStr = (SQLINTEGER) len;
 
-	if (cbSqlStrIn)
-		free(ptr);
+//	if (cbSqlStrIn)
+//		free(ptr);
 
 	return result;
 }
@@ -1606,7 +1606,7 @@ WD_PutData(HSTMT hstmt,
 #endif /* UNICODE_SUPPORT */
 		if (SQL_C_CHAR == ctype)
 		{
-			putlen = strlen(rgbValue);
+			putlen = strlen(static_cast<const char*>(rgbValue));
 			lenset = TRUE;
 		}
 	}
@@ -1624,14 +1624,14 @@ WD_PutData(HSTMT hstmt,
 		else
 			putlen = ctype_length(ctype);
 	}
-	putbuf = rgbValue;
+	putbuf = static_cast<char*>(rgbValue);
 	handling_lo = (PIC_dsp_wdtype(conn, *current_iparam) == conn->lobj_type);
 	if (handling_lo && SQL_C_CHAR == ctype)
 	{
-		allocbuf = malloc(putlen / 2 + 1);
+		allocbuf = static_cast<char*>(malloc(putlen / 2 + 1));
 		if (allocbuf)
 		{
-			WD_hex2bin(rgbValue, allocbuf, putlen);
+			WD_hex2bin(static_cast<const char*>(rgbValue), allocbuf, putlen);
 			putbuf = allocbuf;
 			putlen /= 2;
 		}
@@ -1703,7 +1703,7 @@ WD_PutData(HSTMT hstmt,
 		}
 		else
 		{
-			current_pdata->EXEC_buffer = malloc(putlen + 1);
+			current_pdata->EXEC_buffer = static_cast<char*>(malloc(putlen + 1));
 			if (!current_pdata->EXEC_buffer)
 			{
 				SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Out of memory in WD_PutData (2)", func);
@@ -1741,7 +1741,7 @@ WD_PutData(HSTMT hstmt,
 				MYLOG(0, "        cbValue = " FORMAT_LEN ", old_pos = " FORMAT_LEN ", *used = " FORMAT_LEN "\n", putlen, old_pos, used);
 
 				/* dont lose the old pointer in case out of memory */
-				buffer = realloc(current_pdata->EXEC_buffer, allocsize);
+				buffer = static_cast<char*>(realloc(current_pdata->EXEC_buffer, allocsize));
 				if (!buffer)
 				{
 					SC_set_error(stmt, STMT_NO_MEMORY_ERROR,"Out of memory in WD_PutData (3)", func);
