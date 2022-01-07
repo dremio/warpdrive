@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Adapted from the warpdrive project
+# Adapted from the Arrow project
 
 add_custom_target(warpdrive-all)
 add_custom_target(warpdrive)
@@ -123,13 +123,14 @@ if(CXX_LINKER_SUPPORTS_VERSION_SCRIPT)
 endif()
 
 set(WARPDRIVE_ALL_SRCS ${WARPDRIVE_SRCS} ${WARPDRIVE_C_SRCS})
+set(WARPDRIVE_BUILD_STATIC ON)
+set(WARPDRIVE_BUILD_SHARED OFF)
 
 if(WARPDRIVE_BUILD_STATIC AND WARPDRIVE_BUNDLED_STATIC_LIBS)
   set(WARPDRIVE_BUILD_BUNDLED_DEPENDENCIES TRUE)
 else()
   set(WARPDRIVE_BUILD_BUNDLED_DEPENDENCIES FALSE)
 endif()
-
 
 add_warpdrive_lib(warpdrive
               CMAKE_PACKAGE_NAME
@@ -158,6 +159,7 @@ add_warpdrive_lib(warpdrive
               ${WARPDRIVE_STATIC_INSTALL_INTERFACE_LIBS})
 
 add_dependencies(warpdrive ${WARPDRIVE_LIBRARIES})
+add_dependencies(warpdrive ODBCAbstraction)
 
 if(WARPDRIVE_BUILD_STATIC AND WIN32)
   target_compile_definitions(arrow_static PUBLIC WARPDRIVE_STATIC)
@@ -202,6 +204,7 @@ if(WARPDRIVE_TESTING)
 
   add_custom_target(warpdrive_testing)
   add_dependencies(warpdrive_testing ${WARPDRIVE_TESTING_LIBRARIES})
+  add_dependencies(warpdrive_testing ODBCAbstraction)
 
   if(WARPDRIVE_BUILD_STATIC AND WIN32)
     target_compile_definitions(warpdrive_testing_static PUBLIC WARPDRIVE_TESTING_STATIC)

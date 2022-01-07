@@ -535,6 +535,26 @@ if(${INFER_FOUND})
                                  ${CMAKE_BINARY_DIR}/compile_commands.json 3)
 endif()
 
+# Add dependency on the ODBC Abstraction, which also gets and builds Arrow.
+ExternalProject_Add(ODBCAbstraction
+    GIT_REPOSITORY https://github.com/jcralmeida/flightsql-odbc.git
+    GIT_TAG get-arrow-with-cmake-and-git
+    CMAKE_ARGS ${ARROW_CMAKE_ARGS}
+    INSTALL_COMMAND cmake -E echo "Skipping install step.")
+    #TODO: Fix the INSTALL operation in the ODBCAbstraction project.
+
+# Add Arrow library build path and ODBCAbstraction library path.
+link_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction-build/flight_sql/ApacheArrow-prefix/src/ApacheArrow-install/lib)
+link_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction-build/lib)
+list(APPEND WARPDRIVE_LINK_LIBS spi)
+list(APPEND WARPDRIVE_STATIC_LINK_LIBS spi)
+list(APPEND WARPDRIVE_STATIC_INSTALL_INTERFACE_LIBS spi)
+list(APPEND WARPDRIVE_SHARED_LINK_LIBS spi)
+list(APPEND WARPDRIVE_SHARED_INSTALL_INTERFACE_LIBS spi)
+
+# Add include directories for _only_ the ODBCAbstraction SPI.
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction/spi)
+
 #
 # Linker and Dependencies
 #
@@ -647,6 +667,7 @@ list(APPEND WARPDRIVE_STATIC_INSTALL_INTERFACE_LIBS ${WARPDRIVE_SYSTEM_LINK_LIBS
  #             ${CMAKE_CURRENT_SOURCE_DIR}/README.md DESTINATION "${WARPDRIVE_DOC_DIR}")
 
 add_subdirectory(src/warpdrive)
+add_subdirectory(src/arrow-odbc)
 
 #
 # Validate and print out Warpdrive configuration options

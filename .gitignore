@@ -447,3 +447,17 @@ CMakeTmp/
 CMakeFiles/
 build/
 Makefile
+src/arrow-odbc/ApacheArrow-prefix/tmp/ApacheArrow-cfgcmd.txt
+src/arrow-odbc/ApacheArrow-prefix/tmp/ApacheArrow-gitupdate.cmake
+src/arrow-odbc/ApacheArrow-prefix/tmp/ApacheArrow-gitclone.cmake
+src/arrow-odbc/arrow-odbc.pc
+ODBCAbstraction-prefix/*
+src/warpdrive/WarpdriveOptions.cmake
+src/arrow-odbc/arrow-odbcConfigVersion.cmake
+*/ApacheArrow-prefix/*
+src/arrow-odbc/ApacheArrow-prefix/tmp/ApacheArrow-cfgcmd.txt.in
+src/arrow-odbc/ApacheArrow-prefix/src/ApacheArrow-stamp/ApacheArrow-gitinfo.txt
+*ninja_deps
+*ninja_logs
+src/arrow-odbc/arrow-odbcConfig.cmake
+src/warpdrive/WarpdriveOptions.cmake

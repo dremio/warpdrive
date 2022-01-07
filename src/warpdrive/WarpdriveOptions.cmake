@@ -6,12 +6,12 @@ set(WARPDRIVE_CXXFLAGS "")
 ### Build static libraries
 set(WARPDRIVE_BUILD_STATIC "ON")
 ### Build shared libraries
-set(WARPDRIVE_BUILD_SHARED "ON")
+set(WARPDRIVE_BUILD_SHARED "OFF")
 ### Arbitrary string that identifies the kind of package
 ### (for informational purposes)
 set(WARPDRIVE_PACKAGE_KIND "")
 ### The Warpdrive git commit id (if any)
-set(WARPDRIVE_GIT_ID "93c56917c31b959e80bf24bd4db7dcb81536858c")
+set(WARPDRIVE_GIT_ID "bac0dc3cae4cbc57766fc7b32b89a6636937d6f8")
 ### The Warpdrive git commit description (if any)
 set(WARPDRIVE_GIT_DESCRIPTION "")
 ### Exclude deprecated APIs from build
