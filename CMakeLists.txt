@@ -535,6 +535,15 @@ if(${INFER_FOUND})
                                  ${CMAKE_BINARY_DIR}/compile_commands.json 3)
 endif()
 
+# Add ODBC dependencies.
+if(APPLE)
+  set(ODBC_INCLUDE_DIRS /usr/local/Cellar/libiodbc/3.52.15/include)
+  set(ODBC_LIBRARIES /usr/local/Cellar/libiodbc/3.52.15/lib/libiodbc.dylib)
+  add_compile_definitions(HAVE_LONG_LONG)
+else()
+  find_package(ODBC REQUIRED)
+endif()
+
 # Add dependency on the ODBC Abstraction, which also gets and builds Arrow.
 ExternalProject_Add(ODBCAbstraction
     GIT_REPOSITORY https://github.com/jcralmeida/flightsql-odbc.git
@@ -554,6 +563,10 @@ list(APPEND WARPDRIVE_SHARED_INSTALL_INTERFACE_LIBS spi)
 
 # Add include directories for _only_ the ODBCAbstraction SPI.
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction/spi)
+
+# Add Boost dependencies. Should be pre-installed (Brew on Mac).
+find_package(Boost REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
 
 #
 # Linker and Dependencies

@@ -23,15 +23,6 @@ add_custom_target(warpdrive-tests)
 add_dependencies(warpdrive-all
                  warpdrive-tests)
 
-# Add ODBC dependencies.
-if(APPLE)
-  set(ODBC_INCLUDE_DIRS /usr/local/Cellar/libiodbc/3.52.15/include)
-  set(ODBC_LIBRARIES /usr/local/Cellar/libiodbc/3.52.15/lib/libiodbc.dylib)
-  add_compile_definitions(HAVE_LONG_LONG)
-else()
-  find_package(ODBC REQUIRED)
-endif()
-
 # Enable unicode driver build
 add_compile_definitions(UNICODE_SUPPORT)
 
@@ -160,6 +151,10 @@ add_warpdrive_lib(warpdrive
 
 add_dependencies(warpdrive ${WARPDRIVE_LIBRARIES})
 add_dependencies(warpdrive ODBCAbstraction)
+include_directories(warpdrive
+  ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction/spi
+  ${Boost_INCLUDE_DIRS}
+)
 
 if(WARPDRIVE_BUILD_STATIC AND WIN32)
   target_compile_definitions(arrow_static PUBLIC WARPDRIVE_STATIC)

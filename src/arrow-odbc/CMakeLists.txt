@@ -45,13 +45,14 @@ find_package(gRPC 1.36 CONFIG REQUIRED)
 set(ARROW_ODBC_THIRDPARTY_LIBS
   spi
   arrow_odbc_spi_impl
-  arrow
-  arrow_flight
   arrow_flight_sql
+  arrow_flight
+  arrow
   arrow_bundled_dependencies
   ${ZLIB_LIBRARIES}
   ${Protobuf_LIBRARIES}
   gRPC::grpc++
+  ${ODBC_LIBRARIES}
 )
 
 add_warpdrive_lib(arrow-odbc
@@ -82,5 +83,13 @@ add_warpdrive_lib(arrow-odbc
               ${WARPDRIVE_SHARED_INSTALL_INTERFACE_LIBS}
               STATIC_INSTALL_INTERFACE_LIBS
               ${WARPDRIVE_STATIC_INSTALL_INTERFACE_LIBS})
+
+include_directories(arrow-odbc 
+  ${CMAKE_CURRENT_BINARY_DIR}/../warpdrive
+  ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction/flight_sql
+  ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction/spi
+  ${ODBC_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+)
 
 #target_link_libraries(FirstTest gtest gtest_main pthread)

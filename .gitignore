@@ -457,7 +457,7 @@ src/arrow-odbc/arrow-odbcConfigVersion.cmake
 */ApacheArrow-prefix/*
 src/arrow-odbc/ApacheArrow-prefix/tmp/ApacheArrow-cfgcmd.txt.in
 src/arrow-odbc/ApacheArrow-prefix/src/ApacheArrow-stamp/ApacheArrow-gitinfo.txt
-*ninja_deps
-*ninja_logs
+*ninja_deps*
+*ninja_log*
 src/arrow-odbc/arrow-odbcConfig.cmake
 src/warpdrive/WarpdriveOptions.cmake
