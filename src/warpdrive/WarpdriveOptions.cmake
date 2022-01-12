@@ -11,7 +11,7 @@ set(WARPDRIVE_BUILD_SHARED "OFF")
 ### (for informational purposes)
 set(WARPDRIVE_PACKAGE_KIND "")
 ### The Warpdrive git commit id (if any)
-set(WARPDRIVE_GIT_ID "bac0dc3cae4cbc57766fc7b32b89a6636937d6f8")
+set(WARPDRIVE_GIT_ID "05111cbf56fa9f4a8ec16a462663f14514581cbf")
 ### The Warpdrive git commit description (if any)
 set(WARPDRIVE_GIT_DESCRIPTION "")
 ### Exclude deprecated APIs from build

@@ -24,6 +24,7 @@ SET(Arrow_STATIC ON)
 find_package(ZLIB REQUIRED)
 
 # Add Protobuf dependencies needed by Arrow Flight. Should be pre-installed.
+# To install on Linux (tested on Linux Mint 20.2):  $ apt install libprotobuf-dev
 set(Protobuf_USE_STATIC_LIBS ON)
 find_package(Protobuf REQUIRED)
 

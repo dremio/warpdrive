@@ -7,8 +7,6 @@
  * Comments:		See "readme.txt" for copyright and license information.
  *-------
  */
-#include <new_driver.h>
-
 #include "flight_sql_driver.h"
 
 /**

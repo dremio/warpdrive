@@ -72,7 +72,7 @@ set(WARPDRIVE_SRCS
     connection.cc
     convert.cc
     descriptor.cc
-    dlg_specific.cc
+#    dlg_specific.cc
 #    dlg_wingui.cc
     drvconn.cc
     environ.cc

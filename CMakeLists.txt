@@ -545,10 +545,11 @@ else()
 endif()
 
 # Add dependency on the ODBC Abstraction, which also gets and builds Arrow.
+define_option(GITHUB_ACCESS_TOKEN "Github access token" "")
 ExternalProject_Add(ODBCAbstraction
-    GIT_REPOSITORY https://github.com/jcralmeida/flightsql-odbc.git
-    GIT_TAG get-arrow-with-cmake-and-git
-    CMAKE_ARGS ${ARROW_CMAKE_ARGS}
+    GIT_REPOSITORY https://${GITHUB_ACCESS_TOKEN}@github.com/jcralmeida/flightsql-odbc.git
+    GIT_TAG master
+    CMAKE_ARGS "-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
     INSTALL_COMMAND cmake -E echo "Skipping install step.")
     #TODO: Fix the INSTALL operation in the ODBCAbstraction project.
 

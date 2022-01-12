@@ -58,7 +58,7 @@ set(WARPDRIVE_VERSION "0.0.1-SNAPSHOT")
 set(WARPDRIVE_SO_VERSION "")
 set(WARPDRIVE_FULL_SO_VERSION "")
 
-set(WARPDRIVE_LIBRARY_PATH_SUFFIXES ";lib/;lib64;lib32;lib;bin;Library;Library/lib;Library/bin")
+set(WARPDRIVE_LIBRARY_PATH_SUFFIXES "x86_64-linux-gnu;lib/x86_64-linux-gnu;lib64;lib32;lib;bin;Library;Library/lib;Library/bin")
 set(WARPDRIVE_INCLUDE_PATH_SUFFIXES "include;Library;Library/include")
 set(WARPDRIVE_SYSTEM_DEPENDENCIES "")
 set(WARPDRIVE_BUNDLED_STATIC_LIBS "")
