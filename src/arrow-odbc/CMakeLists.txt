@@ -42,9 +42,8 @@ find_package(OpenSSL REQUIRED)
 # Add gRPC dependencies needed by Arrow Flight. Should be pre-installed.
 find_package(gRPC 1.36 CONFIG REQUIRED)
 
-
 set(ARROW_ODBC_THIRDPARTY_LIBS
-  spi
+  odbcabstraction
   arrow_odbc_spi_impl
   arrow_flight_sql
   arrow_flight
@@ -56,6 +55,11 @@ set(ARROW_ODBC_THIRDPARTY_LIBS
   ${ODBC_LIBRARIES}
 )
 
+# Add symbols file
+if(APPLE)
+ # set(WARPDRIVE_SHARED_LINK_FLAGS "-exported_symbols_list ${CMAKE_CURRENT_BINARY_DIR}/arrow-odbc.exports ${WARPDRIVE_SHARED_LINK_FLAGS}")
+endif()
+
 add_warpdrive_lib(arrow-odbc
               CMAKE_PACKAGE_NAME
               arrow-odbc
@@ -65,7 +69,12 @@ add_warpdrive_lib(arrow-odbc
               main.cc
               OUTPUTS
               WARPDRIVE_LIBRARIES
+              #warpdrive
               PRECOMPILED_HEADERS
+              BUILD_STATIC
+              OFF
+              BUILD_SHARED
+              ON
               DEPENDENCIES
               warpdrive_dependencies
               warpdrive
@@ -74,6 +83,7 @@ add_warpdrive_lib(arrow-odbc
               ${WARPDRIVE_SHARED_LINK_FLAGS}
               SHARED_LINK_LIBS
               ${WARPDRIVE_LINK_LIBS}
+#              warpdrive
               SHARED_PRIVATE_LINK_LIBS
               ${WARPDRIVE_SHARED_PRIVATE_LINK_LIBS}
               ${ARROW_ODBC_THIRDPARTY_LIBS}
@@ -83,14 +93,18 @@ add_warpdrive_lib(arrow-odbc
               SHARED_INSTALL_INTERFACE_LIBS
               ${WARPDRIVE_SHARED_INSTALL_INTERFACE_LIBS}
               STATIC_INSTALL_INTERFACE_LIBS
-              ${WARPDRIVE_STATIC_INSTALL_INTERFACE_LIBS})
+              ${WARPDRIVE_STATIC_INSTALL_INTERFACE_LIBS}
+              FORCE_LOAD_LIB
+              warpdrive)
 
 include_directories(arrow-odbc 
   ${CMAKE_CURRENT_BINARY_DIR}/../warpdrive
-  ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction/flight_sql
-  ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction/spi
+  ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction/flight_sql/include
+  ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction/odbcabstraction/include
   ${ODBC_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
 )
+
+link_directories(${BUILD_OUTPUT_ROOT_DIRECTORY})
 
 #target_link_libraries(FirstTest gtest gtest_main pthread)

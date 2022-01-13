@@ -1121,7 +1121,7 @@ MYLOG(DETAIL_LOG_LEVEL, "entering fields=" FORMAT_SIZE_T " ntab=%d\n", nfields, 
 		if (!SQL_SUCCEEDED(ret))
 			return ret;
 		oneti = ti[i];
-		ret = WD_PrimaryKeys(pstmt, NULL, 0, NULL, 0, NULL, 0, oneti->table_oid);
+//		ret = WD_PrimaryKeys(pstmt, NULL, 0, NULL, 0, NULL, 0, oneti->table_oid);
 		if (!SQL_SUCCEEDED(ret))
 			goto cleanup;
 #ifdef	UNICODE_SUPPORT

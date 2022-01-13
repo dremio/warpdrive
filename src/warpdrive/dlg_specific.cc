@@ -31,6 +31,8 @@ static pgNAME decode(const char *in);
 static pgNAME decode_or_remove_braces(const char *in);
 
 #define	OVR_EXTRA_BITS (BIT_FORCEABBREVCONNSTR | BIT_FAKE_MSS | BIT_BDE_ENVIRONMENT | BIT_CVT_NULL_DATE | BIT_ACCESSIBLE_ONLY | BIT_IGNORE_ROUND_TRIP_TIME | BIT_DISABLE_KEEPALIVE | BIT_DISABLE_CONVERT_FUNC)
+extern "C"
+{
 UInt4	getExtraOptions(const ConnInfo *ci)
 {
 	UInt4	flag = ci->extra_opts & (~OVR_EXTRA_BITS);
@@ -1917,3 +1919,5 @@ CC_copy_conninfo(ConnInfo *ci, const ConnInfo *sci)
 }
 #undef	CORR_STRCPY
 #undef	CORR_VALCPY
+
+}

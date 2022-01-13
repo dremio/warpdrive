@@ -101,6 +101,8 @@ set(WARPDRIVE_SRCS
     wdtypes.cc
     win_unicode.cc
     xalibname.cc
+    ODBCConnection.cc
+    ODBCEnvironment.cc
 )
 
 #
@@ -144,7 +146,7 @@ add_warpdrive_lib(warpdrive
               ${WARPDRIVE_SHARED_PRIVATE_LINK_LIBS}
               STATIC_LINK_LIBS
               ${WARPDRIVE_STATIC_LINK_LIBS}
-              SHARED_INSTALL_INTERFACE_LIBS
+              SHARED_INSTALL_IN _LIBS
               ${WARPDRIVE_SHARED_INSTALL_INTERFACE_LIBS}
               STATIC_INSTALL_INTERFACE_LIBS
               ${WARPDRIVE_STATIC_INSTALL_INTERFACE_LIBS})
@@ -152,7 +154,7 @@ add_warpdrive_lib(warpdrive
 add_dependencies(warpdrive ${WARPDRIVE_LIBRARIES})
 add_dependencies(warpdrive ODBCAbstraction)
 include_directories(warpdrive
-  ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction/spi
+  ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction/odbcabstraction/include
   ${Boost_INCLUDE_DIRS}
 )
 

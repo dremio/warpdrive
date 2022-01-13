@@ -22,10 +22,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include "wdapifunc.h"
+#include <memory>
+#include <mutex>
 #ifdef	WIN32
 #include <winsock2.h>
 #endif /* WIN32 */
 #include "loadlib.h"
+#include "new_driver.h"
+#include "ODBCEnvironment.h"
 
 
 /* The one instance of the handles */
@@ -60,6 +64,21 @@ ConnectionClass * const *getConnList(void)
 	return conns;
 }
 
+namespace {
+	// The singleton instance of the driver.
+	static std::shared_ptr<driver::odbcabstraction::Driver> s_driver;
+	static std::mutex s_driverLock;
+
+void InitializeDriverIfNeeded() {
+	std::lock_guard<std::mutex> lock(s_driverLock);
+	if (s_driver == nullptr) {
+		s_driver = CreateDriver();
+	}
+}
+}
+
+using namespace ODBC;
+
 RETCODE		SQL_API
 WD_AllocEnv(HENV * phenv)
 {
@@ -75,11 +94,12 @@ WD_AllocEnv(HENV * phenv)
 	 */
 	{
 		initialize_global_cs();
+		InitializeDriverIfNeeded();
 	}
 
-	*phenv = (HENV) EN_Constructor();
-	if (!*phenv)
-	{
+	try {
+		*phenv = reinterpret_cast<HENV>(new ODBCEnvironment(s_driver));
+	} catch (std::bad_alloc&) {
 		*phenv = SQL_NULL_HENV;
 		EN_log_error(func, "Error allocating environment", NULL);
 		ret = SQL_ERROR;
@@ -95,12 +115,13 @@ WD_FreeEnv(HENV henv)
 {
 	CSTR func = "WD_FreeEnv";
 	SQLRETURN	ret = SQL_SUCCESS;
-	EnvironmentClass *env = (EnvironmentClass *) henv;
+	ODBCEnvironment *env = reinterpret_cast<ODBCEnvironment*>(henv);
 
 	MYLOG(0, "entering env=%p\n", env);
 
-	if (env && EN_Destructor(env))
+	if (env)
 	{
+		delete env;
 		MYLOG(0, "   ok\n");
 		goto cleanup;
 	}
@@ -414,7 +435,7 @@ WD_EnvError(HENV henv,
 		return SQL_NO_DATA_FOUND;
 	if (cbErrorMsgMax < 0)
 		return SQL_ERROR;
-	if (!EN_get_error(env, &status, &msg) || NULL == msg)
+	/*if (!EN_get_error(env, &status, &msg) || NULL == msg)
 	{
 		MYLOG(0, "EN_get_error: msg = #%s#\n", msg);
 
@@ -426,7 +447,7 @@ WD_EnvError(HENV henv,
 			szErrorMsg[0] = '\0';
 
 		return SQL_NO_DATA_FOUND;
-	}
+	}*/
 	MYLOG(0, "EN_get_error: status = %d, msg = #%s#\n", status, msg);
 
 	if (NULL != pcbErrorMsg)

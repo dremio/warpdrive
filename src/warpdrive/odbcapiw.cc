@@ -26,7 +26,10 @@
 #include "connection.h"
 #include "statement.h"
 
-RETCODE  SQL_API
+extern "C" {
+
+WD_EXPORT_SYMBOL
+RETCODE SQL_API
 SQLColumnsW(HSTMT StatementHandle,
 			SQLWCHAR *CatalogName, SQLSMALLINT NameLength1,
 			SQLWCHAR *SchemaName, SQLSMALLINT NameLength2,
@@ -86,6 +89,7 @@ SQLColumnsW(HSTMT StatementHandle,
 }
 
 
+WD_EXPORT_SYMBOL
 RETCODE  SQL_API
 SQLConnectW(HDBC ConnectionHandle,
 			SQLWCHAR *ServerName, SQLSMALLINT NameLength1,
@@ -119,6 +123,7 @@ SQLConnectW(HDBC ConnectionHandle,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE SQL_API
 SQLDriverConnectW(HDBC hdbc,
 				  HWND hwnd,
@@ -192,6 +197,8 @@ cleanup:
 		free(szIn);
 	return ret;
 }
+
+WD_EXPORT_SYMBOL
 RETCODE SQL_API
 SQLBrowseConnectW(HDBC			hdbc,
 				  SQLWCHAR	   *szConnStrIn,
@@ -253,6 +260,7 @@ SQLDataSourcesW(HENV EnvironmentHandle,
 	return SQL_ERROR;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE  SQL_API
 SQLDescribeColW(HSTMT StatementHandle,
 				SQLUSMALLINT ColumnNumber, SQLWCHAR *ColumnName,
@@ -317,6 +325,7 @@ SQLDescribeColW(HSTMT StatementHandle,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE  SQL_API
 SQLExecDirectW(HSTMT StatementHandle,
 			   SQLWCHAR *StatementText, SQLINTEGER TextLength)
@@ -349,6 +358,7 @@ SQLExecDirectW(HSTMT StatementHandle,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE  SQL_API
 SQLGetCursorNameW(HSTMT StatementHandle,
 				  SQLWCHAR *CursorName, SQLSMALLINT BufferLength,
@@ -402,6 +412,7 @@ SQLGetCursorNameW(HSTMT StatementHandle,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE  SQL_API
 SQLGetInfoW(HDBC ConnectionHandle,
 			SQLUSMALLINT InfoType, PTR InfoValue,
@@ -422,6 +433,7 @@ SQLGetInfoW(HDBC ConnectionHandle,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE  SQL_API
 SQLPrepareW(HSTMT StatementHandle,
 			SQLWCHAR *StatementText, SQLINTEGER TextLength)
@@ -451,6 +463,7 @@ SQLPrepareW(HSTMT StatementHandle,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE  SQL_API
 SQLSetCursorNameW(HSTMT StatementHandle,
 				  SQLWCHAR *CursorName, SQLSMALLINT NameLength)
@@ -473,6 +486,7 @@ SQLSetCursorNameW(HSTMT StatementHandle,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE  SQL_API
 SQLSpecialColumnsW(HSTMT StatementHandle,
 				   SQLUSMALLINT IdentifierType, SQLWCHAR *CatalogName,
@@ -503,12 +517,12 @@ SQLSpecialColumnsW(HSTMT StatementHandle,
 	StartRollbackState(stmt);
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
-	else
+/*	else
 		ret = WD_SpecialColumns(StatementHandle, IdentifierType,
 								   (SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
 								   (SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
 								   (SQLCHAR *) tbName, (SQLSMALLINT) nmlen3,
-								   Scope, Nullable);
+								   Scope, Nullable);*/
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	if (ctName)
@@ -520,6 +534,7 @@ SQLSpecialColumnsW(HSTMT StatementHandle,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE  SQL_API
 SQLStatisticsW(HSTMT StatementHandle,
 			   SQLWCHAR *CatalogName, SQLSMALLINT NameLength1,
@@ -566,6 +581,7 @@ SQLStatisticsW(HSTMT StatementHandle,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE  SQL_API
 SQLTablesW(HSTMT StatementHandle,
            SQLWCHAR *CatalogName, SQLSMALLINT NameLength1,
@@ -618,6 +634,7 @@ SQLTablesW(HSTMT StatementHandle,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE SQL_API
 SQLColumnPrivilegesW(HSTMT			hstmt,
 					 SQLWCHAR	   *szCatalogName,
@@ -675,6 +692,7 @@ SQLColumnPrivilegesW(HSTMT			hstmt,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE SQL_API
 SQLForeignKeysW(HSTMT			hstmt,
 				SQLWCHAR	   *szPkCatalogName,
@@ -716,13 +734,13 @@ SQLForeignKeysW(HSTMT			hstmt,
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
 	else
-		ret = WD_ForeignKeys(hstmt,
+/*		ret = WD_ForeignKeys(hstmt,
 								(SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
 								(SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
 								(SQLCHAR *) tbName, (SQLSMALLINT) nmlen3,
 								(SQLCHAR *) fkctName, (SQLSMALLINT) nmlen4,
 								(SQLCHAR *) fkscName, (SQLSMALLINT) nmlen5,
-								(SQLCHAR *) fktbName, (SQLSMALLINT) nmlen6);
+								(SQLCHAR *) fktbName, (SQLSMALLINT) nmlen6);*/
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	if (ctName)
@@ -740,6 +758,7 @@ SQLForeignKeysW(HSTMT			hstmt,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE SQL_API
 SQLNativeSqlW(HDBC			hdbc,
 			  SQLWCHAR	   *szSqlStrIn,
@@ -801,6 +820,7 @@ SQLNativeSqlW(HDBC			hdbc,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE SQL_API
 SQLPrimaryKeysW(HSTMT			hstmt,
 				SQLWCHAR	   *szCatalogName,
@@ -832,11 +852,12 @@ SQLPrimaryKeysW(HSTMT			hstmt,
 	StartRollbackState(stmt);
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
-	else
+	/*else
 		ret = WD_PrimaryKeys(hstmt,
 								(SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
 								(SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
-								(SQLCHAR *) tbName, (SQLSMALLINT) nmlen3, 0);
+								(SQLCHAR *) tbName, (SQLSMALLINT) nmlen3, 0);*/
+								;
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	if (ctName)
@@ -848,6 +869,7 @@ SQLPrimaryKeysW(HSTMT			hstmt,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE SQL_API
 SQLProcedureColumnsW(HSTMT			hstmt,
 					 SQLWCHAR	   *szCatalogName,
@@ -882,13 +904,13 @@ SQLProcedureColumnsW(HSTMT			hstmt,
 		flag |= PODBC_NOT_SEARCH_PATTERN;
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
-	else
+/*	else
 		ret = WD_ProcedureColumns(hstmt,
 									 (SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
 									 (SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
 									 (SQLCHAR *) prName, (SQLSMALLINT) nmlen3,
 									 (SQLCHAR *) clName, (SQLSMALLINT) nmlen4,
-									 flag);
+									 flag);*/
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	if (ctName)
@@ -902,6 +924,7 @@ SQLProcedureColumnsW(HSTMT			hstmt,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE SQL_API
 SQLProceduresW(HSTMT		hstmt,
 			   SQLWCHAR	   *szCatalogName,
@@ -936,12 +959,12 @@ SQLProceduresW(HSTMT		hstmt,
 		flag |= PODBC_NOT_SEARCH_PATTERN;
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
-	else
+/*	else
 		ret = WD_Procedures(hstmt,
 							   (SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
 							   (SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
 							   (SQLCHAR *) prName, (SQLSMALLINT) nmlen3,
-							   flag);
+							   flag);*/
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	if (ctName)
@@ -953,6 +976,7 @@ SQLProceduresW(HSTMT		hstmt,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE SQL_API
 SQLTablePrivilegesW(HSTMT			hstmt,
 					SQLWCHAR	   *szCatalogName,
@@ -987,12 +1011,12 @@ SQLTablePrivilegesW(HSTMT			hstmt,
 		flag |= PODBC_NOT_SEARCH_PATTERN;
 	if (SC_opencheck(stmt, func))
 		ret = SQL_ERROR;
-	else
+/*	else
 		ret = WD_TablePrivileges(hstmt,
 									(SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
 									(SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
 									(SQLCHAR *) tbName, (SQLSMALLINT) nmlen3,
-									flag);
+									flag);*/
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS((StatementClass *) hstmt);
 	if (ctName)
@@ -1004,6 +1028,7 @@ SQLTablePrivilegesW(HSTMT			hstmt,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE SQL_API
 SQLGetTypeInfoW(SQLHSTMT	StatementHandle,
 				SQLSMALLINT	DataType)
@@ -1026,4 +1051,6 @@ SQLGetTypeInfoW(SQLHSTMT	StatementHandle,
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	return ret;
+}
+
 }

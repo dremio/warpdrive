@@ -19,6 +19,7 @@
  */
 
 #include "wdodbc.h"
+#include "sqlext.h"
 #include "misc.h"
 
 #include <stdio.h>
@@ -29,7 +30,13 @@
 #include "statement.h"
 #include "wdapifunc.h"
 
+#include "ODBCEnvironment.h"
+
+extern "C"
+{
+
 /*	SQLAllocConnect/SQLAllocEnv/SQLAllocStmt -> SQLAllocHandle */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLAllocHandle(SQLSMALLINT HandleType,
 			   SQLHANDLE InputHandle, SQLHANDLE * OutputHandle)
@@ -73,6 +80,7 @@ MYLOG(DETAIL_LOG_LEVEL, "OutputHandle=%p\n", *OutputHandle);
 }
 
 /*	SQLBindParameter/SQLSetParam -> SQLBindParam */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLBindParam(HSTMT StatementHandle,
 			 SQLUSMALLINT ParameterNumber, SQLSMALLINT ValueType,
@@ -95,6 +103,7 @@ SQLBindParam(HSTMT StatementHandle,
 }
 
 /*	New function */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLCloseCursor(HSTMT StatementHandle)
 {
@@ -116,6 +125,7 @@ SQLCloseCursor(HSTMT StatementHandle)
 
 #ifndef	UNICODE_SUPPORTXX
 /*	SQLColAttributes -> SQLColAttribute */
+WD_EXPORT_SYMBOL
 SQLRETURN	SQL_API
 SQLColAttribute(SQLHSTMT StatementHandle,
 				SQLUSMALLINT ColumnNumber,
@@ -150,6 +160,7 @@ SQLColAttribute(SQLHSTMT StatementHandle,
 #endif /* UNICODE_SUPPORTXX */
 
 /*	new function */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLCopyDesc(SQLHDESC SourceDescHandle,
 			SQLHDESC TargetDescHandle)
@@ -162,6 +173,7 @@ SQLCopyDesc(SQLHDESC SourceDescHandle,
 }
 
 /*	SQLTransact -> SQLEndTran */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLEndTran(SQLSMALLINT HandleType, SQLHANDLE Handle,
 		   SQLSMALLINT CompletionType)
@@ -191,6 +203,7 @@ SQLEndTran(SQLSMALLINT HandleType, SQLHANDLE Handle,
 }
 
 /*	SQLExtendedFetch -> SQLFetchScroll */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLFetchScroll(HSTMT StatementHandle,
 			   SQLSMALLINT FetchOrientation, SQLLEN FetchOffset)
@@ -240,6 +253,7 @@ MYLOG(0, "bookmark=" FORMAT_LEN " FetchOffset = " FORMAT_LEN "\n", FetchOffset, 
 }
 
 /*	SQLFree(Connect/Env/Stmt) -> SQLFreeHandle */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLFreeHandle(SQLSMALLINT HandleType, SQLHANDLE Handle)
 {
@@ -285,6 +299,7 @@ SQLFreeHandle(SQLSMALLINT HandleType, SQLHANDLE Handle)
 		
 #ifndef	UNICODE_SUPPORTXX
 /*	new function */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLGetDescField(SQLHDESC DescriptorHandle,
 				SQLSMALLINT RecNumber, SQLSMALLINT FieldIdentifier,
@@ -300,6 +315,7 @@ SQLGetDescField(SQLHDESC DescriptorHandle,
 }
 
 /*	new function */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLGetDescRec(SQLHDESC DescriptorHandle,
 			  SQLSMALLINT RecNumber, SQLCHAR *Name,
@@ -314,6 +330,7 @@ SQLGetDescRec(SQLHDESC DescriptorHandle,
 }
 
 /*	new function */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLGetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 				SQLSMALLINT RecNumber, SQLSMALLINT DiagIdentifier,
@@ -329,6 +346,7 @@ SQLGetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 }
 
 /*	SQLError -> SQLDiagRec */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLGetDiagRec(SQLSMALLINT HandleType, SQLHANDLE Handle,
 			  SQLSMALLINT RecNumber, SQLCHAR *Sqlstate,
@@ -345,13 +363,14 @@ SQLGetDiagRec(SQLSMALLINT HandleType, SQLHANDLE Handle,
 #endif /* UNICODE_SUPPORTXX */
 
 /*	new function */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLGetEnvAttr(HENV EnvironmentHandle,
 			  SQLINTEGER Attribute, PTR Value,
 			  SQLINTEGER BufferLength, SQLINTEGER *StringLength)
 {
 	RETCODE	ret;
-	EnvironmentClass *env = (EnvironmentClass *) EnvironmentHandle;
+	ODBC::ODBCEnvironment *env = reinterpret_cast<ODBC::ODBCEnvironment*>(EnvironmentHandle);
 
 	MYLOG(0, "Entering " FORMAT_INTEGER "\n", Attribute);
 	ENTER_ENV_CS(env);
@@ -359,19 +378,19 @@ SQLGetEnvAttr(HENV EnvironmentHandle,
 	switch (Attribute)
 	{
 		case SQL_ATTR_CONNECTION_POOLING:
-			*((unsigned int *) Value) = EN_is_pooling(env) ? SQL_CP_ONE_PER_DRIVER : SQL_CP_OFF;
+			*((SQLINTEGER *) Value) = env->getConnectionPooling();
 			break;
 		case SQL_ATTR_CP_MATCH:
-			*((unsigned int *) Value) = SQL_CP_RELAXED_MATCH;
+			*((SQLINTEGER *) Value) = SQL_CP_RELAXED_MATCH;
 			break;
 		case SQL_ATTR_ODBC_VERSION:
-			*((unsigned int *) Value) = EN_is_odbc2(env) ? SQL_OV_ODBC2 : SQL_OV_ODBC3;
+			*((SQLINTEGER *) Value) = env->getODBCVersion();
 			break;
 		case SQL_ATTR_OUTPUT_NTS:
-			*((unsigned int *) Value) = SQL_TRUE;
+			*((SQLINTEGER *) Value) = SQL_TRUE;
 			break;
 		default:
-			env->errornumber = CONN_INVALID_ARGUMENT_NO;
+	//		env->errornumber = CONN_INVALID_ARGUMENT_NO;
 			ret = SQL_ERROR;
 	}
 	LEAVE_ENV_CS(env);
@@ -380,6 +399,7 @@ SQLGetEnvAttr(HENV EnvironmentHandle,
 
 #ifndef	UNICODE_SUPPORTXX
 /*	SQLGetConnectOption -> SQLGetconnectAttr */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLGetConnectAttr(HDBC ConnectionHandle,
 				  SQLINTEGER Attribute, PTR Value,
@@ -398,6 +418,7 @@ SQLGetConnectAttr(HDBC ConnectionHandle,
 }
 
 /*	SQLGetStmtOption -> SQLGetStmtAttr */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLGetStmtAttr(HSTMT StatementHandle,
 			   SQLINTEGER Attribute, PTR Value,
@@ -418,6 +439,7 @@ SQLGetStmtAttr(HSTMT StatementHandle,
 }
 
 /*	SQLSetConnectOption -> SQLSetConnectAttr */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLSetConnectAttr(HDBC ConnectionHandle,
 				  SQLINTEGER Attribute, PTR Value,
@@ -437,6 +459,7 @@ SQLSetConnectAttr(HDBC ConnectionHandle,
 }
 
 /*	new function */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLSetDescField(SQLHDESC DescriptorHandle,
 				SQLSMALLINT RecNumber, SQLSMALLINT FieldIdentifier,
@@ -451,6 +474,7 @@ SQLSetDescField(SQLHDESC DescriptorHandle,
 }
 
 /*	new fucntion */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLSetDescRec(SQLHDESC DescriptorHandle,
 			  SQLSMALLINT RecNumber, SQLSMALLINT Type,
@@ -466,13 +490,14 @@ SQLSetDescRec(SQLHDESC DescriptorHandle,
 #endif /* UNICODE_SUPPORTXX */
 
 /*	new function */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLSetEnvAttr(HENV EnvironmentHandle,
 			  SQLINTEGER Attribute, PTR Value,
 			  SQLINTEGER StringLength)
 {
 	RETCODE	ret;
-	EnvironmentClass *env = (EnvironmentClass *) EnvironmentHandle;
+	ODBC::ODBCEnvironment* env = reinterpret_cast<ODBC::ODBCEnvironment*>(EnvironmentHandle);
 
 	MYLOG(0, "Entering att=" FORMAT_INTEGER "," FORMAT_ULEN "\n", Attribute, (SQLULEN) Value);
 	ENTER_ENV_CS(env);
@@ -482,15 +507,10 @@ SQLSetEnvAttr(HENV EnvironmentHandle,
 			switch ((ULONG_PTR) Value)
 			{
 				case SQL_CP_OFF:
-					EN_unset_pooling(env);
-					ret = SQL_SUCCESS;
-					break;
-#if defined(WIN_MULTITHREAD_SUPPORT) || defined(POSIX_MULTITHREAD_SUPPORT)
 				case SQL_CP_ONE_PER_DRIVER:
-					EN_set_pooling(env);
+					env->setConnectionPooling(CAST_UPTR(SQLUINTEGER, Value));
 					ret = SQL_SUCCESS;
 					break;
-#endif /* WIN_MULTITHREAD_SUPPORT */
 				default:
 					ret = SQL_SUCCESS_WITH_INFO;
 			}
@@ -500,10 +520,7 @@ SQLSetEnvAttr(HENV EnvironmentHandle,
 			ret = SQL_SUCCESS;
 			break;
 		case SQL_ATTR_ODBC_VERSION:
-			if (SQL_OV_ODBC2 == CAST_UPTR(SQLUINTEGER, Value))
-				EN_set_odbc2(env);
-			else
-				EN_set_odbc3(env);
+			env->setODBCVersion(CAST_UPTR(SQLUINTEGER, Value));
 			ret = SQL_SUCCESS;
 			break;
 		case SQL_ATTR_OUTPUT_NTS:
@@ -513,13 +530,13 @@ SQLSetEnvAttr(HENV EnvironmentHandle,
 				ret = SQL_SUCCESS_WITH_INFO;
 			break;
 		default:
-			env->errornumber = CONN_INVALID_ARGUMENT_NO;
+//			env->errornumber = CONN_INVALID_ARGUMENT_NO;
 			ret = SQL_ERROR;
 	}
 	if (SQL_SUCCESS_WITH_INFO == ret)
 	{
-		env->errornumber = CONN_OPTION_VALUE_CHANGED;
-		env->errormsg = "SetEnv changed to ";
+//		env->errornumber = CONN_OPTION_VALUE_CHANGED;
+//		env->errormsg = "SetEnv changed to ";
 	}
 	LEAVE_ENV_CS(env);
 	return ret;
@@ -527,6 +544,7 @@ SQLSetEnvAttr(HENV EnvironmentHandle,
 
 #ifndef	UNICODE_SUPPORTXX
 /*	SQLSet(Param/Scroll/Stmt)Option -> SQLSetStmtAttr */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLSetStmtAttr(HSTMT StatementHandle,
 			   SQLINTEGER Attribute, PTR Value,
@@ -687,4 +705,6 @@ SQLBulkOperations(HSTMT hstmt, SQLSMALLINT operation)
 	ret = DiscardStatementSvp(stmt,ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	return ret;
+}
+
 }

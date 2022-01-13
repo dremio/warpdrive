@@ -1657,6 +1657,15 @@ WD_GetStmtAttr(HSTMT StatementHandle,
 	return ret;
 }
 
+RETCODE		SQL_API
+WD_SetConnectAttr(HDBC ConnectionHandle,
+					 SQLINTEGER Attribute, PTR Value,
+					 SQLINTEGER StringLength)
+{
+  return SQL_SUCCESS;
+}
+
+#if 0
 /*	SQLSetConnectOption -> SQLSetConnectAttr */
 RETCODE		SQL_API
 WD_SetConnectAttr(HDBC ConnectionHandle,
@@ -1822,6 +1831,7 @@ WD_SetConnectAttr(HDBC ConnectionHandle,
 	}
 	return ret;
 }
+#endif
 
 /*	new function */
 RETCODE		SQL_API

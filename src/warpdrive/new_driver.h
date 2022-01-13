@@ -1,6 +1,6 @@
 /* File:			new_driver.h
  *
- * Description:		Entry point for creating a new instance of driver::spi::Driver objects.
+ * Description:		Entry point for creating a new instance of driver::odbcabstraction::Driver objects.
  *
  * Comments:		See "readme.txt" for copyright and license information.
  *
@@ -13,7 +13,7 @@
 
 namespace driver
 {
-namespace spi
+namespace odbcabstraction
 {
   class Driver;
 }
@@ -22,6 +22,6 @@ namespace spi
 /*
  * Create a new instance of the Driver object.
  */
-std::shared_ptr<driver::spi::Driver> CreateDriver();
+std::shared_ptr<driver::odbcabstraction::Driver> CreateDriver();
 
 #endif

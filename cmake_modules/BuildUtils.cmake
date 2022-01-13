@@ -243,7 +243,8 @@ function(ADD_WARPDRIVE_LIB LIB_NAME)
       DEPENDENCIES
       SHARED_INSTALL_INTERFACE_LIBS
       STATIC_INSTALL_INTERFACE_LIBS
-      OUTPUT_PATH)
+      OUTPUT_PATH
+      FORCE_LOAD_LIB)
   cmake_parse_arguments(ARG
                         "${options}"
                         "${one_value_args}"
@@ -359,7 +360,7 @@ function(ADD_WARPDRIVE_LIB LIB_NAME)
       #
       # When running with the Emscripten Compiler, we need not worry about
       # python, and the Emscripten Compiler does not support this option.
-      set(ARG_SHARED_LINK_FLAGS "-undefined dynamic_lookup ${ARG_SHARED_LINK_FLAGS}")
+    #  set(ARG_SHARED_LINK_FLAGS "-undefined dynamic_lookup ${ARG_SHARED_LINK_FLAGS}")
     endif()
 
     set_target_properties(${LIB_NAME}_shared
@@ -377,6 +378,16 @@ function(ADD_WARPDRIVE_LIB LIB_NAME)
                           "$<INSTALL_INTERFACE:${ARG_SHARED_INSTALL_INTERFACE_LIBS}>"
                           LINK_PRIVATE
                           ${ARG_SHARED_PRIVATE_LINK_LIBS})
+
+    if (DEFINED ARG_FORCE_LOAD_LIB)
+      if (APPLE)
+        foreach(FORCED_LOAD_LIB ${ARG_FORCE_LOAD_LIB})
+        target_link_options(${LIB_NAME}_shared
+          PUBLIC
+          "LINKER:-force_load,${OUTPUT_PATH}lib${FORCED_LOAD_LIB}.a")          
+        endforeach(${ARG_FORCE_LOAD_LIB})
+      endif()
+    endif()  
 
     if(WARPDRIVE_RPATH_ORIGIN)
       if(APPLE)

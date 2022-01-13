@@ -45,10 +45,14 @@
 
 #include "wdapifunc.h"
 
+#include "ODBCEnvironment.h"
+#include "ODBCConnection.h"
+
 #define	SAFE_STR(s)	(NULL != (s) ? (s) : "(null)")
 
-#define STMT_INCREMENT 16		/* how many statement holders to allocate
-								 * at a time */
+#define STMT_INCREMENT 16		/* how many statement holders to allocate at a time */
+
+using namespace ODBC;
 
 static SQLRETURN CC_lookup_lo(ConnectionClass *self);
 static int  CC_close_eof_cursors(ConnectionClass *self);
@@ -76,40 +80,59 @@ static void CC_set_error_if_not_set(ConnectionClass *self, int errornumber, cons
 		CC_set_errormsg(self, errormsg);
 }
 
+extern "C" {
+void
+CC_conninfo_init(ConnInfo *conninfo, UInt4 option)
+{
+}
+
+void
+CC_conninfo_release(ConnInfo *conninfo)
+{
+}
+
+void	
+CC_copy_conninfo(ConnInfo *ci, const ConnInfo *sci)
+{
+}
+
+signed char	ci_updatable_cursors_set(ConnInfo *ci)
+{
+	return 1;
+}
+
+void
+getDSNinfo(ConnInfo *ci, const char *configDrvrname)
+{
+	;
+}
+
 RETCODE		SQL_API
 WD_AllocConnect(HENV henv,
 				   HDBC * phdbc)
 {
-	EnvironmentClass *env = (EnvironmentClass *) henv;
-	ConnectionClass *conn;
+	ODBCEnvironment* env = reinterpret_cast<ODBCEnvironment*>(henv);
+	std::shared_ptr<ODBCConnection> conn;
 	CSTR func = "WD_AllocConnect";
 
 	MYLOG(0, "entering...\n");
 
-	conn = CC_Constructor();
-	MYLOG(0, "**** henv = %p, conn = %p\n", henv, conn);
-
-	if (!conn)
+	try
 	{
-		env->errormsg = "Couldn't allocate memory for Connection object.";
-		env->errornumber = ENV_ALLOC_ERROR;
+		conn = env->CreateConnection();
+		MYLOG(0, "**** henv = %p, conn = %p\n", henv, conn.get());
+	} catch (std::bad_alloc&) {
+//		env->errormsg = "Couldn't allocate memory for Connection object.";
+//		env->errornumber = ENV_ALLOC_ERROR;
 		*phdbc = SQL_NULL_HDBC;
-		EN_log_error(func, "", env);
-		return SQL_ERROR;
-	}
-
-	if (!EN_add_connection(env, conn))
-	{
-		env->errormsg = "Maximum number of connections exceeded.";
-		env->errornumber = ENV_ALLOC_ERROR;
-		CC_Destructor(conn);
-		*phdbc = SQL_NULL_HDBC;
-		EN_log_error(func, "", env);
+		//EN_log_error(func, "", env);
 		return SQL_ERROR;
 	}
 
 	if (phdbc)
-		*phdbc = (HDBC) conn;
+	{
+		*phdbc = reinterpret_cast<HDBC*>(conn.get());
+	}
 
 	return SQL_SUCCESS;
 }
@@ -1069,11 +1092,19 @@ static char CC_initial_log(ConnectionClass *self, const char *func)
 	return 1;
 }
 
-static int handle_show_results(const QResultClass *res);
+int handle_show_results(const QResultClass *res)
+{
+	return 0;
+}
+
 #define	TRANSACTION_ISOLATION "transaction_isolation"
 #define	ISOLATION_SHOW_QUERY "show " TRANSACTION_ISOLATION
 
-static int LIBPQ_connect(ConnectionClass *self);
+int LIBPQ_connect(ConnectionClass *self)
+{
+	return 0;
+}
+
 static char
 LIBPQ_CC_connect(ConnectionClass *self, char *salt_para)
 {
@@ -1397,6 +1428,11 @@ SQLUINTEGER	CC_get_isolation(ConnectionClass *self)
 	QR_Destructor(res);
 MYLOG(0, "isolation=" FORMAT_UINTEGER "\n", isolation);
 	return isolation;
+}
+#else
+SQLUINTEGER	CC_get_isolation(ConnectionClass *self)
+{
+	return 0;
 }
 #endif
 
@@ -1760,6 +1796,12 @@ CC_internal_rollback(ConnectionClass *self, int rollback_type, BOOL ignore_abort
 
 	return ret;
 }
+#else
+int CC_internal_rollback(ConnectionClass *self, int rollback_type, BOOL ignore_abort)
+{
+	return 0;
+}
+
 #endif
 
 /*
@@ -2357,6 +2399,12 @@ MYLOG(DETAIL_LOG_LEVEL, " ignored abort_on_conn\n");
 	rhold.last = res;
 	return rhold;
 }
+#else
+QResultHold
+CC_send_query_append(ConnectionClass *self, const char *query, QueryInfo *qi, UDWORD flag, StatementClass *stmt, const char *appendq)
+{
+	return {};
+}
 #endif
 
 #define MAX_SEND_FUNC_ARGS	3
@@ -2508,6 +2556,12 @@ cleanup:
 	if (pgres)
 		PQclear(pgres);
 	return ret;
+}
+#else
+int
+CC_send_function(ConnectionClass *self, const char *fn_name, void *result_buf, int *actual_result_len, int result_is_int, LO_ARG *args, int nargs)
+{
+	return 0;
 }
 #endif
 
@@ -2990,6 +3044,12 @@ CC_send_cancel_request(const ConnectionClass *conn)
 		return TRUE;
 	else
 		return FALSE;
+}
+#else
+int
+CC_send_cancel_request(const ConnectionClass *conn)
+{
+	return 0;
 }
 #endif
 
@@ -3623,3 +3683,4 @@ CC_set_transact(ConnectionClass *self, UInt4 isolation)
 	return TRUE;
 }
 
+}

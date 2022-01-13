@@ -7,11 +7,11 @@
  * Comments:		See "readme.txt" for copyright and license information.
  *-------
  */
-#include "flight_sql_driver.h"
+#include <flight_sql/flight_sql_driver.h>
 
 /**
  * @brief Create a Driver object
  */
-std::shared_ptr<driver::spi::Driver> CreateDriver() {
-    return std::shared_ptr<driver::spi::Driver>(new driver::flight_sql::FlightSqlDriver());
+std::shared_ptr<driver::odbcabstraction::Driver> CreateDriver() {
+    return std::shared_ptr<driver::odbcabstraction::Driver>(new driver::flight_sql::FlightSqlDriver());
 }

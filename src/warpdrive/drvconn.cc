@@ -36,9 +36,15 @@
 #include "wdapifunc.h"
 
 #include "dlg_specific.h"
+#include <string>
+#include "ODBCConnection.h"
+#include <odbcabstraction/connection.h>
 
 #define	FORCE_PASSWORD_DISPLAY
 #define	NULL_IF_NULL(a) (a ? a : "(NULL)")
+
+using namespace ODBC;
+using driver::odbcabstraction::Connection;
 
 #ifndef FORCE_PASSWORD_DISPLAY
 static char * hide_password(const char *str)
@@ -87,6 +93,30 @@ paramRequired(const ConnInfo *ci, int reqs)
 	return required;
 }
 
+
+RETCODE		SQL_API
+WD_DriverConnect(HDBC hdbc,
+					HWND hwnd,
+					const SQLCHAR * szConnStrIn,
+					SQLSMALLINT cbConnStrIn,
+					SQLCHAR * szConnStrOut,
+					SQLSMALLINT cbConnStrOutMax,
+					SQLSMALLINT * pcbConnStrOut,
+					SQLUSMALLINT fDriverCompletion)
+{
+	CSTR func = "WD_DriverConnect";
+	ODBCConnection *conn = reinterpret_cast<ODBCConnection*>(hdbc);
+
+	std::string connStr(reinterpret_cast<const char*>(szConnStrIn));
+	Connection::ConnPropertyMap properties;
+	std::vector<std::string> missing_properties;
+	ODBCConnection::getPropertiesFromConnString(connStr, properties);
+	conn->connect(properties, missing_properties);
+
+	return SQL_SUCCESS;
+}
+
+#if 0
 RETCODE		SQL_API
 WD_DriverConnect(HDBC hdbc,
 					HWND hwnd,
@@ -318,7 +348,7 @@ MYLOG(DETAIL_LOG_LEVEL, "before CC_connect\n");
 	MYLOG(0, "leaving %d\n", result);
 	return result;
 }
-
+#endif
 
 #ifdef WIN32
 RETCODE

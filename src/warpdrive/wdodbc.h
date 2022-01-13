@@ -108,6 +108,8 @@ void		debug_memory_check(void);
 #undef	WIN_MULTITHREAD_SUPPORT
 #endif
 
+#define WD_EXPORT_SYMBOL __attribute__((visibility("default")))
+
 #include <sql.h>
 #include <sqlext.h>
 #if defined(WIN32) && (_MSC_VER < 1300) /* in case of VC6 or under */
@@ -696,10 +698,17 @@ enum { /* CC_conninfo_init option */
 	CLEANUP_FOR_REUSE	= 1L		/* reuse the info */
 	,INIT_GLOBALS		= (1L << 1) /* init globals memebers */
 };
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 void	CC_conninfo_init(ConnInfo *conninfo, UInt4 option);
 void	CC_conninfo_release(ConnInfo *conninfo);
 void	CC_copy_conninfo(ConnInfo *ci, const ConnInfo *sci);
 const char *GetExeProgramName();
+#ifdef __cplusplus
+}
+#endif
 #ifdef	POSIX_MULTITHREAD_SUPPORT
 #if	!defined(HAVE_ECO_THREAD_LOCKS)
 #define	POSIX_THREADMUTEX_SUPPORT

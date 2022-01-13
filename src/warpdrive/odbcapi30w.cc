@@ -12,8 +12,8 @@
  *-------
  */
 
-#include "sqltypes.h"
 #include "wdodbc.h"
+#include "sqltypes.h"
 #include "unicode_support.h"
 #include <stdio.h>
 #include <string.h>
@@ -23,7 +23,8 @@
 #include "statement.h"
 #include "misc.h"
 
-
+extern "C" {
+WD_EXPORT_SYMBOL
 RETCODE	SQL_API
 SQLGetStmtAttrW(SQLHSTMT hstmt,
 				SQLINTEGER	fAttribute,
@@ -45,6 +46,7 @@ SQLGetStmtAttrW(SQLHSTMT hstmt,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE SQL_API
 SQLSetStmtAttrW(SQLHSTMT hstmt,
 				SQLINTEGER	fAttribute,
@@ -65,6 +67,7 @@ SQLSetStmtAttrW(SQLHSTMT hstmt,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE SQL_API
 SQLGetConnectAttrW(HDBC hdbc,
 				   SQLINTEGER	fAttribute,
@@ -84,6 +87,7 @@ SQLGetConnectAttrW(HDBC hdbc,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE SQL_API
 SQLSetConnectAttrW(HDBC hdbc,
 				   SQLINTEGER	fAttribute,
@@ -105,6 +109,7 @@ SQLSetConnectAttrW(HDBC hdbc,
 }
 
 /*      new function */
+WD_EXPORT_SYMBOL
 RETCODE  SQL_API
 SQLSetDescFieldW(SQLHDESC DescriptorHandle, SQLSMALLINT RecNumber,
 				 SQLSMALLINT FieldIdentifier, PTR Value,
@@ -148,6 +153,7 @@ SQLSetDescFieldW(SQLHDESC DescriptorHandle, SQLSMALLINT RecNumber,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE SQL_API
 SQLGetDescFieldW(SQLHDESC hdesc, SQLSMALLINT iRecord, SQLSMALLINT iField,
 				 PTR rgbValue, SQLINTEGER cbValueMax,
@@ -211,6 +217,7 @@ SQLGetDescFieldW(SQLHDESC hdesc, SQLSMALLINT iRecord, SQLSMALLINT iField,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE SQL_API
 SQLGetDiagRecW(SQLSMALLINT fHandleType,
 			   SQLHANDLE	handle,
@@ -263,6 +270,7 @@ SQLGetDiagRecW(SQLSMALLINT fHandleType,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 SQLRETURN SQL_API
 SQLColAttributeW(SQLHSTMT	hstmt,
 				 SQLUSMALLINT	iCol,
@@ -348,6 +356,7 @@ SQLColAttributeW(SQLHSTMT	hstmt,
 	return ret;
 }
 
+WD_EXPORT_SYMBOL
 RETCODE SQL_API
 SQLGetDiagFieldW(SQLSMALLINT	fHandleType,
 				 SQLHANDLE		handle,
@@ -419,6 +428,7 @@ SQLGetDiagFieldW(SQLSMALLINT	fHandleType,
 }
 
 /*	new function */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLGetDescRecW(SQLHDESC DescriptorHandle,
 			  SQLSMALLINT RecNumber, SQLWCHAR *Name,
@@ -433,6 +443,7 @@ SQLGetDescRecW(SQLHDESC DescriptorHandle,
 }
 
 /*	new fucntion */
+WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLSetDescRecW(SQLHDESC DescriptorHandle,
 			  SQLSMALLINT RecNumber, SQLSMALLINT Type,
@@ -444,4 +455,5 @@ SQLSetDescRecW(SQLHDESC DescriptorHandle,
 	MYLOG(0, "Entering\n");
 	MYLOG(0, "Error not implemented\n");
 	return SQL_ERROR;
+}
 }

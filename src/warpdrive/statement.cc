@@ -2584,7 +2584,9 @@ QResultClass *add_libpq_notice_receiver(StatementClass *stmt, notice_receiver_ar
 
 	return newres;
 }
+#endif
 
+#if 0
 static QResultClass *
 libpq_bind_and_exec(StatementClass *stmt)
 {
@@ -2779,6 +2781,12 @@ cleanup:
 		free(paramFormats);
 
 	return res;
+}
+#else
+static QResultClass *
+libpq_bind_and_exec(StatementClass *stmt)
+{
+	return NULL;
 }
 #endif
 
@@ -3082,6 +3090,15 @@ cleanup:
 		PQclear(pgres);
 
 	return res;
+}
+#else
+QResultClass *
+ParseAndDescribeWithLibpq(StatementClass *stmt, const char *plan_name,
+						  const char *query_param,
+						  Int2 num_params, const char *comment,
+						  QResultClass *res)
+{
+	return NULL;
 }
 #endif
 

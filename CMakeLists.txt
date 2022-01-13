@@ -49,6 +49,8 @@ if(POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW)
 endif()
 
+set (CMAKE_CXX_STANDARD 11)
+
 set(WARPDRIVE_VERSION "0.0.1-SNAPSHOT")
 
 string(REGEX MATCH "^[0-9]+\\.[0-9]+\\.[0-9]+" WARPDRIVE_BASE_VERSION "${WARPDRIVE_VERSION}")
@@ -538,36 +540,47 @@ endif()
 # Add ODBC dependencies.
 if(APPLE)
   set(ODBC_INCLUDE_DIRS /usr/local/Cellar/libiodbc/3.52.15/include)
-  set(ODBC_LIBRARIES /usr/local/Cellar/libiodbc/3.52.15/lib/libiodbc.dylib)
-  add_compile_definitions(HAVE_LONG_LONG)
+  set(ODBC_LIBRARIES /usr/local/Cellar/libiodbc/3.52.15/lib/libiodbc.dylib /usr/local/Cellar/libiodbc/3.52.15/lib/libiodbcinst.dylib)
+  add_compile_definitions(HAVE_LONG_LONG SQLCOLATTRIBUTE_SQLLEN)
 else()
   find_package(ODBC REQUIRED)
 endif()
 
 # Add dependency on the ODBC Abstraction, which also gets and builds Arrow.
 define_option(GITHUB_ACCESS_TOKEN "Github access token" "")
+if (GITHUB_ACCESS_TOKEN)
+  set(ODBCABSTRACTION_REPO https://${GITHUB_ACCESS_TOKEN}@github.com/jcralmeida/flightsql-odbc.git)
+else()
+  set(ODBCABSTRACTION_REPO https://github.com/jcralmeida/flightsql-odbc.git)
+endif()
+
+define_option(ODBCABSTRACTION_GIT_TAG, "Tag for the ODBC Abstraction project", "master")
+
 ExternalProject_Add(ODBCAbstraction
-    GIT_REPOSITORY https://${GITHUB_ACCESS_TOKEN}@github.com/jcralmeida/flightsql-odbc.git
-    GIT_TAG master
-    CMAKE_ARGS "-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
+    GIT_REPOSITORY ${ODBCABSTRACTION_REPO}
+    GIT_TAG ${ODBCABSTRACTION_GIT_TAG}
+    CMAKE_ARGS "-DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
     INSTALL_COMMAND cmake -E echo "Skipping install step.")
     #TODO: Fix the INSTALL operation in the ODBCAbstraction project.
 
-# Add Arrow library build path and ODBCAbstraction library path.
-link_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction-build/flight_sql/ApacheArrow-prefix/src/ApacheArrow-install/lib)
-link_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction-build/lib)
-list(APPEND WARPDRIVE_LINK_LIBS spi)
-list(APPEND WARPDRIVE_STATIC_LINK_LIBS spi)
-list(APPEND WARPDRIVE_STATIC_INSTALL_INTERFACE_LIBS spi)
-list(APPEND WARPDRIVE_SHARED_LINK_LIBS spi)
-list(APPEND WARPDRIVE_SHARED_INSTALL_INTERFACE_LIBS spi)
-
-# Add include directories for _only_ the ODBCAbstraction SPI.
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction/spi)
+find_package(Threads REQUIRED)
 
 # Add Boost dependencies. Should be pre-installed (Brew on Mac).
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
+
+# Add Arrow library build path and ODBCAbstraction library path.
+link_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction-build/flight_sql/ApacheArrow-prefix/src/ApacheArrow-install/lib)
+link_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction-build/lib)
+link_directories(${BUILD_OUTPUT_ROOT_DIRECTORY})
+list(APPEND WARPDRIVE_LINK_LIBS odbcabstraction)
+list(APPEND WARPDRIVE_STATIC_LINK_LIBS odbcabstraction)
+list(APPEND WARPDRIVE_STATIC_INSTALL_INTERFACE_LIBS odbcabstraction)
+list(APPEND WARPDRIVE_SHARED_LINK_LIBS odbcabstraction Threads::Threads)
+list(APPEND WARPDRIVE_SHARED_INSTALL_INTERFACE_LIBS odbcabstraction)
+
+# Add include directories for _only_ the ODBCAbstraction SPI.
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction/odbcabstraction/include)
 
 #
 # Linker and Dependencies
