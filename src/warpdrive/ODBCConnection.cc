@@ -6,16 +6,26 @@
 #include "ODBCConnection.h"
 
 #include "ODBCEnvironment.h"
+#include <iterator>
 #include <memory>
 #include <odbcabstraction/driver.h>
 #include <odbcabstraction/exceptions.h>
-#include <algorithm>
-#include <boost/tokenizer.hpp>
+#include <boost/xpressive/xpressive.hpp>
 
 using namespace ODBC;
 using namespace driver::odbcabstraction;
 using driver::odbcabstraction::Connection;
 using driver::odbcabstraction::DriverException;
+
+namespace
+{
+  // Key-value pairs separated by semi-colon.
+  // Note that the value can be wrapped in curly braces to escape other significant characters
+  // such as semi-colons and equals signs.
+  // NOTE: This can be optimized to be built statically.
+  const boost::xpressive::sregex CONNECTION_STR_REGEX = boost::xpressive::sregex::compile(
+    "([^=;]+)=({.+}|[^=;]+|[^;])");
+}
 
 // Public =========================================================================================
 ODBCConnection::ODBCConnection(ODBCEnvironment& environment, 
@@ -45,14 +55,18 @@ void ODBCConnection::connect(const Connection::ConnPropertyMap &properties,
 void ODBCConnection::getPropertiesFromConnString(const std::string& connStr,
   Connection::ConnPropertyMap &properties)
 {
-  // TODO: Read from the DSN if a DSN is used. Read the Driver key as well.
-  boost::tokenizer<boost::char_separator<char> > strTokenizer(connStr, boost::char_separator<char>(";"));
-  for (auto iter = strTokenizer.begin(); strTokenizer.end() != iter; iter++)
-  {
-    boost::tokenizer<boost::char_separator<char> > kvTokenizer(*iter, boost::char_separator<char>("="));
-    auto kv_iter = kvTokenizer.begin();
-    std::string key = *kv_iter++;
-    Connection::Property value(*kv_iter);
+  const int groups[] = { 1, 2 }; // CONNECTION_STR_REGEX has two groups. key: 1, value: 2
+  boost::xpressive::sregex_token_iterator regexIter(connStr.begin(), connStr.end(), 
+    CONNECTION_STR_REGEX, groups), end;
+
+  for (auto it = regexIter; end != regexIter; ++regexIter) {
+    std::string key = *regexIter;
+    std::string value = *++regexIter;
+
+    // Strip wrapping curly braces.
+    if (value.size() >= 2 && value[0] == '{' && value[value.size() - 1] == '}') {
+      value = value.substr(1, value.size() - 2);
+    }
     properties.emplace(std::make_pair(std::move(key), std::move(value)));
   }
 }
