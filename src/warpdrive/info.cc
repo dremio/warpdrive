@@ -1334,9 +1334,6 @@ WD_GetFunctions(HDBC hdbc,
 				   SQLUSMALLINT fFunction,
 				   SQLUSMALLINT * pfExists)
 {
-	ConnectionClass *conn = (ConnectionClass *) hdbc;
-	ConnInfo   *ci = &(conn->connInfo);
-
 	MYLOG(0, "entering...%u\n", fFunction);
 
 	if (fFunction == SQL_API_ALL_FUNCTIONS)
@@ -1369,7 +1366,7 @@ WD_GetFunctions(HDBC hdbc,
 		pfExists[SQL_API_SQLTRANSACT] = TRUE;
 
 		/* ODBC level 1 functions */
-		pfExists[SQL_API_SQLBINDPARAMETER] = TRUE;
+		pfExists[SQL_API_SQLBINDPARAMETER] = FALSE;
 		pfExists[SQL_API_SQLCOLUMNS] = TRUE;
 		pfExists[SQL_API_SQLDRIVERCONNECT] = TRUE;
 		pfExists[SQL_API_SQLGETCONNECTOPTION] = TRUE;		/* partial */
@@ -1391,11 +1388,7 @@ WD_GetFunctions(HDBC hdbc,
 		pfExists[SQL_API_SQLCOLUMNPRIVILEGES] = FALSE;
 		pfExists[SQL_API_SQLDATASOURCES] = FALSE;	/* only implemented by
 													 * DM */
-		if (SUPPORT_DESCRIBE_PARAM(ci))
-			pfExists[SQL_API_SQLDESCRIBEPARAM] = TRUE;
-		else
-			pfExists[SQL_API_SQLDESCRIBEPARAM] = FALSE; /* not properly
-													 * implemented */
+		pfExists[SQL_API_SQLDESCRIBEPARAM] = FALSE;
 		pfExists[SQL_API_SQLDRIVERS] = FALSE;		/* only implemented by
 													 * DM */
 		pfExists[SQL_API_SQLEXTENDEDFETCH] = TRUE;
@@ -1410,180 +1403,171 @@ WD_GetFunctions(HDBC hdbc,
 		pfExists[SQL_API_SQLSETPOS] = TRUE;
 		pfExists[SQL_API_SQLSETSCROLLOPTIONS] = TRUE;		/* odbc 1.0 */
 		pfExists[SQL_API_SQLTABLEPRIVILEGES] = TRUE;
-		if (0 == ci->updatable_cursors)
-			pfExists[SQL_API_SQLBULKOPERATIONS] = FALSE;
-		else
-			pfExists[SQL_API_SQLBULKOPERATIONS] = TRUE;
+		pfExists[SQL_API_SQLBULKOPERATIONS] = FALSE;
 	}
 	else
 	{
-		if (ci->drivers.lie)
-			*pfExists = TRUE;
-		else
+		switch (fFunction)
 		{
-			switch (fFunction)
-			{
-				case SQL_API_SQLBINDCOL:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLCANCEL:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLCOLATTRIBUTE:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLCONNECT:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLDESCRIBECOL:
-					*pfExists = TRUE;
-					break;		/* partial */
-				case SQL_API_SQLDISCONNECT:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLEXECDIRECT:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLEXECUTE:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLFETCH:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLFREESTMT:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLGETCURSORNAME:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLNUMRESULTCOLS:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLPREPARE:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLROWCOUNT:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLSETCURSORNAME:
-					*pfExists = TRUE;
-					break;
+			case SQL_API_SQLBINDCOL:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLCANCEL:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLCOLATTRIBUTE:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLCONNECT:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLDESCRIBECOL:
+				*pfExists = TRUE;
+				break;		/* partial */
+			case SQL_API_SQLDISCONNECT:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLEXECDIRECT:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLEXECUTE:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLFETCH:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLFREESTMT:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLGETCURSORNAME:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLNUMRESULTCOLS:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLPREPARE:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLROWCOUNT:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLSETCURSORNAME:
+				*pfExists = TRUE;
+				break;
 
-					/* ODBC level 1 functions */
-				case SQL_API_SQLBINDPARAMETER:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLCOLUMNS:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLDRIVERCONNECT:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLGETDATA:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLGETFUNCTIONS:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLGETINFO:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLGETTYPEINFO:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLPARAMDATA:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLPUTDATA:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLSPECIALCOLUMNS:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLSTATISTICS:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLTABLES:
-					*pfExists = TRUE;
-					break;
+				/* ODBC level 1 functions */
+			case SQL_API_SQLBINDPARAMETER:
+				*pfExists = FALSE;
+				break;
+			case SQL_API_SQLCOLUMNS:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLDRIVERCONNECT:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLGETDATA:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLGETFUNCTIONS:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLGETINFO:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLGETTYPEINFO:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLPARAMDATA:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLPUTDATA:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLSPECIALCOLUMNS:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLSTATISTICS:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLTABLES:
+				*pfExists = TRUE;
+				break;
 
-					/* ODBC level 2 functions */
-				case SQL_API_SQLBROWSECONNECT:
-					*pfExists = FALSE;
-					break;
-				case SQL_API_SQLCOLUMNPRIVILEGES:
-					*pfExists = FALSE;
-					break;
-				case SQL_API_SQLDATASOURCES:
-					*pfExists = FALSE;
-					break;		/* only implemented by DM */
-				case SQL_API_SQLDESCRIBEPARAM:
-					if (SUPPORT_DESCRIBE_PARAM(ci))
-						*pfExists = TRUE;
-					else
-						*pfExists = FALSE;
-					break;		/* not properly implemented */
-				case SQL_API_SQLDRIVERS:
-					*pfExists = FALSE;
-					break;		/* only implemented by DM */
-				case SQL_API_SQLEXTENDEDFETCH:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLFOREIGNKEYS:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLMORERESULTS:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLNATIVESQL:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLNUMPARAMS:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLPRIMARYKEYS:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLPROCEDURECOLUMNS:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLPROCEDURES:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLSETPOS:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLTABLEPRIVILEGES:
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLBULKOPERATIONS:	/* 24 */
-				case SQL_API_SQLALLOCHANDLE:	/* 1001 */
-				case SQL_API_SQLBINDPARAM:	/* 1002 */
-				case SQL_API_SQLCLOSECURSOR:	/* 1003 */
-				case SQL_API_SQLENDTRAN:	/* 1005 */
-				case SQL_API_SQLFETCHSCROLL:	/* 1021 */
-				case SQL_API_SQLFREEHANDLE:	/* 1006 */
-				case SQL_API_SQLGETCONNECTATTR:	/* 1007 */
-				case SQL_API_SQLGETDESCFIELD:	/* 1008 */
-				case SQL_API_SQLGETDIAGFIELD:	/* 1010 */
-				case SQL_API_SQLGETDIAGREC:	/* 1011 */
-				case SQL_API_SQLGETENVATTR:	/* 1012 */
-				case SQL_API_SQLGETSTMTATTR:	/* 1014 */
-				case SQL_API_SQLSETCONNECTATTR:	/* 1016 */
-				case SQL_API_SQLSETDESCFIELD:	/* 1017 */
-				case SQL_API_SQLSETENVATTR:	/* 1019 */
-				case SQL_API_SQLSETSTMTATTR:	/* 1020 */
-					*pfExists = TRUE;
-					break;
-				case SQL_API_SQLGETDESCREC:	/* 1009 */
-				case SQL_API_SQLSETDESCREC:	/* 1018 */
-				case SQL_API_SQLCOPYDESC:	/* 1004 */
-					*pfExists = FALSE;
-					break;
-				default:
-					*pfExists = FALSE;
-					break;
-			}
+				/* ODBC level 2 functions */
+			case SQL_API_SQLBROWSECONNECT:
+				*pfExists = FALSE;
+				break;
+			case SQL_API_SQLCOLUMNPRIVILEGES:
+				*pfExists = FALSE;
+				break;
+			case SQL_API_SQLDATASOURCES:
+				*pfExists = FALSE;
+				break;		/* only implemented by DM */
+			case SQL_API_SQLDESCRIBEPARAM:
+				*pfExists = FALSE;
+				break;		/* not properly implemented */
+			case SQL_API_SQLDRIVERS:
+				*pfExists = FALSE;
+				break;		/* only implemented by DM */
+			case SQL_API_SQLEXTENDEDFETCH:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLFOREIGNKEYS:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLMORERESULTS:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLNATIVESQL:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLNUMPARAMS:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLPRIMARYKEYS:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLPROCEDURECOLUMNS:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLPROCEDURES:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLSETPOS:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLTABLEPRIVILEGES:
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLBULKOPERATIONS:	/* 24 */
+				*pfExists = FALSE;
+				break;
+			case SQL_API_SQLALLOCHANDLE:	/* 1001 */
+			case SQL_API_SQLBINDPARAM:	/* 1002 */
+			case SQL_API_SQLCLOSECURSOR:	/* 1003 */
+			case SQL_API_SQLENDTRAN:	/* 1005 */
+			case SQL_API_SQLFETCHSCROLL:	/* 1021 */
+			case SQL_API_SQLFREEHANDLE:	/* 1006 */
+			case SQL_API_SQLGETCONNECTATTR:	/* 1007 */
+			case SQL_API_SQLGETDESCFIELD:	/* 1008 */
+			case SQL_API_SQLGETDIAGFIELD:	/* 1010 */
+			case SQL_API_SQLGETDIAGREC:	/* 1011 */
+			case SQL_API_SQLGETENVATTR:	/* 1012 */
+			case SQL_API_SQLGETSTMTATTR:	/* 1014 */
+			case SQL_API_SQLSETCONNECTATTR:	/* 1016 */
+			case SQL_API_SQLSETDESCFIELD:	/* 1017 */
+			case SQL_API_SQLSETENVATTR:	/* 1019 */
+			case SQL_API_SQLSETSTMTATTR:	/* 1020 */
+				*pfExists = TRUE;
+				break;
+			case SQL_API_SQLGETDESCREC:	/* 1009 */
+			case SQL_API_SQLSETDESCREC:	/* 1018 */
+			case SQL_API_SQLCOPYDESC:	/* 1004 */
+				*pfExists = FALSE;
+				break;
+			default:
+				*pfExists = FALSE;
+				break;
 		}
 	}
 	return SQL_SUCCESS;
