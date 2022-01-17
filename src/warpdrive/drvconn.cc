@@ -107,7 +107,12 @@ WD_DriverConnect(HDBC hdbc,
 	CSTR func = "WD_DriverConnect";
 	ODBCConnection *conn = reinterpret_cast<ODBCConnection*>(hdbc);
 
-	std::string connStr(reinterpret_cast<const char*>(szConnStrIn));
+    std::string connStr;
+	if (cbConnStrIn == SQL_NTS) {
+		connStr = reinterpret_cast<const char*>(szConnStrIn);
+	} else {
+		connStr.assign(reinterpret_cast<const char*>(szConnStrIn), cbConnStrIn);
+	}
 	Connection::ConnPropertyMap properties;
 	std::vector<std::string> missing_properties;
 	ODBCConnection::getPropertiesFromConnString(connStr, properties);

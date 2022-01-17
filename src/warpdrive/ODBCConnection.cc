@@ -94,6 +94,18 @@ void ODBCConnection::connect(const Connection::ConnPropertyMap &properties,
   m_isConnected = true;
 }
 
+void ODBCConnection::disconnect() {
+  if (m_isConnected) {
+    m_spiConnection->Close();
+    m_isConnected = false;
+  }
+}
+
+void ODBCConnection::releaseConnection() {
+  disconnect();
+  m_environment.DropConnection(this);
+}
+
 // Public Static ===================================================================================
 void ODBCConnection::getPropertiesFromConnString(const std::string& connStr,
   Connection::ConnPropertyMap &properties)

@@ -47,12 +47,15 @@
 
 #include "ODBCEnvironment.h"
 #include "ODBCConnection.h"
+#include <odbcabstraction/connection.h>
+#include <string>
 
 #define	SAFE_STR(s)	(NULL != (s) ? (s) : "(null)")
 
 #define STMT_INCREMENT 16		/* how many statement holders to allocate at a time */
 
 using namespace ODBC;
+using namespace driver::odbcabstraction;
 
 static SQLRETURN CC_lookup_lo(ConnectionClass *self);
 static int  CC_close_eof_cursors(ConnectionClass *self);
@@ -147,60 +150,49 @@ WD_Connect(HDBC hdbc,
 			  const SQLCHAR * szAuthStr,
 			  SQLSMALLINT cbAuthStr)
 {
-	ConnectionClass *conn = (ConnectionClass *) hdbc;
-	ConnInfo   *ci;
 	CSTR func = "WD_Connect";
 	RETCODE	ret = SQL_SUCCESS;
-	char	fchar, *tmpstr;
 
 	MYLOG(0, "entering..cbDSN=%hi.\n", cbDSN);
 
-	if (!conn)
+	if (!hdbc)
 	{
 		CC_log_error(func, "", NULL);
 		return SQL_INVALID_HANDLE;
 	}
 
-	ci = &conn->connInfo;
-	CC_conninfo_init(ci, INIT_GLOBALS);
+	ODBCConnection *conn = reinterpret_cast<ODBCConnection*>(hdbc);
 
-	make_string(szDSN, cbDSN, ci->dsn, sizeof(ci->dsn));
-
-	/* get the values for the DSN from the registry */
-	getDSNinfo(ci, NULL);
-
-	logs_on_off(1, ci->drivers.debug, ci->drivers.commlog);
-	/* initialize WD_version from connInfo.protocol    */
-	CC_initialize_WD_version(conn);
-
-	/*
-	 * override values from DSN info with UID and authStr(pwd) This only
-	 * occurs if the values are actually there.
-	 */
-	fchar = ci->username[0]; /* save the first byte */
-	make_string(szUID, cbUID, ci->username, sizeof(ci->username));
-	if ('\0' == ci->username[0]) /* an empty string is specified */
-		ci->username[0] = fchar; /* restore the original username */
-	tmpstr = make_string(szAuthStr, cbAuthStr, NULL, 0);
-	if (tmpstr)
-	{
-		if (tmpstr[0]) /* non-empty string is specified */
-			STR_TO_NAME(ci->password, tmpstr);
-		free(tmpstr);
+	std::string connStr("DSN=");
+	if (szDSN) {
+      if (SQL_NTS == cbDSN) {
+		  connStr += std::string(reinterpret_cast<const char*>(szDSN));
+	  } else {
+		  connStr += std::string(reinterpret_cast<const char*>(szDSN), cbDSN);
+	  }
+	} else {
+      return SQL_ERROR;
 	}
 
-	MYLOG(0, "conn = %p (DSN='%s', UID='%s', PWD='%s')\n", conn, ci->dsn, ci->username, NAME_IS_VALID(ci->password) ? "xxxxx" : "");
-
-	if ((fchar = CC_connect(conn, NULL)) <= 0)
-	{
-		/* Error messages are filled in */
-		CC_log_error(func, "Error on CC_connect", conn);
-		ret = SQL_ERROR;
+	if (szUID) {
+		size_t uidLen = cbUID == SQL_NTS ? strlen(reinterpret_cast<const char*>(szUID)) : uidLen;
+		if (uidLen) {
+			connStr += ";UID=";
+			connStr += std::string(reinterpret_cast<const char*>(szUID), uidLen);
+		}
 	}
-	if (SQL_SUCCESS == ret && 2 == fchar)
-		ret = SQL_SUCCESS_WITH_INFO;
 
-	MYLOG(0, "leaving..%d.\n", ret);
+	if (szAuthStr) {
+		size_t authLen = cbAuthStr == SQL_NTS ? strlen(reinterpret_cast<const char*>(szAuthStr)) : cbAuthStr;
+		if (authLen) {
+			connStr += ";PWD=";
+			connStr += std::string(reinterpret_cast<const char*>(szAuthStr), authLen);
+		}
+	}
+	Connection::ConnPropertyMap properties;
+	std::vector<std::string> missing_properties;
+	ODBCConnection::getPropertiesFromConnString(connStr, properties);
+	conn->connect(properties, missing_properties);
 
 	return ret;
 }
@@ -228,31 +220,17 @@ WD_BrowseConnect(HDBC hdbc,
 RETCODE		SQL_API
 WD_Disconnect(HDBC hdbc)
 {
-	ConnectionClass *conn = (ConnectionClass *) hdbc;
 	CSTR func = "WD_Disconnect";
-
-
 	MYLOG(0, "entering...\n");
 
-	if (!conn)
+	if (!hdbc)
 	{
 		CC_log_error(func, "", NULL);
 		return SQL_INVALID_HANDLE;
 	}
 
-	if (conn->status == CONN_EXECUTING)
-	{
-		CC_set_error(conn, CONN_IN_USE, "A transaction is currently being executed", func);
-		return SQL_ERROR;
-	}
+	reinterpret_cast<ODBCConnection*>(hdbc)->disconnect();
 
-	logs_on_off(-1, conn->connInfo.drivers.debug, conn->connInfo.drivers.commlog);
-	MYLOG(0, "about to CC_cleanup\n");
-
-	/* Close the connection and free statements */
-	CC_cleanup(conn, FALSE);
-
-	MYLOG(0, "done CC_cleanup\n");
 	MYLOG(0, "leaving...\n");
 
 	return SQL_SUCCESS;
@@ -262,27 +240,16 @@ WD_Disconnect(HDBC hdbc)
 RETCODE		SQL_API
 WD_FreeConnect(HDBC hdbc)
 {
-	ConnectionClass *conn = (ConnectionClass *) hdbc;
 	CSTR func = "WD_FreeConnect";
-	EnvironmentClass *env;
-
 	MYLOG(0, "entering...hdbc=%p\n", hdbc);
 
-	if (!conn)
+	if (!hdbc)
 	{
 		CC_log_error(func, "", NULL);
 		return SQL_INVALID_HANDLE;
 	}
 
-	/* Remove the connection from the environment */
-	if (NULL != (env = CC_get_env(conn)) &&
-	    !EN_remove_connection(env, conn))
-	{
-		CC_set_error(conn, CONN_IN_USE, "A transaction is currently being executed", func);
-		return SQL_ERROR;
-	}
-
-	CC_Destructor(conn);
+	reinterpret_cast<ODBCConnection*>(hdbc)->releaseConnection();
 
 	MYLOG(0, "leaving...\n");
 

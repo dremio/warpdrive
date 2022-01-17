@@ -36,6 +36,10 @@ class ODBCConnection {
     
     ~ODBCConnection() = default;
 
+    void disconnect();
+
+    void releaseConnection();
+
     static void getPropertiesFromConnString(const std::string& connStr, 
       driver::odbcabstraction::Connection::ConnPropertyMap &properties);
 
