@@ -31,6 +31,9 @@
 #include "wdapifunc.h"
 
 #include "ODBCEnvironment.h"
+#include "ODBCStatement.h"
+
+using namespace ODBC;
 
 extern "C"
 {
@@ -107,18 +110,13 @@ WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLCloseCursor(HSTMT StatementHandle)
 {
-	StatementClass	*stmt = (StatementClass *) StatementHandle;
+	ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(StatementHandle);
 	RETCODE	ret;
 
 	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
 
 	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
 	ret = WD_FreeStmt(StatementHandle, SQL_CLOSE);
-	ret = DiscardStatementSvp(stmt,ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	return ret;
 }
