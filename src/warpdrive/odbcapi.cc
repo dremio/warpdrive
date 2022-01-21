@@ -344,26 +344,14 @@ SQLExecute(HSTMT StatementHandle)
 {
 	CSTR func = "SQLExecute";
 	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
 	UWORD	flag = 0;
 
 	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
 
 	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
 	flag |= (PODBC_RECYCLE_STATEMENT | PODBC_WITH_HOLD);
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
-	else
-	{
-		StartRollbackState(stmt);
-		stmt->exec_current_row = -1;
-		//// SC_set_Result(StatementHandle, NULL);
-		ret = WD_Execute(StatementHandle, flag);
-		ret = DiscardStatementSvp(stmt, ret, FALSE);
-	}
+	//// SC_set_Result(StatementHandle, NULL);
+	ret = WD_Execute(StatementHandle, flag);
 	LEAVE_STMT_CS(stmt);
 	return ret;
 }
@@ -514,13 +502,11 @@ SQLGetInfo(HDBC ConnectionHandle,
 	RETCODE		ret;
 	ConnectionClass	*conn = (ConnectionClass *) ConnectionHandle;
 
-	CC_examine_global_transaction(conn);
 	ENTER_CONN_CS(conn);
-	CC_clear_error(conn);
 	MYLOG(0, "Entering\n");
-	if ((ret = WD_GetInfo(ConnectionHandle, InfoType, InfoValue,
-				BufferLength, StringLength)) == SQL_ERROR)
-		CC_log_error("SQLGetInfo(30)", "", conn);
+//	if ((ret = WD_GetInfo(ConnectionHandle, InfoType, InfoValue,
+//				BufferLength, StringLength)) == SQL_ERROR)
+//		CC_log_error("SQLGetInfo(30)", "", conn);
 	LEAVE_CONN_CS(conn);
 	return ret;
 }
@@ -559,6 +545,8 @@ RETCODE		SQL_API
 SQLNumResultCols(HSTMT StatementHandle,
 				 SQLSMALLINT *ColumnCount)
 {
+
+#if 0
 	RETCODE	ret;
 	StatementClass *stmt = (StatementClass *) StatementHandle;
 
@@ -573,6 +561,9 @@ SQLNumResultCols(HSTMT StatementHandle,
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	return ret;
+#endif
+	if (ColumnCount) *ColumnCount = 0;
+	return SQL_SUCCESS;
 }
 
 WD_EXPORT_SYMBOL
@@ -649,18 +640,13 @@ RETCODE		SQL_API
 SQLRowCount(HSTMT StatementHandle,
 			SQLLEN *RowCount)
 {
-	RETCODE	ret;
+	RETCODE	ret = SQL_SUCCESS;
 	StatementClass *stmt = (StatementClass *) StatementHandle;
 
 	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
 	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	ret = WD_RowCount(StatementHandle, RowCount);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
+//	ret = WD_RowCount(StatementHandle, RowCount);
+    if (RowCount) *RowCount = -1;
 	LEAVE_STMT_CS(stmt);
 	return ret;
 }

@@ -338,20 +338,10 @@ SQLExecDirectW(HSTMT StatementHandle,
 	UWORD	flag = 0;
 
 	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
 	stxt = ucs2_to_utf8(StatementText, TextLength, &slen, FALSE);
 	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	flag |= PODBC_WITH_HOLD;
-	StartRollbackState(stmt);
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
-	else
-		ret = WD_ExecDirect(StatementHandle,
-							   (SQLCHAR *) stxt, (SQLINTEGER) slen, flag);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
+	ret = WD_ExecDirect(StatementHandle,
+							(SQLCHAR *) stxt, (SQLINTEGER) slen, flag);
 	LEAVE_STMT_CS(stmt);
 	if (stxt)
 		free(stxt);
@@ -419,16 +409,12 @@ SQLGetInfoW(HDBC ConnectionHandle,
 			SQLSMALLINT BufferLength, SQLSMALLINT *StringLength)
 {
 	ConnectionClass	*conn = (ConnectionClass *) ConnectionHandle;
-	RETCODE	ret;
+	RETCODE	ret = SQL_SUCCESS;
 
-	CC_examine_global_transaction(conn);
 	ENTER_CONN_CS(conn);
-	CC_set_in_unicode_driver(conn);
-	CC_clear_error(conn);
 	MYLOG(0, "Entering\n");
-	if ((ret = WD_GetInfo(ConnectionHandle, InfoType, InfoValue,
-							 BufferLength, StringLength)) == SQL_ERROR)
-		CC_log_error("SQLGetInfoW", "", conn);
+//	if ((ret = WD_GetInfo(ConnectionHandle, InfoType, InfoValue,
+//							 BufferLength, StringLength)) == SQL_ERROR)
 	LEAVE_CONN_CS(conn);
 	return ret;
 }
@@ -445,18 +431,9 @@ SQLPrepareW(HSTMT StatementHandle,
 	SQLLEN	slen;
 
 	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
 	stxt = ucs2_to_utf8(StatementText, TextLength, &slen, FALSE);
 	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
-	else
-		ret = WD_Prepare(StatementHandle, (SQLCHAR *) stxt, (SQLINTEGER) slen);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
+	ret = WD_Prepare(StatementHandle, (SQLCHAR *) stxt, (SQLINTEGER) slen);
 	LEAVE_STMT_CS(stmt);
 	if (stxt)
 		free(stxt);

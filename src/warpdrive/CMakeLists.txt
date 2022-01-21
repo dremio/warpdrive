@@ -103,6 +103,7 @@ set(WARPDRIVE_SRCS
     xalibname.cc
     ODBCConnection.cc
     ODBCEnvironment.cc
+    ODBCStatement.cc
 )
 
 #

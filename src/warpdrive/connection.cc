@@ -398,7 +398,7 @@ CC_cursor_count(ConnectionClass *self)
 	StatementClass *stmt;
 	int			i,
 				count = 0;
-	QResultClass		*res;
+	/*QResultClass		*res;
 
 	MYLOG(0, "self=%p, num_stmts=%d\n", self, self->num_stmts);
 
@@ -412,7 +412,7 @@ CC_cursor_count(ConnectionClass *self)
 	CONNLOCK_RELEASE(self);
 
 	MYLOG(0, "leaving %d\n", count);
-
+*/
 	return count;
 }
 
@@ -421,7 +421,7 @@ void
 CC_clear_error(ConnectionClass *self)
 {
 	if (!self)	return;
-	CONNLOCK_ACQUIRE(self);
+/*	CONNLOCK_ACQUIRE(self);
 	self->__error_number = 0;
 	if (self->__error_message)
 	{
@@ -430,7 +430,7 @@ CC_clear_error(ConnectionClass *self)
 	}
 	self->sqlstate[0] = '\0';
 	CONNLOCK_RELEASE(self);
-}
+*/}
 
 void
 CC_examine_global_transaction(ConnectionClass *self)

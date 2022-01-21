@@ -13,8 +13,8 @@
 
 namespace ODBC
 {
-class ODBCEnvironment;
-class ODBCStatement;
+  class ODBCEnvironment;
+  class ODBCStatement;
 }
 
 /**
@@ -39,6 +39,9 @@ class ODBCConnection {
     void disconnect();
 
     void releaseConnection();
+
+    std::shared_ptr<ODBCStatement> createStatement();
+    void dropStatement(ODBCStatement* statement);
 
     static void getPropertiesFromConnString(const std::string& connStr, 
       driver::odbcabstraction::Connection::ConnPropertyMap &properties);

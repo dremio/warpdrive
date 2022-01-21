@@ -31,6 +31,9 @@
 #include "wdapifunc.h"
 
 #include "ODBCEnvironment.h"
+#include "ODBCStatement.h"
+
+using namespace ODBC;
 
 extern "C"
 {
@@ -107,18 +110,13 @@ WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLCloseCursor(HSTMT StatementHandle)
 {
-	StatementClass	*stmt = (StatementClass *) StatementHandle;
+	ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(StatementHandle);
 	RETCODE	ret;
 
 	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
 
 	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
 	ret = WD_FreeStmt(StatementHandle, SQL_CLOSE);
-	ret = DiscardStatementSvp(stmt,ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	return ret;
 }
@@ -405,14 +403,12 @@ SQLGetConnectAttr(HDBC ConnectionHandle,
 				  SQLINTEGER Attribute, PTR Value,
 				  SQLINTEGER BufferLength, SQLINTEGER *StringLength)
 {
-	RETCODE	ret;
+	RETCODE	ret = SQL_SUCCESS;
 
 	MYLOG(0, "Entering " FORMAT_UINTEGER "\n", Attribute);
-	CC_examine_global_transaction((ConnectionClass*) ConnectionHandle);
 	ENTER_CONN_CS((ConnectionClass *) ConnectionHandle);
-	CC_clear_error((ConnectionClass *) ConnectionHandle);
-	ret = WD_GetConnectAttr(ConnectionHandle, Attribute,Value,
-			BufferLength, StringLength);
+//	ret = WD_GetConnectAttr(ConnectionHandle, Attribute,Value,
+//			BufferLength, StringLength);
 	LEAVE_CONN_CS((ConnectionClass *) ConnectionHandle);
 	return ret;
 }
@@ -429,11 +425,8 @@ SQLGetStmtAttr(HSTMT StatementHandle,
 
 	MYLOG(0, "Entering Handle=%p " FORMAT_INTEGER "\n", StatementHandle, Attribute);
 	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	ret = WD_GetStmtAttr(StatementHandle, Attribute, Value,
-			BufferLength, StringLength);
-	ret = DiscardStatementSvp(stmt,ret, FALSE);
+//	ret = WD_GetStmtAttr(StatementHandle, Attribute, Value,
+//			BufferLength, StringLength);
 	LEAVE_STMT_CS(stmt);
 	return ret;
 }
@@ -445,15 +438,13 @@ SQLSetConnectAttr(HDBC ConnectionHandle,
 				  SQLINTEGER Attribute, PTR Value,
 				  SQLINTEGER StringLength)
 {
-	RETCODE	ret;
+	RETCODE	ret = SQL_SUCCESS;
 	ConnectionClass *conn = (ConnectionClass *) ConnectionHandle;
 
 	MYLOG(0, "Entering " FORMAT_INTEGER "\n", Attribute);
-	CC_examine_global_transaction(conn);
 	ENTER_CONN_CS(conn);
-	CC_clear_error(conn);
-	ret = WD_SetConnectAttr(ConnectionHandle, Attribute, Value,
-				  StringLength);
+//	ret = WD_SetConnectAttr(ConnectionHandle, Attribute, Value,
+//				  StringLength);
 	LEAVE_CONN_CS(conn);
 	return ret;
 }
@@ -551,14 +542,11 @@ SQLSetStmtAttr(HSTMT StatementHandle,
 			   SQLINTEGER StringLength)
 {
 	StatementClass *stmt = (StatementClass *) StatementHandle;
-	RETCODE	ret;
+	RETCODE	ret = SQL_SUCCESS;
 
 	MYLOG(0, "Entering Handle=%p " FORMAT_INTEGER "," FORMAT_ULEN "\n", StatementHandle, Attribute, (SQLULEN) Value);
 	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	ret = WD_SetStmtAttr(StatementHandle, Attribute, Value, StringLength);
-	ret = DiscardStatementSvp(stmt,ret, FALSE);
+//	ret = WD_SetStmtAttr(StatementHandle, Attribute, Value, StringLength);
 	LEAVE_STMT_CS(stmt);
 	return ret;
 }
