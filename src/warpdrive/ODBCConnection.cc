@@ -6,11 +6,13 @@
 #include "ODBCConnection.h"
 
 #include "ODBCEnvironment.h"
+#include "ODBCStatement.h"
 #include "odbcinst.h"
 #include <iterator>
 #include <memory>
-#include <odbcabstraction/driver.h>
+#include <odbcabstraction/connection.h>
 #include <odbcabstraction/exceptions.h>
+#include <odbcabstraction/statement.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/xpressive/xpressive.hpp>
 
@@ -104,6 +106,21 @@ void ODBCConnection::disconnect() {
 void ODBCConnection::releaseConnection() {
   disconnect();
   m_environment.DropConnection(this);
+}
+
+std::shared_ptr<ODBCStatement> ODBCConnection::createStatement() {
+  std::shared_ptr<Statement> spiStatement = m_spiConnection->CreateStatement();
+  std::shared_ptr<ODBCStatement> statement = std::make_shared<ODBCStatement>(*this, spiStatement);
+  m_statements.push_back(statement);
+  return statement;
+}
+
+void ODBCConnection::dropStatement(ODBCStatement* stmt) {
+    auto it = std::find_if(m_statements.begin(), m_statements.end(), 
+      [&stmt] (const std::shared_ptr<ODBCStatement>& statement) { return statement.get() == stmt; });
+    if (m_statements.end() != it) {
+        m_statements.erase(it);
+    }
 }
 
 // Public Static ===================================================================================

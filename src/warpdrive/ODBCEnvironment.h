@@ -9,17 +9,14 @@
 #include <memory>
 #include <vector>
 
-namespace driver
-{
-namespace odbcabstraction
-{
-class Driver;
+namespace driver {
+namespace odbcabstraction {
+  class Driver;
 }
 }
 
-namespace ODBC
-{
-class ODBCConnection;
+namespace ODBC {
+  class ODBCConnection;
 }
 
 /**

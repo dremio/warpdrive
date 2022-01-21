@@ -13,6 +13,8 @@
  */
 
 #include "wdodbc.h"
+#include <memory>
+#include <new>
 #ifdef	WIN_MULTITHREAD_SUPPORT
 #ifndef	_WIN32_WINNT
 #define	_WIN32_WINNT	0x0400
@@ -35,6 +37,10 @@
 #include <ctype.h>
 
 #include "wdapifunc.h"
+#include "ODBCConnection.h"
+#include "ODBCStatement.h"
+
+using namespace ODBC;
 
 
 /*	Map sql commands to statement types */
@@ -183,8 +189,7 @@ WD_AllocStmt(HDBC hdbc,
 				HSTMT * phstmt, UDWORD flag)
 {
 	CSTR func = "WD_AllocStmt";
-	ConnectionClass *conn = (ConnectionClass *) hdbc;
-	StatementClass *stmt;
+	ODBCConnection *conn = reinterpret_cast<ODBCConnection*>(hdbc);
 	ARDFields	*ardopts;
 
 	MYLOG(0, "entering...\n");
@@ -195,46 +200,17 @@ WD_AllocStmt(HDBC hdbc,
 		return SQL_INVALID_HANDLE;
 	}
 
-	stmt = SC_Constructor(conn);
-
-	MYLOG(0, "**** : hdbc = %p, stmt = %p\n", hdbc, stmt);
-
-	if (!stmt)
-	{
-		CC_set_error(conn, CONN_STMT_ALLOC_ERROR, "No more memory to allocate a further SQL-statement", func);
+    std::shared_ptr<ODBCStatement> stmt;
+	try {
+		stmt = conn->createStatement();
+	} catch (std::bad_alloc&) {
+//		throw DriverException("No more memory to allocate a further SQL-statement");
 		*phstmt = SQL_NULL_HSTMT;
 		return SQL_ERROR;
 	}
+	MYLOG(0, "**** : hdbc = %p, stmt = %p\n", hdbc, stmt.get());
 
-	if (!CC_add_statement(conn, stmt))
-	{
-		CC_set_error(conn, CONN_STMT_ALLOC_ERROR, "Maximum number of statements exceeded.", func);
-		SC_Destructor(stmt);
-		*phstmt = SQL_NULL_HSTMT;
-		return SQL_ERROR;
-	}
-
-	*phstmt = (HSTMT) stmt;
-
-	stmt->iflag = flag;
-	/* Copy default statement options based from Connection options */
-	if (0 != (PODBC_INHERIT_CONNECT_OPTIONS & flag))
-	{
-		stmt->options = stmt->options_orig = conn->stmtOptions;
-		stmt->ardi.ardf = conn->ardOptions;
-	}
-	else
-	{
-		InitializeStatementOptions(&stmt->options_orig);
-		stmt->options = stmt->options_orig;
-		InitializeARDFields(&stmt->ardi.ardf);
-	}
-	ardopts = SC_get_ARDF(stmt);
-	ARD_AllocBookmark(ardopts);
-
-	/* Save the handle for later */
-	stmt->phstmt = phstmt;
-
+    *phstmt = stmt.get();
 	return SQL_SUCCESS;
 }
 
@@ -244,7 +220,7 @@ WD_FreeStmt(HSTMT hstmt,
 			   SQLUSMALLINT fOption)
 {
 	CSTR func = "WD_FreeStmt";
-	StatementClass *stmt = (StatementClass *) hstmt;
+	ODBCStatement *stmt = (ODBCStatement *) hstmt;
 
 	MYLOG(0, "entering...hstmt=%p, fOption=%hi\n", hstmt, fOption);
 
@@ -253,77 +229,25 @@ WD_FreeStmt(HSTMT hstmt,
 		SC_log_error(func, "", NULL);
 		return SQL_INVALID_HANDLE;
 	}
-	SC_clear_error(stmt);
+//	SC_clear_error(stmt);
 
-	if (fOption == SQL_DROP)
-	{
-		ConnectionClass *conn = stmt->hdbc;
-
-		/* Remove the statement from the connection's statement list */
-		if (conn)
-		{
-			QResultClass	*res;
-
-			if (STMT_EXECUTING == stmt->status)
-			{
-				SC_set_error(stmt, STMT_SEQUENCE_ERROR, "Statement is currently executing a transaction.", func);
-				return SQL_ERROR; /* stmt may be executing a transaction */
-			}
-			if (conn->unnamed_prepared_stmt == stmt)
-				conn->unnamed_prepared_stmt = NULL;
-
-			/*
-			 * Free any cursors and discard any result info.
-			 * Don't detach the statement from the connection
-			 * before freeing the associated cursors. Otherwise
-			 * CC_cursor_count() would get wrong results.
-			 */
-			res = SC_get_Result(stmt);
-			QR_Destructor(res);
-			SC_init_Result(stmt);
-			if (!CC_remove_statement(conn, stmt))
-			{
-				SC_set_error(stmt, STMT_SEQUENCE_ERROR, "Statement is currently executing a transaction.", func);
-				return SQL_ERROR;		/* stmt may be executing a
-										 * transaction */
-			}
-		}
-
-		if (stmt->execute_delegate)
-		{
-			WD_FreeStmt(stmt->execute_delegate, SQL_DROP);
-			stmt->execute_delegate = NULL;
-		}
-		if (stmt->execute_parent)
-			stmt->execute_parent->execute_delegate = NULL;
-		/* Destroy the statement and free any results, cursors, etc. */
-		SC_Destructor(stmt);
+	if (fOption == SQL_DROP) {
+ 		stmt->releaseStatement();
 	}
-	else if (fOption == SQL_UNBIND)
-		SC_unbind_cols(stmt);
+	else if (fOption == SQL_UNBIND) {
+		// TODO: Drop bindings from ResultSet.
+		//SC_unbind_cols(stmt);
+	}
 	else if (fOption == SQL_CLOSE)
 	{
-		/*
-		 * this should discard all the results, but leave the statement
-		 * itself in place (it can be executed again)
-		 */
-		stmt->transition_status = STMT_TRANSITION_ALLOCATED;
-		if (stmt->execute_delegate)
-		{
-			WD_FreeStmt(stmt->execute_delegate, SQL_DROP);
-			stmt->execute_delegate = NULL;
-		}
-		if (!SC_recycle_statement(stmt))
-		{
-			return SQL_ERROR;
-		}
-		SC_set_Curres(stmt, NULL);
+		stmt->closeCursor(true);
 	}
-	else if (fOption == SQL_RESET_PARAMS)
-		SC_free_params(stmt, STMT_FREE_PARAMS_ALL);
+	else if (fOption == SQL_RESET_PARAMS) {
+		// Do nothing, since parameters are unsupported.
+	}
 	else
 	{
-		SC_set_error(stmt, STMT_OPTION_OUT_OF_RANGE_ERROR, "Invalid option passed to WD_FreeStmt.", func);
+		// throw DriverException("Invalid parameter")
 		return SQL_ERROR;
 	}
 

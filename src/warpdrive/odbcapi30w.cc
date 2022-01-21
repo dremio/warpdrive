@@ -32,16 +32,13 @@ SQLGetStmtAttrW(SQLHSTMT hstmt,
 				SQLINTEGER	cbValueMax,
 				SQLINTEGER	*pcbValue)
 {
-	RETCODE	ret;
+	RETCODE	ret = SQL_SUCCESS;
 	StatementClass	*stmt = (StatementClass *) hstmt;
 
 	MYLOG(0, "Entering\n");
 	ENTER_STMT_CS((StatementClass *) hstmt);
-	SC_clear_error((StatementClass *) hstmt);
-	StartRollbackState(stmt);
-	ret = WD_GetStmtAttr(hstmt, fAttribute, rgbValue,
-		cbValueMax, pcbValue);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
+//	ret = WD_GetStmtAttr(hstmt, fAttribute, rgbValue,
+//		cbValueMax, pcbValue);
 	LEAVE_STMT_CS((StatementClass *) hstmt);
 	return ret;
 }
@@ -53,16 +50,13 @@ SQLSetStmtAttrW(SQLHSTMT hstmt,
 				PTR		rgbValue,
 				SQLINTEGER	cbValueMax)
 {
-	RETCODE	ret;
+	RETCODE	ret = SQL_SUCCESS;
 	StatementClass	*stmt = (StatementClass *) hstmt;
 
 	MYLOG(0, "Entering\n");
 	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	ret = WD_SetStmtAttr(hstmt, fAttribute, rgbValue,
-		cbValueMax);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
+//	ret = WD_SetStmtAttr(hstmt, fAttribute, rgbValue,
+//		cbValueMax);
 	LEAVE_STMT_CS(stmt);
 	return ret;
 }
@@ -75,14 +69,12 @@ SQLGetConnectAttrW(HDBC hdbc,
 				   SQLINTEGER	cbValueMax,
 				   SQLINTEGER	*pcbValue)
 {
-	RETCODE	ret;
+	RETCODE	ret = SQL_SUCCESS;
 
 	MYLOG(0, "Entering\n");
-	CC_examine_global_transaction((ConnectionClass *) hdbc);
 	ENTER_CONN_CS((ConnectionClass *) hdbc);
-	CC_clear_error((ConnectionClass *) hdbc);
-	ret = WD_GetConnectAttr(hdbc, fAttribute, rgbValue,
-		cbValueMax, pcbValue);
+//	ret = WD_GetConnectAttr(hdbc, fAttribute, rgbValue,
+//		cbValueMax, pcbValue);
 	LEAVE_CONN_CS((ConnectionClass *) hdbc);
 	return ret;
 }
@@ -94,16 +86,12 @@ SQLSetConnectAttrW(HDBC hdbc,
 				   PTR		rgbValue,
 				   SQLINTEGER	cbValue)
 {
-	RETCODE	ret;
-	ConnectionClass *conn = (ConnectionClass *) hdbc;
+	RETCODE	ret = SQL_SUCCESS;
 
 	MYLOG(0, "Entering\n");
-	CC_examine_global_transaction(conn);
 	ENTER_CONN_CS(conn);
-	CC_clear_error(conn);
-	CC_set_in_unicode_driver(conn);
-	ret = WD_SetConnectAttr(hdbc, fAttribute, rgbValue,
-		cbValue);
+//	ret = WD_SetConnectAttr(hdbc, fAttribute, rgbValue,
+//		cbValue);
 	LEAVE_CONN_CS(conn);
 	return ret;
 }

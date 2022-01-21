@@ -32,6 +32,11 @@
 #include "wdtypes.h"
 #include "lobj.h"
 #include "wdapifunc.h"
+#include "ODBCStatement.h"
+#include "ODBCConnection.h"
+#include <string>
+
+using namespace ODBC;
 
 /*		Perform a Prepare on the SQL statement */
 RETCODE		SQL_API
@@ -40,95 +45,16 @@ WD_Prepare(HSTMT hstmt,
 			  SQLINTEGER cbSqlStr)
 {
 	CSTR func = "WD_Prepare";
-	StatementClass *self = (StatementClass *) hstmt;
+	ODBCStatement *stmt = reinterpret_cast<ODBCStatement*>(hstmt);
 	RETCODE	retval = SQL_SUCCESS;
 	BOOL	prepared;
 
 	MYLOG(0, "entering...\n");
+	const char* queryStr = reinterpret_cast<const char*>(szSqlStr);
+	std::string query = std::string(queryStr, SQL_NTS == cbSqlStr ? strlen(queryStr) : cbSqlStr);
+	stmt->Prepare(query);
 
-#define	return	DONT_CALL_RETURN_FROM_HERE???
-	/* StartRollbackState(self); */
-
-	/*
-	 * According to the ODBC specs it is valid to call SQLPrepare multiple
-	 * times. In that case, the bound SQL statement is replaced by the new
-	 * one
-	 */
-
-	prepared = self->prepared;
-	SC_set_prepared(self, NOT_YET_PREPARED);
-	switch (self->status)
-	{
-		case STMT_DESCRIBED:
-			MYLOG(0, "**** STMT_DESCRIBED, recycle\n");
-			SC_recycle_statement(self); /* recycle the statement, but do
-										 * not remove parameter bindings */
-			break;
-
-		case STMT_FINISHED:
-			MYLOG(0, "**** STMT_FINISHED, recycle\n");
-			SC_recycle_statement(self); /* recycle the statement, but do
-										 * not remove parameter bindings */
-			break;
-
-		case STMT_ALLOCATED:
-			MYLOG(0, "**** STMT_ALLOCATED, copy\n");
-			self->status = STMT_READY;
-			break;
-
-		case STMT_READY:
-			MYLOG(0, "**** STMT_READY, change SQL\n");
-			if (NOT_YET_PREPARED != prepared)
-				SC_recycle_statement(self); /* recycle the statement */
-			break;
-
-		case STMT_EXECUTING:
-			MYLOG(0, "**** STMT_EXECUTING, error!\n");
-
-			SC_set_error(self, STMT_SEQUENCE_ERROR, "WD_Prepare(): The handle does not point to a statement that is ready to be executed", func);
-
-			retval = SQL_ERROR;
-			goto cleanup;
-
-		default:
-			SC_set_error(self, STMT_INTERNAL_ERROR, "An Internal Error has occured -- Unknown statement status.", func);
-			retval = SQL_ERROR;
-			goto cleanup;
-	}
-
-	SC_initialize_stmts(self, TRUE);
-
-	if (!szSqlStr)
-	{
-		SC_set_error(self, STMT_NO_MEMORY_ERROR, "the query is NULL", func);
-		retval = SQL_ERROR;
-		goto cleanup;
-	}
-	if (!szSqlStr[0])
-		self->statement = strdup("");
-	else
-		self->statement = make_string(szSqlStr, cbSqlStr, NULL, 0);
-	if (!self->statement)
-	{
-		SC_set_error(self, STMT_NO_MEMORY_ERROR, "No memory available to store statement", func);
-		retval = SQL_ERROR;
-		goto cleanup;
-	}
-
-	self->prepare = PREPARE_STATEMENT;
-	self->statement_type = statement_type(self->statement);
-
-	/* Check if connection is onlyread (only selects are allowed) */
-	if (CC_is_onlyread(SC_get_conn(self)) && STMT_UPDATE(self))
-	{
-		SC_set_error(self, STMT_EXEC_ERROR, "Connection is readonly, only select statements are allowed.", func);
-		retval = SQL_ERROR;
-		goto cleanup;
-	}
-
-cleanup:
-#undef	return
-MYLOG(DETAIL_LOG_LEVEL, "leaving %d\n", retval);
+    MYLOG(DETAIL_LOG_LEVEL, "leaving %d\n", retval);
 	return retval;
 }
 
@@ -140,55 +66,14 @@ WD_ExecDirect(HSTMT hstmt,
 				 SQLINTEGER cbSqlStr,
 				 UWORD flag)
 {
-	StatementClass *stmt = (StatementClass *) hstmt;
+	ODBCStatement *stmt = reinterpret_cast<ODBCStatement*>(hstmt);
 	RETCODE		result;
 	CSTR func = "WD_ExecDirect";
-	const ConnectionClass	*conn = SC_get_conn(stmt);
-
 	MYLOG(0, "entering...%x\n", flag);
 
-	if (result = SC_initialize_and_recycle(stmt), SQL_SUCCESS != result)
-		return result;
-
-	/*
-	 * keep a copy of the un-parametrized statement, in case they try to
-	 * execute this statement again
-	 */
-	stmt->statement = make_string(szSqlStr, cbSqlStr, NULL, 0);
-MYLOG(DETAIL_LOG_LEVEL, "a2\n");
-	if (!stmt->statement)
-	{
-		SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "No memory available to store statement", func);
-		return SQL_ERROR;
-	}
-
-	MYLOG(0, "**** hstmt=%p, statement='%s'\n", hstmt, stmt->statement);
-
-	if (0 != (flag & PODBC_WITH_HOLD))
-		SC_set_with_hold(stmt);
-	if (0 != (flag & PODBC_RDONLY))
-		SC_set_readonly(stmt);
-
-	/*
-	 * If an SQLPrepare was performed prior to this, but was left in the
-	 * described state because an error occurred prior to SQLExecute then
-	 * set the statement to finished so it can be recycled.
-	 */
-	if (stmt->status == STMT_DESCRIBED)
-		stmt->status = STMT_FINISHED;
-
-	stmt->statement_type = statement_type(stmt->statement);
-
-	/* Check if connection is onlyread (only selects are allowed) */
-	if (CC_is_onlyread(conn) && STMT_UPDATE(stmt))
-	{
-		SC_set_error(stmt, STMT_EXEC_ERROR, "Connection is readonly, only select statements are allowed.", func);
-		return SQL_ERROR;
-	}
-
-	MYLOG(0, "calling WD_Execute...\n");
-
-	result = WD_Execute(hstmt, flag);
+	const char* queryStr = reinterpret_cast<const char*>(szSqlStr);
+	std::string query = std::string(queryStr, SQL_NTS == cbSqlStr ? strlen(queryStr) : cbSqlStr);
+	stmt->ExecuteDirect(query);
 
 	MYLOG(0, "leaving %hd\n", result);
 	return result;
@@ -925,272 +810,10 @@ RETCODE		SQL_API
 WD_Execute(HSTMT hstmt, UWORD flag)
 {
 	CSTR func = "WD_Execute";
-	StatementClass *stmt = (StatementClass *) hstmt;
+	ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
 	RETCODE		retval = SQL_SUCCESS;
-	ConnectionClass	*conn;
-	APDFields	*apdopts;
-	IPDFields	*ipdopts;
-	SQLLEN		i, start_row, end_row;
-	BOOL	exec_end = FALSE, recycled = FALSE, recycle = TRUE;
-	SQLSMALLINT	num_params;
-
-	MYLOG(0, "entering...%x %p status=%d\n", flag, stmt, stmt->status);
-
-	stmt->has_notice = 0;
-	conn = SC_get_conn(stmt);
-	apdopts = SC_get_APDF(stmt);
-
-	/*
-	 * If the statement was previously described, just recycle the old result
-	 * set that contained just the column information.
-	 */
-	if ((stmt->prepare && stmt->status == STMT_DESCRIBED) ||
-	    (stmt->status == STMT_FINISHED && 0 != (flag & PODBC_RECYCLE_STATEMENT)))
-	{
-		stmt->exec_current_row = -1;
-		SC_recycle_statement(stmt);
-	}
-
-	MYLOG(0, "clear errors...\n");
-
-	SC_clear_error(stmt);
-	if (!stmt->statement)
-	{
-		SC_set_error(stmt, STMT_NO_STMTSTRING, "This handle does not have a SQL statement stored in it", func);
-		MYLOG(0, "problem with handle\n");
-		return SQL_ERROR;
-	}
-
-#define	return	DONT_CALL_RETURN_FROM_HERE???
-
-	if (stmt->exec_current_row > 0)
-	{
-		/*
-		 * executing an array of parameters.
-		 * Don't recycle the statement.
-		 */
-		recycle = FALSE;
-	}
-	else if (PREPARED_PERMANENTLY == stmt->prepared ||
-		 PREPARED_TEMPORARILY == stmt->prepared)
-	{
-		/*
-		 * re-executing an prepared statement.
-		 * Don't recycle the statement but
-		 * discard the old result.
-		 */
-		recycle = FALSE;
-		SC_reset_result_for_rerun(stmt);
-	}
-	/*
-	 * If SQLExecute is being called again, recycle the statement. Note
-	 * this should have been done by the application in a call to
-	 * SQLFreeStmt(SQL_CLOSE) or SQLCancel.
-	 */
-	else if (stmt->status == STMT_FINISHED)
-	{
-		MYLOG(0, "recycling statement (should have been done by app)...\n");
-/******** Is this really NEEDED ? ******/
-		SC_recycle_statement(stmt);
-		recycled = TRUE;
-	}
-	/* Check if the statement is in the correct state */
-	else if ((stmt->prepare && stmt->status != STMT_READY) ||
-		(stmt->status != STMT_ALLOCATED && stmt->status != STMT_READY))
-	{
-		SC_set_error(stmt, STMT_STATUS_ERROR, "The handle does not point to a statement that is ready to be executed", func);
-		MYLOG(0, "problem with statement\n");
-		retval = SQL_ERROR;
-		goto cleanup;
-	}
-
-	if (start_row = stmt->exec_start_row, start_row < 0)
-		start_row = 0;
-	if (end_row = stmt->exec_end_row, end_row < 0)
-	{
-		end_row = (SQLINTEGER) apdopts->paramset_size - 1;
-		if (end_row < 0)
-		       end_row = 0;
-	}
-	if (stmt->exec_current_row < 0)
-		stmt->exec_current_row = start_row;
-	ipdopts = SC_get_IPDF(stmt);
-	num_params = stmt->num_params;
-	if (num_params < 0)
-		WD_NumParams(stmt, &num_params);
-	if (stmt->exec_current_row == start_row)
-	{
-		/*
-		   We sometimes need to know about the PG type of binding
-		   parameters even in case of non-prepared statements.
-		 */
-		int	nCallParse = doNothing;
-		BOOL	maybeBatch = FALSE;
-
-		if (end_row > start_row &&
-		    SQL_CURSOR_FORWARD_ONLY == stmt->options.cursor_type &&
-		    SQL_CONCUR_READ_ONLY == stmt->options.scroll_concurrency &&
-		    stmt->batch_size > 1)
-			maybeBatch = TRUE;
-MYLOG(0, "prepare=%d prepared=%d  batch_size=%d start_row=" FORMAT_LEN "end_row=" FORMAT_LEN " => maybeBatch=%d\n", stmt->prepare, stmt->prepared, stmt->batch_size, start_row, end_row, maybeBatch);
-		if (NOT_YET_PREPARED == stmt->prepared)
-		{
-			if (maybeBatch)
-				stmt->use_server_side_prepare = 0;
-			switch (nCallParse = HowToPrepareBeforeExec(stmt, TRUE))
-			{
-				case shouldParse:
-					if (retval = prepareParameters(stmt, FALSE), SQL_ERROR == retval)
-						goto cleanup;
-					break;
-			}
-		}
-MYLOG(0, "prepareParameters was %s called, prepare state:%d\n", shouldParse == nCallParse ? "" : "not", stmt->prepare);
-
-		if (shouldParse == nCallParse &&
-		    PREPARE_BY_THE_DRIVER == stmt->prepare)
-		{
-			SC_set_Result(stmt, NULL);
-		}
-		if (0 != (PREPARE_BY_THE_DRIVER & stmt->prepare) &&
-		    maybeBatch)
-			stmt->exec_type = DEFFERED_EXEC;
-		else
-			stmt->exec_type = DIRECT_EXEC;
-
-MYLOG(0, "prepare=%d maybeBatch=%d exec_type=%d\n", stmt->prepare, maybeBatch, stmt->exec_type);
-		if (ipdopts->param_processed_ptr)
-			*ipdopts->param_processed_ptr = 0;
-		/*
-		 * Initialize param_status_ptr
-		 */
-		if (ipdopts->param_status_ptr)
-		{
-			for (i = 0; i <= end_row; i++)
-				ipdopts->param_status_ptr[i] = SQL_PARAM_UNUSED;
-		}
-		if (recycle && !recycled)
-			SC_recycle_statement(stmt);
-		if (isSqlServr() &&
-		    stmt->external &&
-		    0 != stmt->prepare &&
-		    WD_VERSION_LT(conn, 8.4) &&
-		    SC_can_parse_statement(stmt))
-			parse_sqlsvr(stmt);
-	}
-
-next_param_row:
-	if (stmt->exec_current_row > end_row)
-		exec_end = TRUE;
-	else if (apdopts->param_operation_ptr)
-	{
-		while (apdopts->param_operation_ptr[stmt->exec_current_row] == SQL_PARAM_IGNORE)
-		{
-			if (stmt->exec_current_row >= end_row)
-			{
-				exec_end = TRUE;
-				break;
-			}
-			++stmt->exec_current_row;
-		}
-	}
-	if (exec_end)
-	{
-		if (DEFFERED_EXEC == stmt->exec_type )
-			retval = Exec_with_parameters_resolved(stmt, LAST_EXEC, &exec_end);
-		stmt->exec_current_row = -1;
-		goto cleanup;
-	}
-	/*
-	 *	Initialize the current row status
-	 */
-	if (ipdopts->param_status_ptr)
-		ipdopts->param_status_ptr[stmt->exec_current_row] = SQL_PARAM_ERROR;
-
-	/*
-	 *	Free any data at exec params before the statement is
-	 *	executed again or the next set of parameters is processed.
-	 *	If not,	then there will be a memory leak when the next
-	 *	SQLParamData/SQLPutData is called.
-	 */
-	SC_free_params(stmt, STMT_FREE_PARAMS_DATA_AT_EXEC_ONLY);
-
-	/*
-	 * Check if statement has any data-at-execute parameters when it is
-	 * not in SC_pre_execute.
-	 */
-	{
-		/*
-		 * The bound parameters could have possibly changed since the last
-		 * execute of this statement?  Therefore check for params and
-		 * re-copy.
-		 */
-		SQLULEN	offset = apdopts->param_offset_ptr ? *apdopts->param_offset_ptr : 0;
-		SQLINTEGER	bind_size = apdopts->param_bind_type;
-		SQLLEN		current_row = stmt->exec_current_row < 0 ? 0 : stmt->exec_current_row;
-		Int4	num_p = num_params < apdopts->allocated ? num_params : apdopts->allocated;
-
-		/*
-		 *	Increment the  number of currently processed rows
-		 */
-		if (ipdopts->param_processed_ptr)
-			(*ipdopts->param_processed_ptr)++;
-		stmt->data_at_exec = -1;
-		for (i = 0; i < num_p; i++)
-		{
-			SQLLEN	   *pcVal = apdopts->parameters[i].used;
-
-			apdopts->parameters[i].data_at_exec = FALSE;
-			if (pcVal)
-			{
-				if (bind_size > 0)
-					pcVal = LENADDR_SHIFT(pcVal, offset + bind_size * current_row);
-				else
-					pcVal = LENADDR_SHIFT(pcVal, offset) + current_row;
-				if (*pcVal == SQL_DATA_AT_EXEC || *pcVal <= SQL_LEN_DATA_AT_EXEC_OFFSET)
-					apdopts->parameters[i].data_at_exec = TRUE;
-			}
-			/* Check for data at execution parameters */
-			if (apdopts->parameters[i].data_at_exec)
-			{
-				MYLOG(0, "The " FORMAT_LEN "th parameter of " FORMAT_LEN "-row is data at exec(" FORMAT_LEN ")\n", i, current_row, pcVal ? (*pcVal) : -1);
-				if (stmt->data_at_exec < 0)
-					stmt->data_at_exec = 1;
-				else
-					stmt->data_at_exec++;
-			}
-		}
-
-		/*
-		 * If there are some data at execution parameters, return need
-		 * data
-		 */
-
-		/*
-		 * SQLParamData and SQLPutData will be used to send params and
-		 * execute the statement.
-		 */
-		if (stmt->data_at_exec > 0)
-		{
-			retval = SQL_NEED_DATA;
-			goto cleanup;
-		}
-	}
-
-	if (0 != (flag & PODBC_WITH_HOLD))
-		SC_set_with_hold(stmt);
-	retval = Exec_with_parameters_resolved(stmt, stmt->exec_type, &exec_end);
-	if (!exec_end)
-	{
-		goto next_param_row;
-	}
-cleanup:
-MYLOG(0, "leaving %p retval=%d status=%d\n", stmt, retval, stmt->status);
-	SC_setInsertedTable(stmt, retval);
-#undef	return
-	if (SQL_SUCCESS == retval &&
-	    STMT_OK > SC_get_errornumber(stmt))
-		retval = SQL_SUCCESS_WITH_INFO;
+	MYLOG(0, "entering...\n");
+	stmt->ExecutePrepared();
 	return retval;
 }
 
