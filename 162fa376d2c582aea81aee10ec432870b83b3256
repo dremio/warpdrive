@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "11d33a7d_c57a2349",
+        "filename": "src/warpdrive/ODBCConnection.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-01-24T19:10:43Z",
+      "side": 1,
+      "message": "I could use an unordered_set here instead. The number of statements per connection should generally be low though (\u003c10)",
+      "parentUuid": "b551e418_7586e094",
+      "revId": "162fa376d2c582aea81aee10ec432870b83b3256",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "113df45b_3d4682db",
         "filename": "src/warpdrive/ODBCStatement.cc",
         "patchSetId": 2
