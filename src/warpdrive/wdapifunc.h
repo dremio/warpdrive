@@ -337,6 +337,12 @@ RETCODE SQL_API WD_SetDescField(SQLHDESC DescriptorHandle,
 RETCODE SQL_API WD_GetDescField(SQLHDESC DescriptorHandle,
 			SQLSMALLINT RecNumber, SQLSMALLINT FieldIdentifier,
 			PTR Value, SQLINTEGER BufferLength, SQLINTEGER *StringLength);
+RETCODE SQL_API WD_GetDescRec(SQLHDESC DescriptorHandle,
+			  SQLSMALLINT RecNumber, SQLCHAR *Name,
+			  SQLSMALLINT BufferLength, SQLSMALLINT *StringLength,
+			  SQLSMALLINT *Type, SQLSMALLINT *SubType,
+			  SQLLEN *Length, SQLSMALLINT *Precision,
+			  SQLSMALLINT *Scale, SQLSMALLINT *Nullable);
 RETCODE SQL_API WD_DescError(SQLHDESC DescriptorHandle, SQLSMALLINT RecNumber,
 			SQLCHAR *Sqlstate, SQLINTEGER *NativeError,
 			SQLCHAR *MessageText, SQLSMALLINT BufferLength,

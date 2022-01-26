@@ -15,6 +15,7 @@
  *-------
  */
 
+#include "sqlext.h"
 #include "wdodbc.h"
 
 #include <string.h>
@@ -33,6 +34,14 @@
 
 #include "wdapifunc.h"
 
+#include "AttributeUtils.h"
+#include "ODBCStatement.h"
+#include "ODBCDescriptor.h"
+#include <odbcabstraction/exceptions.h>
+
+using namespace ODBC;
+using namespace driver::odbcabstraction;
+
 /*	Helper macro */
 #define getEffectiveOid(conn, fi) WD_true_type((conn), (fi)->columntype, FI_type(fi))
 #define	NULL_IF_NULL(a) ((a) ? ((const char *)(a)) : "(null)")
@@ -42,47 +51,11 @@ RETCODE		SQL_API
 WD_RowCount(HSTMT hstmt,
 			   SQLLEN * pcrow)
 {
-	CSTR func = "WD_RowCount";
-	StatementClass *stmt = (StatementClass *) hstmt;
-	QResultClass *res;
-
-	MYLOG(0, "entering...\n");
-	if (!stmt)
-	{
-		SC_log_error(func, NULL_STRING, NULL);
-		return SQL_INVALID_HANDLE;
-	}
-	if (stmt->proc_return > 0)
-	{
-		*pcrow = 0;
-		MYLOG(DETAIL_LOG_LEVEL, "returning RowCount=" FORMAT_LEN "\n", *pcrow);
-		return SQL_SUCCESS;
-	}
-
-	res = SC_get_Curres(stmt);
-	if (res)
-	{
-		if (stmt->status != STMT_FINISHED)
-		{
-			SC_set_error(stmt, STMT_SEQUENCE_ERROR, "Can't get row count while statement is still executing.", func);
-			return	SQL_ERROR;
-		}
-		if (res->recent_processed_row_count >= 0)
-		{
-			*pcrow = res->recent_processed_row_count;
-			MYLOG(0, "**** THE ROWS: *pcrow = " FORMAT_LEN "\n", *pcrow);
-
-			return SQL_SUCCESS;
-		}
-		else if (QR_NumResultCols(res) > 0)
-		{
-			*pcrow = QR_get_cursor(res) ? -1 : QR_get_num_total_tuples(res) - res->dl_count;
-			MYLOG(0, "RowCount=" FORMAT_LEN "\n", *pcrow);
-			return SQL_SUCCESS;
-		}
-	}
-
-	return SQL_SUCCESS;
+  CSTR func = "WD_RowCount";
+  if (pcrow) {
+    *pcrow = -1;
+  }
+  return SQL_SUCCESS;
 }
 
 static BOOL
@@ -144,60 +117,12 @@ RETCODE		SQL_API
 WD_NumResultCols(HSTMT hstmt,
 					SQLSMALLINT * pccol)
 {
-	CSTR func = "WD_NumResultCols";
-	StatementClass *stmt = (StatementClass *) hstmt;
-	QResultClass *result;
-	char		parse_ok;
-	RETCODE		ret = SQL_SUCCESS;
+  CSTR func = "WD_NumResultCols";
+  const ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
+  const std::vector<DescriptorRecord>& records = stmt->GetIRD()->GetRecords();
 
-	MYLOG(0, "entering...\n");
-	if (!stmt)
-	{
-		SC_log_error(func, NULL_STRING, NULL);
-		return SQL_INVALID_HANDLE;
-	}
-
-	SC_clear_error(stmt);
-#define	return	DONT_CALL_RETURN_FROM_HERE???
-	/* StartRollbackState(stmt); */
-
-	if (stmt->proc_return > 0)
-	{
-		*pccol = 0;
-		goto cleanup;
-	}
-	parse_ok = FALSE;
-	if (!stmt->catalog_result && SC_is_parse_forced(stmt) && SC_can_parse_statement(stmt))
-	{
-		if (SC_parsed_status(stmt) == STMT_PARSE_NONE)
-		{
-			MYLOG(0, "calling parse_statement on stmt=%p\n", stmt);
-			parse_statement(stmt, FALSE);
-		}
-
-		if (SC_parsed_status(stmt) != STMT_PARSE_FATAL)
-		{
-			parse_ok = TRUE;
-			*pccol = SC_get_IRDF(stmt)->nfields;
-			MYLOG(0, "PARSE: *pccol = %d\n", *pccol);
-		}
-	}
-
-	if (!parse_ok)
-	{
-		if (!SC_describe_ok(stmt, FALSE, -1, func))
-		{
-			ret = SQL_ERROR;
-			goto cleanup;
-		}
-
-		result = SC_get_ExecdOrParsed(stmt);
-		*pccol = QR_NumPublicResultCols(result);
-	}
-
-cleanup:
-#undef	return
-	return ret;
+  GetAttribute(static_cast<SQLSMALLINT>(records.size()), pccol, sizeof(SQLSMALLINT), nullptr);
+  return SQL_SUCCESS;
 }
 
 #define	USE_FI(fi, unknown) (fi && UNKNOWNS_AS_LONGEST != unknown)
@@ -217,248 +142,28 @@ WD_DescribeCol(HSTMT hstmt,
 				  SQLSMALLINT * pibScale,
 				  SQLSMALLINT * pfNullable)
 {
-	CSTR func = "WD_DescribeCol";
+  CSTR func = "WD_DescribeCol";
 
-	/* gets all the information about a specific column */
-	StatementClass *stmt = (StatementClass *) hstmt;
-	ConnectionClass *conn;
-	IRDFields  *irdflds;
-	QResultClass *res = NULL;
-	char	   *col_name = NULL;
-	OID			fieldtype = 0;
-	SQLLEN		column_size = 0;
-	int		unknown_sizes;
-	SQLINTEGER	decimal_digits = 0;
-	ConnInfo   *ci;
-	FIELD_INFO *fi;
-	char		buf[255];
-	int			len = 0;
-	RETCODE		result = SQL_SUCCESS;
+  if (icol == 0) {
+    throw DriverException("InvalidDescriptorIndex");
+  }
 
-	MYLOG(0, "entering.%d..\n", icol);
+  const ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
+  const std::vector<DescriptorRecord>& records = stmt->GetIRD()->GetRecords();
 
-	if (!stmt)
-	{
-		SC_log_error(func, NULL_STRING, NULL);
-		return SQL_INVALID_HANDLE;
-	}
+  SQLUSMALLINT zeroBasedIndex = icol - 1;
+  const DescriptorRecord& record = records[zeroBasedIndex];
+  SQLINTEGER totalColumnNameLen;
+  GetAttributeUTF8(record.m_name, szColName, cbColNameMax, &totalColumnNameLen);
+  if (pcbColName) {
+    *pcbColName = static_cast<SQLSMALLINT>(totalColumnNameLen);
+  }
+  GetAttribute(record.m_type, pfSqlType, sizeof(SQLUSMALLINT), nullptr);
+  GetAttribute(record.m_length, pcbColDef, sizeof(SQLULEN), nullptr);
+  GetAttribute(record.m_nullable, pfNullable, sizeof(SQLSMALLINT), nullptr);
 
-	conn = SC_get_conn(stmt);
-	ci = &(conn->connInfo);
-	unknown_sizes = ci->drivers.unknown_sizes;
-
-	SC_clear_error(stmt);
-
-#define	return	DONT_CALL_RETURN_FROM_HERE???
-	irdflds = SC_get_IRDF(stmt);
-	if (0 == icol) /* bookmark column */
-	{
-		SQLSMALLINT	fType = stmt->options.use_bookmarks == SQL_UB_VARIABLE ? SQL_BINARY : SQL_INTEGER;
-
-MYLOG(DETAIL_LOG_LEVEL, "answering bookmark info\n");
-		if (szColName && cbColNameMax > 0)
-			*szColName = '\0';
-		if (pcbColName)
-			*pcbColName = 0;
-		if (pfSqlType)
-			*pfSqlType = fType;
-		if (pcbColDef)
-			*pcbColDef = 10;
-		if (pibScale)
-			*pibScale = 0;
-		if (pfNullable)
-			*pfNullable = SQL_NO_NULLS;
-		result = SQL_SUCCESS;
-		goto cleanup;
-	}
-
-	/*
-	 * Dont check for bookmark column. This is the responsibility of the
-	 * driver manager.
-	 */
-
-	icol--;						/* use zero based column numbers */
-
-	fi = NULL;
-	if (icol < irdflds->nfields && irdflds->fi)
-		fi = irdflds->fi[icol];
-	if (!FI_is_applicable(fi) && !stmt->catalog_result && SC_is_parse_forced(stmt) && SC_can_parse_statement(stmt))
-	{
-		if (SC_parsed_status(stmt) == STMT_PARSE_NONE)
-		{
-			MYLOG(0, "calling parse_statement on stmt=%p\n", stmt);
-			parse_statement(stmt, FALSE);
-		}
-
-		MYLOG(0, "PARSE: icol=%d, stmt=%p, stmt->nfld=%d, stmt->fi=%p\n", icol, stmt, irdflds->nfields, irdflds->fi);
-
-		if (SC_parsed_status(stmt) != STMT_PARSE_FATAL && irdflds->fi)
-		{
-			if (icol < irdflds->nfields)
-				fi = irdflds->fi[icol];
-			else
-			{
-				SC_set_error(stmt, STMT_INVALID_COLUMN_NUMBER_ERROR, "Invalid column number in DescribeCol.", func);
-				result = SQL_ERROR;
-				goto cleanup;
-			}
-			MYLOG(0, "getting info for icol=%d\n", icol);
-		}
-	}
-
-	if (!FI_is_applicable(fi))
-	{
-		/*
-		 * If couldn't parse it OR the field being described was not parsed
-		 * (i.e., because it was a function or expression, etc, then do it the
-		 * old fashioned way.
-		 */
-		BOOL	build_fi = (NULL != pfNullable || NULL != pfSqlType);
-		fi = NULL;
-		if (!SC_describe_ok(stmt, build_fi, icol, func))
-		{
-			result = SQL_ERROR;
-			goto cleanup;
-		}
-
-		res = SC_get_ExecdOrParsed(stmt);
-		if (icol >= QR_NumPublicResultCols(res))
-		{
-			SC_set_error(stmt, STMT_INVALID_COLUMN_NUMBER_ERROR, "Invalid column number in DescribeCol.", func);
-			SPRINTF_FIXED(buf, "Col#=%d, #Cols=%d,%d keys=%d", icol, QR_NumResultCols(res), QR_NumPublicResultCols(res), res->num_key_fields);
-			SC_log_error(func, buf, stmt);
-			result = SQL_ERROR;
-			goto cleanup;
-		}
-		if (icol < irdflds->nfields && irdflds->fi)
-			fi = irdflds->fi[icol];
-	}
-	res = SC_get_ExecdOrParsed(stmt);
-#ifdef	SUPPRESS_LONGEST_ON_CURSORS
-	if (UNKNOWNS_AS_LONGEST == unknown_sizes)
-	{
-		if (QR_once_reached_eof(res))
-			unknown_sizes = UNKNOWNS_AS_LONGEST;
-		else
-			unknown_sizes = UNKNOWNS_AS_MAX;
-	}
-#endif /* SUPPRESS_LONGEST_ON_CURSORS */
-	/* handle constants */
-	if (res &&
-	    -2 == QR_get_fieldsize(res, icol))
-		unknown_sizes = UNKNOWNS_AS_LONGEST;
-
-	if (FI_is_applicable(fi))
-	{
-		fieldtype = getEffectiveOid(conn, fi);
-		if (NAME_IS_VALID(fi->column_alias))
-			col_name = GET_NAME(fi->column_alias);
-		else
-			col_name = GET_NAME(fi->column_name);
-		if (USE_FI(fi, unknown_sizes))
-		{
-			column_size = fi->column_size;
-			decimal_digits = fi->decimal_digits;
-		}
-		else
-		{
-			column_size = wdtype_column_size(stmt, fieldtype, icol, unknown_sizes);
-			decimal_digits = wdtype_decimal_digits(stmt, fieldtype, icol);
-		}
-
-		MYLOG(0, "PARSE: fieldtype=%u, col_name='%s', column_size=" FORMAT_LEN "\n", fieldtype, NULL_IF_NULL(col_name), column_size);
-	}
-	else
-	{
-		col_name = QR_get_fieldname(res, icol);
-		fieldtype = QR_get_field_type(res, icol);
-
-		column_size = wdtype_column_size(stmt, fieldtype, icol, unknown_sizes);
-		decimal_digits = wdtype_decimal_digits(stmt, fieldtype, icol);
-	}
-
-	MYLOG(0, "col %d fieldname = '%s'\n", icol, NULL_IF_NULL(col_name));
-	MYLOG(0, "col %d fieldtype = %d\n", icol, fieldtype);
-	MYLOG(0, "col %d column_size = " FORMAT_LEN "\n", icol, column_size);
-
-	result = SQL_SUCCESS;
-
-	/*
-	 * COLUMN NAME
-	 */
-	len = col_name ? (int) strlen(col_name) : 0;
-
-	if (pcbColName)
-		*pcbColName = len;
-
-	if (szColName && cbColNameMax > 0)
-	{
-		if (NULL != col_name)
-			strncpy_null((char *) szColName, col_name, cbColNameMax);
-		else
-			szColName[0] = '\0';
-
-		if (len >= cbColNameMax)
-		{
-			result = SQL_SUCCESS_WITH_INFO;
-			SC_set_error(stmt, STMT_TRUNCATED, "The buffer was too small for the colName.", func);
-		}
-	}
-
-	/*
-	 * CONCISE(SQL) TYPE
-	 */
-	if (pfSqlType)
-	{
-		*pfSqlType = wdtype_to_concise_type(stmt, fieldtype, icol, unknown_sizes);
-
-		MYLOG(0, "col %d *pfSqlType = %d\n", icol, *pfSqlType);
-	}
-
-	/*
-	 * COLUMN SIZE(PRECISION in 2.x)
-	 */
-	if (pcbColDef)
-	{
-		if (column_size < 0)
-			column_size = 0;		/* "I dont know" */
-
-		*pcbColDef = column_size;
-
-		MYLOG(0, "Col: col %d  *pcbColDef = " FORMAT_ULEN "\n", icol, *pcbColDef);
-	}
-
-	/*
-	 * DECIMAL DIGITS(SCALE in 2.x)
-	 */
-	if (pibScale)
-	{
-		if (decimal_digits < 0)
-			decimal_digits = 0;
-
-		*pibScale = (SQLSMALLINT) decimal_digits;
-		MYLOG(0, "col %d  *pibScale = %d\n", icol, *pibScale);
-	}
-
-	/*
-	 * NULLABILITY
-	 */
-	if (pfNullable)
-	{
-		if (SC_has_outer_join(stmt))
-			*pfNullable = TRUE;
-		else
-			*pfNullable = fi ? fi->nullable : wdtype_nullable(conn, fieldtype);
-
-		MYLOG(0, "col %d  *pfNullable = %d\n", icol, *pfNullable);
-	}
-
-cleanup:
-#undef	return
-	return result;
+  return SQL_SUCCESS;
 }
-
-
 
 /*		Returns result column descriptor information for a result set. */
 RETCODE		SQL_API
@@ -470,435 +175,135 @@ WD_ColAttributes(HSTMT hstmt,
 					SQLSMALLINT * pcbDesc,
 					SQLLEN * pfDesc)
 {
-	CSTR func = "WD_ColAttributes";
-	StatementClass *stmt = (StatementClass *) hstmt;
-	IRDFields	*irdflds;
-	OID		field_type = 0;
-	Int2		col_idx;
-	ConnectionClass	*conn;
-	ConnInfo	*ci;
-	int		column_size, unknown_sizes;
-	int			cols = 0;
-	RETCODE		result;
-	const char   *p = NULL;
-	SQLLEN		value = 0;
-	const	FIELD_INFO	*fi = NULL;
-	const	TABLE_INFO	*ti = NULL;
-	QResultClass	*res;
-	BOOL		stmt_updatable;
+  CSTR func = "WD_ColAttributes";
+  SQLRETURN result = SQL_SUCCESS;
 
-	MYLOG(0, "entering..col=%d %d len=%d.\n", icol, fDescType,
+  MYLOG(0, "entering..col=%d %d len=%d.\n", icol, fDescType,
 				cbDescMax);
 
-	if (!stmt)
-	{
-		SC_log_error(func, NULL_STRING, NULL);
-		return SQL_INVALID_HANDLE;
+  if (icol == 0) {
+    throw DriverException("Bookmarks are not supported");
+  }
+
+	
+  const ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
+  const std::vector<DescriptorRecord>& records = stmt->GetIRD()->GetRecords();
+  
+  if (fDescType == SQL_DESC_COUNT) {
+    if (pfDesc) {
+	  *pfDesc = static_cast<SQLLEN>(records.size());
 	}
-	stmt_updatable = SC_is_updatable(stmt)
-		/* The following doesn't seem appropriate for client side cursors
-		  && stmt->options.scroll_concurrency != SQL_CONCUR_READ_ONLY
-		 */
-		;
+	return SQL_SUCCESS;
+  }
 
-	if (pcbDesc)
-		*pcbDesc = 0;
-	irdflds = SC_get_IRDF(stmt);
-	conn = SC_get_conn(stmt);
-	ci = &(conn->connInfo);
+  SQLUSMALLINT zeroBasedIndex = icol - 1;
+  const DescriptorRecord& record = records[zeroBasedIndex];
 
-	/*
-	 * Dont check for bookmark column.	This is the responsibility of the
-	 * driver manager.	For certain types of arguments, the column number
-	 * is ignored anyway, so it may be 0.
-	 */
+  SQLLEN recordNumericValue = 0;
+  const std::string* recordStrValue = nullptr;
+  switch (fDescType) {
+	  case SQL_DESC_AUTO_UNIQUE_VALUE:
+	    recordNumericValue = record.m_autoUniqueValue;
+		break;
+	  case SQL_DESC_CASE_SENSITIVE:
+	    recordNumericValue = record.m_caseSensitive;
+		break;
+	  case SQL_DESC_CONCISE_TYPE:
+	    recordNumericValue = record.m_conciseType;
+		break;
+	  case SQL_DESC_DISPLAY_SIZE:
+	  	recordNumericValue = record.m_displaySize;
+		break;
+	  case SQL_DESC_FIXED_PREC_SCALE:
+	    recordNumericValue = record.m_fixedPrecScale;
+		break;
+	  case SQL_COLUMN_LENGTH:
+	  case SQL_DESC_LENGTH:
+	    recordNumericValue = record.m_length;
+		break;
+	  case SQL_DESC_NULLABLE:
+	    recordNumericValue = record.m_nullable;
+		break;
+	  case SQL_DESC_NUM_PREC_RADIX:
+	    recordNumericValue = record.m_numPrecRadix;
+		break;
+	  case SQL_DESC_OCTET_LENGTH:
+	    recordNumericValue = record.m_octetLength;
+		break;
+	  case SQL_COLUMN_PRECISION:
+	  case SQL_DESC_PRECISION:
+	    recordNumericValue = record.m_precision;
+		break;
+	  case SQL_COLUMN_SCALE:
+	  case SQL_DESC_SCALE:
+	    recordNumericValue = record.m_scale;
+		break;
+	  case SQL_DESC_SEARCHABLE:
+	    recordNumericValue = record.m_searchable;
+		break;
+	  case SQL_DESC_TYPE:
+	    recordNumericValue = record.m_type;
+		break;
+	  case SQL_DESC_UNNAMED:
+	    recordNumericValue = record.m_unnamed;
+		break;
+	  case SQL_DESC_UNSIGNED:
+	    recordNumericValue = record.m_unsigned;
+		break;
+	  case SQL_DESC_UPDATABLE:
+	    recordNumericValue = record.m_updatable;
+		break;
 
-	res = SC_get_ExecdOrParsed(stmt);
-	if (0 == icol && SQL_DESC_COUNT != fDescType) /* bookmark column */
-	{
-MYLOG(DETAIL_LOG_LEVEL, "answering bookmark info\n");
-		switch (fDescType)
-		{
-			case SQL_DESC_OCTET_LENGTH:
-				if (pfDesc)
-					*pfDesc = 4;
-				break;
-			case SQL_DESC_TYPE:
-				if (pfDesc)
-					*pfDesc = stmt->options.use_bookmarks == SQL_UB_VARIABLE ? SQL_BINARY : SQL_INTEGER;
-				break;
-		}
-		return SQL_SUCCESS;
+	  case SQL_DESC_BASE_COLUMN_NAME:
+	    recordStrValue = &record.m_baseColumnName;
+		break;
+	  case SQL_DESC_BASE_TABLE_NAME:
+	    recordStrValue = &record.m_baseTableName;
+		break;
+	  case SQL_DESC_CATALOG_NAME:
+	    recordStrValue = &record.m_catalogName;
+		break;
+	  case SQL_DESC_LABEL:
+	    recordStrValue = &record.m_label;
+		break;
+	  case SQL_DESC_LITERAL_PREFIX:
+	    recordStrValue = &record.m_literalPrefix;
+		break;
+	  case SQL_DESC_LITERAL_SUFFIX:
+	    recordStrValue = &record.m_literalSuffix;
+		break;
+	  case SQL_DESC_LOCAL_TYPE_NAME:
+	    recordStrValue = &record.m_localTypeName;
+		break;
+	  case SQL_DESC_NAME:
+	    recordStrValue = &record.m_name;
+		break;
+	  case SQL_DESC_SCHEMA_NAME:
+	    recordStrValue = &record.m_schemaName;
+		break;
+	  case SQL_DESC_TABLE_NAME:
+	    recordStrValue = &record.m_tableName;
+		break;
+	  case SQL_DESC_TYPE_NAME:
+	    recordStrValue = &record.m_typeName;
+		break;
+	  default:
+	    throw DriverException("Invalid descriptor field");
+  }
+
+  // Character attribute.
+  if (recordStrValue) {
+	SQLINTEGER outputLen = 0;
+    GetAttributeUTF8(*recordStrValue, rgbDesc, cbDescMax, &outputLen);
+	if (pcbDesc) {
+	  *pcbDesc = static_cast<SQLSMALLINT>(outputLen);
 	}
+	return SQL_SUCCESS;
+  }
 
-	col_idx = icol - 1;
-
-	unknown_sizes = ci->drivers.unknown_sizes;
-
-	/* not appropriate for SQLColAttributes() */
-	if (stmt->catalog_result)
-		unknown_sizes = UNKNOWNS_AS_LONGEST;
-	else if (unknown_sizes == UNKNOWNS_AS_DONTKNOW)
-		unknown_sizes = UNKNOWNS_AS_MAX;
-
-	if (!stmt->catalog_result && SC_is_parse_forced(stmt) && SC_can_parse_statement(stmt))
-	{
-		if (SC_parsed_status(stmt) == STMT_PARSE_NONE)
-		{
-			MYLOG(0, "calling parse_statement\n");
-			parse_statement(stmt, FALSE);
-		}
-
-		cols = irdflds->nfields;
-
-		/*
-		 * Column Count is a special case.	The Column number is ignored
-		 * in this case.
-		 */
-		if (fDescType == SQL_DESC_COUNT)
-		{
-			if (pfDesc)
-				*pfDesc = cols;
-
-			return SQL_SUCCESS;
-		}
-
-		if (SC_parsed_status(stmt) != STMT_PARSE_FATAL && irdflds->fi)
-		{
-			if (col_idx >= cols)
-			{
-				SC_set_error(stmt, STMT_INVALID_COLUMN_NUMBER_ERROR, "Invalid column number in ColAttributes.", func);
-				return SQL_ERROR;
-			}
-		}
-	}
-
-	if (col_idx < irdflds->nfields && irdflds->fi)
-		fi = irdflds->fi[col_idx];
-	if (FI_is_applicable(fi))
-		field_type = getEffectiveOid(conn, fi);
-	else
-	{
-		BOOL	build_fi = FALSE;
-
-		fi = NULL;
-		switch (fDescType)
-		{
-			case SQL_COLUMN_OWNER_NAME:
-			case SQL_COLUMN_TABLE_NAME:
-			case SQL_COLUMN_TYPE:
-			case SQL_COLUMN_TYPE_NAME:
-			case SQL_COLUMN_AUTO_INCREMENT:
-			case SQL_DESC_NULLABLE:
-			case SQL_DESC_BASE_TABLE_NAME:
-			case SQL_DESC_BASE_COLUMN_NAME:
-			case SQL_COLUMN_UPDATABLE:
-			case 1212: /* SQL_CA_SS_COLUMN_KEY ? */
-				build_fi = TRUE;
-				break;
-		}
-		if (!SC_describe_ok(stmt, build_fi, col_idx, func))
-			return SQL_ERROR;
-
-		res = SC_get_ExecdOrParsed(stmt);
-		cols = QR_NumPublicResultCols(res);
-
-		/*
-		 * Column Count is a special case.	The Column number is ignored
-		 * in this case.
-		 */
-		if (fDescType == SQL_DESC_COUNT)
-		{
-			if (pfDesc)
-				*pfDesc = cols;
-
-			return SQL_SUCCESS;
-		}
-
-		if (col_idx >= cols)
-		{
-			SC_set_error(stmt, STMT_INVALID_COLUMN_NUMBER_ERROR, "Invalid column number in ColAttributes.", func);
-			return SQL_ERROR;
-		}
-
-		field_type = QR_get_field_type(res, col_idx);
-		if (col_idx < irdflds->nfields && irdflds->fi)
-			fi = irdflds->fi[col_idx];
-	}
-	if (FI_is_applicable(fi))
-	{
-		ti = fi->ti;
-		field_type = getEffectiveOid(conn, fi);
-	}
-
-	MYLOG(0, "col %d field_type=%d fi,ti=%p,%p\n", col_idx, field_type, fi, ti);
-
-#ifdef SUPPRESS_LONGEST_ON_CURSORS
-	if (UNKNOWNS_AS_LONGEST == unknown_sizes)
-	{
-		if (QR_once_reached_eof(res))
-			unknown_sizes = UNKNOWNS_AS_LONGEST;
-		else
-			unknown_sizes = UNKNOWNS_AS_MAX;
-	}
-#endif /* SUPPRESS_LONGEST_ON_CURSORS */
-	/* handle constants */
-	if (res &&
-	    -2 == QR_get_fieldsize(res, col_idx))
-		unknown_sizes = UNKNOWNS_AS_LONGEST;
-
-	column_size = (USE_FI(fi, unknown_sizes) && fi->column_size > 0) ? fi->column_size : wdtype_column_size(stmt, field_type, col_idx, unknown_sizes);
-	switch (fDescType)
-	{
-		case SQL_COLUMN_AUTO_INCREMENT: /* == SQL_DESC_AUTO_UNIQUE_VALUE */
-			if (fi && fi->auto_increment)
-				value = TRUE;
-			else
-				value = wdtype_auto_increment(conn, field_type);
-			if (value == -1)	/* non-numeric becomes FALSE (ODBC Doc) */
-				value = FALSE;
-			MYLOG(0, "AUTO_INCREMENT=" FORMAT_LEN "\n", value);
-
-			break;
-
-		case SQL_COLUMN_CASE_SENSITIVE: /* == SQL_DESC_CASE_SENSITIVE */
-			value = wdtype_case_sensitive(conn, field_type);
-			break;
-
-			/*
-			 * This special case is handled above.
-			 *
-			 * case SQL_COLUMN_COUNT:
-			 */
-		case SQL_COLUMN_DISPLAY_SIZE: /* == SQL_DESC_DISPLAY_SIZE */
-			value = (USE_FI(fi, unknown_sizes) && 0 != fi->display_size) ? fi->display_size : wdtype_display_size(stmt, field_type, col_idx, unknown_sizes);
-
-			MYLOG(0, "col %d, display_size= " FORMAT_LEN "\n", col_idx, value);
-
-			break;
-
-		case SQL_COLUMN_LABEL: /* == SQL_DESC_LABEL */
-			if (fi && (NAME_IS_VALID(fi->column_alias)))
-			{
-				p = GET_NAME(fi->column_alias);
-
-				MYLOG(0, "COLUMN_LABEL = '%s'\n", p);
-				break;
-			}
-			/* otherwise same as column name -- FALL THROUGH!!! */
-
-		case SQL_DESC_NAME:
-			MYLOG(DETAIL_LOG_LEVEL, "fi=%p (alias, name)=", fi);
-			if (fi)
-				MYPRINTF(DETAIL_LOG_LEVEL, "(%s,%s)\n", PRINT_NAME(fi->column_alias), PRINT_NAME(fi->column_name));
-			else
-				MYPRINTF(DETAIL_LOG_LEVEL, "NULL\n");
-			p = fi ? (NAME_IS_NULL(fi->column_alias) ? SAFE_NAME(fi->column_name) : GET_NAME(fi->column_alias)) : QR_get_fieldname(res, col_idx);
-
-			MYLOG(0, "COLUMN_NAME = '%s'\n", p);
-			break;
-
-		case SQL_COLUMN_LENGTH:
-			value = (USE_FI(fi, unknown_sizes) && fi->length > 0) ? fi->length : wdtype_buffer_length(stmt, field_type, col_idx, unknown_sizes);
-			if (0 > value)
-			/* if (-1 == value)  I'm not sure which is right */
-				value = 0;
-
-			MYLOG(0, "col %d, column_length = " FORMAT_LEN "\n", col_idx, value);
-			break;
-
-		case SQL_COLUMN_MONEY: /* == SQL_DESC_FIXED_PREC_SCALE */
-			value = wdtype_money(conn, field_type);
-MYLOG(DETAIL_LOG_LEVEL, "COLUMN_MONEY=" FORMAT_LEN "\n", value);
-			break;
-
-		case SQL_DESC_NULLABLE:
-			if (SC_has_outer_join(stmt))
-				value = TRUE;
-			else
-				value = fi ? fi->nullable : wdtype_nullable(conn, field_type);
-MYLOG(DETAIL_LOG_LEVEL, "COLUMN_NULLABLE=" FORMAT_LEN "\n", value);
-			break;
-
-		case SQL_COLUMN_OWNER_NAME: /* == SQL_DESC_SCHEMA_NAME */
-			p = ti ? SAFE_NAME(ti->schema_name) : NULL_STRING;
-			MYLOG(0, "SCHEMA_NAME = '%s'\n", p);
-			break;
-
-		case SQL_COLUMN_PRECISION: /* in 2.x */
-			value = column_size;
-			if (value < 0)
-				value = 0;
-
-			MYLOG(0, "col %d, column_size = " FORMAT_LEN "\n", col_idx, value);
-			break;
-
-		case SQL_COLUMN_QUALIFIER_NAME: /* == SQL_DESC_CATALOG_NAME */
-			p = ti ? CurrCatString(conn) : NULL_STRING;	/* empty string means *not supported* */
-			break;
-
-		case SQL_COLUMN_SCALE: /* in 2.x */
-			value = wdtype_decimal_digits(stmt, field_type, col_idx);
-MYLOG(DETAIL_LOG_LEVEL, "COLUMN_SCALE=" FORMAT_LEN "\n", value);
-			if (value < 0)
-				value = 0;
-			break;
-
-		case SQL_COLUMN_SEARCHABLE: /* == SQL_DESC_SEARCHABLE */
-			value = wdtype_searchable(conn, field_type);
-			break;
-
-		case SQL_COLUMN_TABLE_NAME: /* == SQL_DESC_TABLE_NAME */
-			p = ti ? SAFE_NAME(ti->table_name) : NULL_STRING;
-
-			MYLOG(0, "TABLE_NAME = '%s'\n", p);
-			break;
-
-		case SQL_COLUMN_TYPE: /* == SQL_DESC_CONCISE_TYPE */
-			value = wdtype_to_concise_type(stmt, field_type, col_idx, unknown_sizes);
-			MYLOG(0, "COLUMN_TYPE=" FORMAT_LEN "\n", value);
-			break;
-
-		case SQL_COLUMN_TYPE_NAME: /* == SQL_DESC_TYPE_NAME */
-			p = wdtype_to_name(stmt, field_type, col_idx, fi && fi->auto_increment);
-			break;
-
-		case SQL_COLUMN_UNSIGNED: /* == SQL_DESC_UNSINGED */
-			value = wdtype_unsigned(conn, field_type);
-			if (value == -1)	/* non-numeric becomes TRUE (ODBC Doc) */
-				value = SQL_TRUE;
-
-			break;
-
-		case SQL_COLUMN_UPDATABLE: /* == SQL_DESC_UPDATABLE */
-
-			/*
-			 * Neither Access or Borland care about this.
-			 *
-			 * if (field_type == WD_TYPE_OID) pfDesc = SQL_ATTR_READONLY;
-			 * else
-			 */
-			if (!stmt_updatable)
-				value = SQL_ATTR_READONLY;
-			else
-				value = fi ? (fi->updatable ? SQL_ATTR_WRITE : SQL_ATTR_READONLY) : (QR_get_attid(res, col_idx) > 0 ? SQL_ATTR_WRITE : SQL_ATTR_READONLY);
-			if (SQL_ATTR_READONLY != value)
-			{
-				const char *name = fi ? SAFE_NAME(fi->column_name) : QR_get_fieldname(res, col_idx);
-				if (stricmp(name, OID_NAME) == 0 ||
-				    stricmp(name, "ctid") == 0 ||
-				    stricmp(name, XMIN_NAME) == 0)
-					value = SQL_ATTR_READONLY;
-				else if (conn->ms_jet && fi && fi->auto_increment)
-					value = SQL_ATTR_READONLY;
-			}
-
-			MYLOG(0, "%s: UPDATEABLE = " FORMAT_LEN "\n", func, value);
-			break;
-		case SQL_DESC_BASE_COLUMN_NAME:
-
-			p = fi ? SAFE_NAME(fi->column_name) : QR_get_fieldname(res, col_idx);
-
-			MYLOG(0, "BASE_COLUMN_NAME = '%s'\n", p);
-			break;
-		case SQL_DESC_BASE_TABLE_NAME: /* the same as TABLE_NAME ok ? */
-			p = ti ? SAFE_NAME(ti->table_name) : NULL_STRING;
-
-			MYLOG(0, "BASE_TABLE_NAME = '%s'\n", p);
-			break;
-		case SQL_DESC_LENGTH: /* different from SQL_COLUMN_LENGTH */
-			value = (fi && column_size > 0) ? column_size : wdtype_desclength(stmt, field_type, col_idx, unknown_sizes);
-			if (-1 == value)
-				value = 0;
-
-			MYLOG(0, "col %d, desc_length = " FORMAT_LEN "\n", col_idx, value);
-			break;
-		case SQL_DESC_OCTET_LENGTH:
-			value = (USE_FI(fi, unknown_sizes) && fi->length > 0) ? fi->length : wdtype_attr_transfer_octet_length(conn, field_type, column_size, unknown_sizes);
-			if (-1 == value)
-				value = 0;
-			MYLOG(0, "col %d, octet_length = " FORMAT_LEN "\n", col_idx, value);
-			break;
-		case SQL_DESC_PRECISION: /* different from SQL_COLUMN_PRECISION */
-			if (value = FI_precision(fi), value <= 0)
-				value = wdtype_precision(stmt, field_type, col_idx, unknown_sizes);
-			if (value < 0)
-				value = 0;
-
-			MYLOG(0, "col %d, desc_precision = " FORMAT_LEN "\n", col_idx, value);
-			break;
-		case SQL_DESC_SCALE: /* different from SQL_COLUMN_SCALE */
-			value = wdtype_scale(stmt, field_type, col_idx);
-			if (value < 0)
-				value = 0;
-			break;
-		case SQL_DESC_LOCAL_TYPE_NAME:
-			p = wdtype_to_name(stmt, field_type, col_idx, fi && fi->auto_increment);
-			break;
-		case SQL_DESC_TYPE:
-			value = wdtype_to_sqldesctype(stmt, field_type, col_idx, unknown_sizes);
-			break;
-		case SQL_DESC_NUM_PREC_RADIX:
-			value = wdtype_radix(conn, field_type);
-			break;
-		case SQL_DESC_LITERAL_PREFIX:
-			p = wdtype_literal_prefix(conn, field_type);
-			break;
-		case SQL_DESC_LITERAL_SUFFIX:
-			p = wdtype_literal_suffix(conn, field_type);
-			break;
-		case SQL_DESC_UNNAMED:
-			value = (fi && NAME_IS_NULL(fi->column_name) && NAME_IS_NULL(fi->column_alias)) ? SQL_UNNAMED : SQL_NAMED;
-			break;
-		case 1211: /* SQL_CA_SS_COLUMN_HIDDEN ? */
-			value = 0;
-			break;
-		case 1212: /* SQL_CA_SS_COLUMN_KEY ? */
-			if (fi)
-			{
-				if (fi->columnkey < 0)
-				{
-					SC_set_SS_columnkey(stmt);
-				}
-				value = fi->columnkey;
-				MYLOG(0, "SS_COLUMN_KEY=" FORMAT_LEN "\n", value);
-				break;
-			}
-			SC_set_error(stmt, STMT_OPTION_NOT_FOR_THE_DRIVER, "this request may be for MS SQL Server", func);
-			return SQL_ERROR;
-		default:
-			SC_set_error(stmt, STMT_INVALID_OPTION_IDENTIFIER, "ColAttribute for this type not implemented yet", func);
-			return SQL_ERROR;
-	}
-
-	result = SQL_SUCCESS;
-
-	if (p)
-	{							/* char/binary data */
-		size_t len = strlen(p);
-
-		if (rgbDesc)
-		{
-			strncpy_null((char *) rgbDesc, p, (size_t) cbDescMax);
-
-			if (len >= cbDescMax)
-			{
-				result = SQL_SUCCESS_WITH_INFO;
-				SC_set_error(stmt, STMT_TRUNCATED, "The buffer was too small for the rgbDesc.", func);
-			}
-		}
-
-		if (pcbDesc)
-			*pcbDesc = (SQLSMALLINT) len;
-	}
-	else
-	{
-		/* numeric data */
-		if (pfDesc)
-			*pfDesc = value;
-	}
-
-	return result;
+  // Numeric attribute.
+  GetAttribute(recordNumericValue, pfDesc, sizeof(SQLLEN), nullptr);
+  return SQL_SUCCESS;
 }
 
 
