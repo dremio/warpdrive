@@ -33,6 +33,14 @@
 
 #include "wdapifunc.h"
 
+#include "AttributeUtils.h"
+#include "ODBCStatement.h"
+#include "ODBCDescriptor.h"
+#include <odbcabstraction/exceptions.h>
+
+using namespace ODBC;
+using namespace driver::odbcabstraction;
+
 /*	Helper macro */
 #define getEffectiveOid(conn, fi) WD_true_type((conn), (fi)->columntype, FI_type(fi))
 #define	NULL_IF_NULL(a) ((a) ? ((const char *)(a)) : "(null)")
@@ -42,47 +50,11 @@ RETCODE		SQL_API
 WD_RowCount(HSTMT hstmt,
 			   SQLLEN * pcrow)
 {
-	CSTR func = "WD_RowCount";
-	StatementClass *stmt = (StatementClass *) hstmt;
-	QResultClass *res;
-
-	MYLOG(0, "entering...\n");
-	if (!stmt)
-	{
-		SC_log_error(func, NULL_STRING, NULL);
-		return SQL_INVALID_HANDLE;
-	}
-	if (stmt->proc_return > 0)
-	{
-		*pcrow = 0;
-		MYLOG(DETAIL_LOG_LEVEL, "returning RowCount=" FORMAT_LEN "\n", *pcrow);
-		return SQL_SUCCESS;
-	}
-
-	res = SC_get_Curres(stmt);
-	if (res)
-	{
-		if (stmt->status != STMT_FINISHED)
-		{
-			SC_set_error(stmt, STMT_SEQUENCE_ERROR, "Can't get row count while statement is still executing.", func);
-			return	SQL_ERROR;
-		}
-		if (res->recent_processed_row_count >= 0)
-		{
-			*pcrow = res->recent_processed_row_count;
-			MYLOG(0, "**** THE ROWS: *pcrow = " FORMAT_LEN "\n", *pcrow);
-
-			return SQL_SUCCESS;
-		}
-		else if (QR_NumResultCols(res) > 0)
-		{
-			*pcrow = QR_get_cursor(res) ? -1 : QR_get_num_total_tuples(res) - res->dl_count;
-			MYLOG(0, "RowCount=" FORMAT_LEN "\n", *pcrow);
-			return SQL_SUCCESS;
-		}
-	}
-
-	return SQL_SUCCESS;
+  CSTR func = "WD_RowCount";
+  if (pcrow) {
+    *pcrow = -1;
+  }
+  return SQL_SUCCESS;
 }
 
 static BOOL
@@ -144,60 +116,12 @@ RETCODE		SQL_API
 WD_NumResultCols(HSTMT hstmt,
 					SQLSMALLINT * pccol)
 {
-	CSTR func = "WD_NumResultCols";
-	StatementClass *stmt = (StatementClass *) hstmt;
-	QResultClass *result;
-	char		parse_ok;
-	RETCODE		ret = SQL_SUCCESS;
+  CSTR func = "WD_NumResultCols";
+  const ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
+  const std::vector<DescriptorRecord>& records = stmt->GetIRD()->GetRecords();
 
-	MYLOG(0, "entering...\n");
-	if (!stmt)
-	{
-		SC_log_error(func, NULL_STRING, NULL);
-		return SQL_INVALID_HANDLE;
-	}
-
-	SC_clear_error(stmt);
-#define	return	DONT_CALL_RETURN_FROM_HERE???
-	/* StartRollbackState(stmt); */
-
-	if (stmt->proc_return > 0)
-	{
-		*pccol = 0;
-		goto cleanup;
-	}
-	parse_ok = FALSE;
-	if (!stmt->catalog_result && SC_is_parse_forced(stmt) && SC_can_parse_statement(stmt))
-	{
-		if (SC_parsed_status(stmt) == STMT_PARSE_NONE)
-		{
-			MYLOG(0, "calling parse_statement on stmt=%p\n", stmt);
-			parse_statement(stmt, FALSE);
-		}
-
-		if (SC_parsed_status(stmt) != STMT_PARSE_FATAL)
-		{
-			parse_ok = TRUE;
-			*pccol = SC_get_IRDF(stmt)->nfields;
-			MYLOG(0, "PARSE: *pccol = %d\n", *pccol);
-		}
-	}
-
-	if (!parse_ok)
-	{
-		if (!SC_describe_ok(stmt, FALSE, -1, func))
-		{
-			ret = SQL_ERROR;
-			goto cleanup;
-		}
-
-		result = SC_get_ExecdOrParsed(stmt);
-		*pccol = QR_NumPublicResultCols(result);
-	}
-
-cleanup:
-#undef	return
-	return ret;
+  GetAttribute(static_cast<SQLSMALLINT>(records.size()), pccol, sizeof(SQLSMALLINT), nullptr);
+  return SQL_SUCCESS;
 }
 
 #define	USE_FI(fi, unknown) (fi && UNKNOWNS_AS_LONGEST != unknown)
@@ -217,248 +141,28 @@ WD_DescribeCol(HSTMT hstmt,
 				  SQLSMALLINT * pibScale,
 				  SQLSMALLINT * pfNullable)
 {
-	CSTR func = "WD_DescribeCol";
+  CSTR func = "WD_DescribeCol";
 
-	/* gets all the information about a specific column */
-	StatementClass *stmt = (StatementClass *) hstmt;
-	ConnectionClass *conn;
-	IRDFields  *irdflds;
-	QResultClass *res = NULL;
-	char	   *col_name = NULL;
-	OID			fieldtype = 0;
-	SQLLEN		column_size = 0;
-	int		unknown_sizes;
-	SQLINTEGER	decimal_digits = 0;
-	ConnInfo   *ci;
-	FIELD_INFO *fi;
-	char		buf[255];
-	int			len = 0;
-	RETCODE		result = SQL_SUCCESS;
+  if (icol == 0) {
+    throw DriverException("InvalidDescriptorIndex");
+  }
 
-	MYLOG(0, "entering.%d..\n", icol);
+  const ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
+  const std::vector<DescriptorRecord>& records = stmt->GetIRD()->GetRecords();
 
-	if (!stmt)
-	{
-		SC_log_error(func, NULL_STRING, NULL);
-		return SQL_INVALID_HANDLE;
-	}
+  SQLUSMALLINT zeroBasedIndex = icol - 1;
+  const DescriptorRecord& record = records[zeroBasedIndex];
+  SQLINTEGER totalColumnNameLen;
+  GetAttributeUTF8(record.m_name, szColName, cbColNameMax, &totalColumnNameLen);
+  if (pcbColName) {
+    *pcbColName = static_cast<SQLSMALLINT>(totalColumnNameLen);
+  }
+  GetAttribute(record.m_type, pfSqlType, sizeof(SQLUSMALLINT), nullptr);
+  GetAttribute(record.m_length, pcbColDef, sizeof(SQLULEN), nullptr);
+  GetAttribute(record.m_nullable, pfNullable, sizeof(SQLSMALLINT), nullptr);
 
-	conn = SC_get_conn(stmt);
-	ci = &(conn->connInfo);
-	unknown_sizes = ci->drivers.unknown_sizes;
-
-	SC_clear_error(stmt);
-
-#define	return	DONT_CALL_RETURN_FROM_HERE???
-	irdflds = SC_get_IRDF(stmt);
-	if (0 == icol) /* bookmark column */
-	{
-		SQLSMALLINT	fType = stmt->options.use_bookmarks == SQL_UB_VARIABLE ? SQL_BINARY : SQL_INTEGER;
-
-MYLOG(DETAIL_LOG_LEVEL, "answering bookmark info\n");
-		if (szColName && cbColNameMax > 0)
-			*szColName = '\0';
-		if (pcbColName)
-			*pcbColName = 0;
-		if (pfSqlType)
-			*pfSqlType = fType;
-		if (pcbColDef)
-			*pcbColDef = 10;
-		if (pibScale)
-			*pibScale = 0;
-		if (pfNullable)
-			*pfNullable = SQL_NO_NULLS;
-		result = SQL_SUCCESS;
-		goto cleanup;
-	}
-
-	/*
-	 * Dont check for bookmark column. This is the responsibility of the
-	 * driver manager.
-	 */
-
-	icol--;						/* use zero based column numbers */
-
-	fi = NULL;
-	if (icol < irdflds->nfields && irdflds->fi)
-		fi = irdflds->fi[icol];
-	if (!FI_is_applicable(fi) && !stmt->catalog_result && SC_is_parse_forced(stmt) && SC_can_parse_statement(stmt))
-	{
-		if (SC_parsed_status(stmt) == STMT_PARSE_NONE)
-		{
-			MYLOG(0, "calling parse_statement on stmt=%p\n", stmt);
-			parse_statement(stmt, FALSE);
-		}
-
-		MYLOG(0, "PARSE: icol=%d, stmt=%p, stmt->nfld=%d, stmt->fi=%p\n", icol, stmt, irdflds->nfields, irdflds->fi);
-
-		if (SC_parsed_status(stmt) != STMT_PARSE_FATAL && irdflds->fi)
-		{
-			if (icol < irdflds->nfields)
-				fi = irdflds->fi[icol];
-			else
-			{
-				SC_set_error(stmt, STMT_INVALID_COLUMN_NUMBER_ERROR, "Invalid column number in DescribeCol.", func);
-				result = SQL_ERROR;
-				goto cleanup;
-			}
-			MYLOG(0, "getting info for icol=%d\n", icol);
-		}
-	}
-
-	if (!FI_is_applicable(fi))
-	{
-		/*
-		 * If couldn't parse it OR the field being described was not parsed
-		 * (i.e., because it was a function or expression, etc, then do it the
-		 * old fashioned way.
-		 */
-		BOOL	build_fi = (NULL != pfNullable || NULL != pfSqlType);
-		fi = NULL;
-		if (!SC_describe_ok(stmt, build_fi, icol, func))
-		{
-			result = SQL_ERROR;
-			goto cleanup;
-		}
-
-		res = SC_get_ExecdOrParsed(stmt);
-		if (icol >= QR_NumPublicResultCols(res))
-		{
-			SC_set_error(stmt, STMT_INVALID_COLUMN_NUMBER_ERROR, "Invalid column number in DescribeCol.", func);
-			SPRINTF_FIXED(buf, "Col#=%d, #Cols=%d,%d keys=%d", icol, QR_NumResultCols(res), QR_NumPublicResultCols(res), res->num_key_fields);
-			SC_log_error(func, buf, stmt);
-			result = SQL_ERROR;
-			goto cleanup;
-		}
-		if (icol < irdflds->nfields && irdflds->fi)
-			fi = irdflds->fi[icol];
-	}
-	res = SC_get_ExecdOrParsed(stmt);
-#ifdef	SUPPRESS_LONGEST_ON_CURSORS
-	if (UNKNOWNS_AS_LONGEST == unknown_sizes)
-	{
-		if (QR_once_reached_eof(res))
-			unknown_sizes = UNKNOWNS_AS_LONGEST;
-		else
-			unknown_sizes = UNKNOWNS_AS_MAX;
-	}
-#endif /* SUPPRESS_LONGEST_ON_CURSORS */
-	/* handle constants */
-	if (res &&
-	    -2 == QR_get_fieldsize(res, icol))
-		unknown_sizes = UNKNOWNS_AS_LONGEST;
-
-	if (FI_is_applicable(fi))
-	{
-		fieldtype = getEffectiveOid(conn, fi);
-		if (NAME_IS_VALID(fi->column_alias))
-			col_name = GET_NAME(fi->column_alias);
-		else
-			col_name = GET_NAME(fi->column_name);
-		if (USE_FI(fi, unknown_sizes))
-		{
-			column_size = fi->column_size;
-			decimal_digits = fi->decimal_digits;
-		}
-		else
-		{
-			column_size = wdtype_column_size(stmt, fieldtype, icol, unknown_sizes);
-			decimal_digits = wdtype_decimal_digits(stmt, fieldtype, icol);
-		}
-
-		MYLOG(0, "PARSE: fieldtype=%u, col_name='%s', column_size=" FORMAT_LEN "\n", fieldtype, NULL_IF_NULL(col_name), column_size);
-	}
-	else
-	{
-		col_name = QR_get_fieldname(res, icol);
-		fieldtype = QR_get_field_type(res, icol);
-
-		column_size = wdtype_column_size(stmt, fieldtype, icol, unknown_sizes);
-		decimal_digits = wdtype_decimal_digits(stmt, fieldtype, icol);
-	}
-
-	MYLOG(0, "col %d fieldname = '%s'\n", icol, NULL_IF_NULL(col_name));
-	MYLOG(0, "col %d fieldtype = %d\n", icol, fieldtype);
-	MYLOG(0, "col %d column_size = " FORMAT_LEN "\n", icol, column_size);
-
-	result = SQL_SUCCESS;
-
-	/*
-	 * COLUMN NAME
-	 */
-	len = col_name ? (int) strlen(col_name) : 0;
-
-	if (pcbColName)
-		*pcbColName = len;
-
-	if (szColName && cbColNameMax > 0)
-	{
-		if (NULL != col_name)
-			strncpy_null((char *) szColName, col_name, cbColNameMax);
-		else
-			szColName[0] = '\0';
-
-		if (len >= cbColNameMax)
-		{
-			result = SQL_SUCCESS_WITH_INFO;
-			SC_set_error(stmt, STMT_TRUNCATED, "The buffer was too small for the colName.", func);
-		}
-	}
-
-	/*
-	 * CONCISE(SQL) TYPE
-	 */
-	if (pfSqlType)
-	{
-		*pfSqlType = wdtype_to_concise_type(stmt, fieldtype, icol, unknown_sizes);
-
-		MYLOG(0, "col %d *pfSqlType = %d\n", icol, *pfSqlType);
-	}
-
-	/*
-	 * COLUMN SIZE(PRECISION in 2.x)
-	 */
-	if (pcbColDef)
-	{
-		if (column_size < 0)
-			column_size = 0;		/* "I dont know" */
-
-		*pcbColDef = column_size;
-
-		MYLOG(0, "Col: col %d  *pcbColDef = " FORMAT_ULEN "\n", icol, *pcbColDef);
-	}
-
-	/*
-	 * DECIMAL DIGITS(SCALE in 2.x)
-	 */
-	if (pibScale)
-	{
-		if (decimal_digits < 0)
-			decimal_digits = 0;
-
-		*pibScale = (SQLSMALLINT) decimal_digits;
-		MYLOG(0, "col %d  *pibScale = %d\n", icol, *pibScale);
-	}
-
-	/*
-	 * NULLABILITY
-	 */
-	if (pfNullable)
-	{
-		if (SC_has_outer_join(stmt))
-			*pfNullable = TRUE;
-		else
-			*pfNullable = fi ? fi->nullable : wdtype_nullable(conn, fieldtype);
-
-		MYLOG(0, "col %d  *pfNullable = %d\n", icol, *pfNullable);
-	}
-
-cleanup:
-#undef	return
-	return result;
+  return SQL_SUCCESS;
 }
-
-
 
 /*		Returns result column descriptor information for a result set. */
 RETCODE		SQL_API
