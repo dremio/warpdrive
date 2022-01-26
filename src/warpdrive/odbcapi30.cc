@@ -59,17 +59,11 @@ SQLAllocHandle(SQLSMALLINT HandleType,
 			LEAVE_ENV_CS((EnvironmentClass *) InputHandle);
 			break;
 		case SQL_HANDLE_STMT:
-			conn = (ConnectionClass *) InputHandle;
-			CC_examine_global_transaction(conn);
 			ENTER_CONN_CS(conn);
 			ret = WD_AllocStmt(InputHandle, OutputHandle, PODBC_EXTERNAL_STATEMENT | PODBC_INHERIT_CONNECT_OPTIONS);
-			if (*OutputHandle)
-				((StatementClass *) (*OutputHandle))->external = 1;
 			LEAVE_CONN_CS(conn);
 			break;
 		case SQL_HANDLE_DESC:
-			conn = (ConnectionClass *) InputHandle;
-			CC_examine_global_transaction(conn);
 			ENTER_CONN_CS(conn);
 			ret = WD_AllocDesc(InputHandle, OutputHandle);
 			LEAVE_CONN_CS(conn);
@@ -270,20 +264,7 @@ SQLFreeHandle(SQLSMALLINT HandleType, SQLHANDLE Handle)
 			ret = WD_FreeConnect(Handle);
 			break;
 		case SQL_HANDLE_STMT:
-			stmt = (StatementClass *) Handle;
-
-			if (stmt)
-			{
-				conn = stmt->hdbc;
-				if (conn)
-					ENTER_CONN_CS(conn);
-			}
-
 			ret = WD_FreeStmt(Handle, SQL_DROP);
-
-			if (conn)
-				LEAVE_CONN_CS(conn);
-
 			break;
 		case SQL_HANDLE_DESC:
 			ret = WD_FreeDesc(Handle);

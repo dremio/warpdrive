@@ -541,7 +541,7 @@ endif()
 if(APPLE)
   set(ODBC_INCLUDE_DIRS /usr/local/Cellar/libiodbc/3.52.15/include)
   set(ODBC_LIBRARIES /usr/local/Cellar/libiodbc/3.52.15/lib/libiodbc.dylib /usr/local/Cellar/libiodbc/3.52.15/lib/libiodbcinst.dylib)
-  add_compile_definitions(HAVE_LONG_LONG SQLCOLATTRIBUTE_SQLLEN)
+  add_compile_definitions(HAVE_LONG_LONG SQLCOLATTRIBUTE_SQLLEN WITH_IODBC)
 else()
   find_package(ODBC REQUIRED)
 endif()
@@ -557,8 +557,8 @@ endif()
 define_option(ODBCABSTRACTION_GIT_TAG, "Tag for the ODBC Abstraction project", "master")
 
 ExternalProject_Add(ODBCAbstraction
-    GIT_REPOSITORY ${ODBCABSTRACTION_REPO}
-    GIT_TAG ${ODBCABSTRACTION_GIT_TAG}
+    GIT_REPOSITORY /Users/jamesd/github/flightsql-odbc/
+    GIT_TAG rsmd2
     CMAKE_ARGS "-DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
     INSTALL_COMMAND cmake -E echo "Skipping install step.")
     #TODO: Fix the INSTALL operation in the ODBCAbstraction project.
