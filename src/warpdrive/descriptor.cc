@@ -24,6 +24,11 @@
 
 #include "wdapifunc.h"
 
+#include "ODBCConnection.h"
+#include "ODBCDescriptor.h"
+
+using namespace ODBC;
+
 
 void	TI_Constructor(TABLE_INFO *self, const ConnectionClass *conn)
 {
@@ -373,57 +378,28 @@ WD_AllocDesc(HDBC ConnectionHandle,
 				SQLHDESC *DescriptorHandle)
 {
 	CSTR func = "WD_AllocDesc";
-	ConnectionClass	*conn = (ConnectionClass *) ConnectionHandle;
+	ODBCConnection*	conn = reinterpret_cast<ODBCConnection*>(ConnectionHandle);
 	RETCODE	ret = SQL_SUCCESS;
 	DescriptorClass	*desc;
 
 	MYLOG(0, "entering...\n");
 
-	desc = (DescriptorClass *) malloc(sizeof(DescriptorClass));
-	if (desc)
-	{
-		memset(desc, 0, sizeof(DescriptorClass));
-		DC_get_conn(desc) = conn;
-		if (CC_add_descriptor(conn, desc))
-			*DescriptorHandle = desc;
-		else
-		{
-			free(desc);
-			CC_set_error(conn, CONN_STMT_ALLOC_ERROR, "Maximum number of descriptors exceeded", func);
-			ret = SQL_ERROR;
-		}
+    if (DescriptorHandle) {
+      std::shared_ptr<ODBCDescriptor> desc = conn->createDescriptor();
+	  *DescriptorHandle = desc.get();
 	}
-	else
-	{
-		CC_set_error(conn, CONN_STMT_ALLOC_ERROR, "No more memory ti allocate a further descriptor", func);
-		ret = SQL_ERROR;
-	}
+
 	return ret;
 }
 
 RETCODE SQL_API
 WD_FreeDesc(SQLHDESC DescriptorHandle)
 {
-	DescriptorClass *desc = (DescriptorClass *) DescriptorHandle;
+	ODBCDescriptor *desc = reinterpret_cast<ODBCDescriptor*> (DescriptorHandle);
 	RETCODE	ret = SQL_SUCCESS;
 
 	MYLOG(0, "entering...\n");
-	DC_Destructor(desc);
-	if (!desc->deschd.embedded)
-	{
-		int	i;
-		ConnectionClass	*conn = DC_get_conn(desc);
-
-		for (i = 0; i < conn->num_descs; i++)
-		{
-			if (conn->descs[i] == desc)
-			{
-				conn->descs[i] = NULL;
-				break;
-			}
-		}
-		free(desc);
-	}
+	desc->ReleaseDescriptor();
 	return ret;
 }
 
