@@ -31,6 +31,12 @@
 #include "loadlib.h"
 #include "dlg_specific.h"
 
+#include "AttributeUtils.h"
+#include "ODBCDescriptor.h"
+#include <odbcabstraction/exceptions.h>
+
+using namespace ODBC;
+using namespace driver::odbcabstraction;
 
 /*	SQLError -> SQLDiagRec */
 RETCODE		SQL_API
@@ -1842,46 +1848,47 @@ WD_GetDescField(SQLHDESC DescriptorHandle,
 {
 	CSTR func = "WD_GetDescField";
 	RETCODE		ret = SQL_SUCCESS;
-	DescriptorClass *desc = (DescriptorClass *) DescriptorHandle;
 
 	MYLOG(0, "entering h=%p rec=" FORMAT_SMALLI " field=" FORMAT_SMALLI " blen=" FORMAT_INTEGER "\n", DescriptorHandle, RecNumber, FieldIdentifier, BufferLength);
-	switch (DC_get_desc_type(desc))
-	{
-		case SQL_ATTR_APP_ROW_DESC:
-			ret = ARDGetField(desc, RecNumber, FieldIdentifier, Value, BufferLength, StringLength);
-			break;
-		case SQL_ATTR_APP_PARAM_DESC:
-			ret = APDGetField(desc, RecNumber, FieldIdentifier, Value, BufferLength, StringLength);
-			break;
-		case SQL_ATTR_IMP_ROW_DESC:
-			ret = IRDGetField(desc, RecNumber, FieldIdentifier, Value, BufferLength, StringLength);
-			break;
-		case SQL_ATTR_IMP_PARAM_DESC:
-			ret = IPDGetField(desc, RecNumber, FieldIdentifier, Value, BufferLength, StringLength);
-			break;
-		default:ret = SQL_ERROR;
-			DC_set_error(desc, DESC_INTERNAL_ERROR, "Error not implemented");
-	}
-	if (ret == SQL_ERROR)
-	{
-		if (!DC_get_errormsg(desc))
-		{
-			switch (DC_get_errornumber(desc))
-			{
-				case DESC_INVALID_DESCRIPTOR_IDENTIFIER:
-					DC_set_errormsg(desc, "can't SQLGetDescField for this descriptor identifier");
-					break;
-				case DESC_INVALID_COLUMN_NUMBER_ERROR:
-					DC_set_errormsg(desc, "can't SQLGetDescField for this column number");
-					break;
-				case DESC_BAD_PARAMETER_NUMBER_ERROR:
-					DC_set_errormsg(desc, "can't SQLGetDescField for this parameter number");
-					break;
-			}
-		}
-		DC_log_error(func, "", desc);
-	}
+
+	const ODBCDescriptor* desc = reinterpret_cast<ODBCDescriptor*>(DescriptorHandle);
+	desc->GetField(RecNumber, FieldIdentifier, Value, BufferLength, StringLength);
 	return ret;
+}
+
+RETCODE		SQL_API
+WD_GetDescRec(SQLHDESC DescriptorHandle,
+			  SQLSMALLINT RecNumber, SQLCHAR *Name,
+			  SQLSMALLINT BufferLength, SQLSMALLINT *StringLength,
+			  SQLSMALLINT *Type, SQLSMALLINT *SubType,
+			  SQLLEN *Length, SQLSMALLINT *Precision,
+			  SQLSMALLINT *Scale, SQLSMALLINT *Nullable)
+{
+  CSTR func = "WD_GetDescRec";
+  RETCODE		ret = SQL_SUCCESS;
+
+  if (RecNumber == 0) {
+    throw DriverException("InvalidDescriptorIndex");
+  }
+
+  const ODBCDescriptor* desc = reinterpret_cast<ODBCDescriptor*>(DescriptorHandle);
+  const std::vector<DescriptorRecord>& records = desc->GetRecords();
+
+  SQLUSMALLINT zeroBasedIndex = RecNumber - 1;
+  const DescriptorRecord& record = records[zeroBasedIndex];
+  SQLINTEGER totalColumnNameLen;
+  GetAttributeUTF8(record.m_name, Name, BufferLength, &totalColumnNameLen);
+  if (StringLength) {
+    *StringLength = static_cast<SQLSMALLINT>(totalColumnNameLen);
+  }
+  GetAttribute(record.m_type, Type, sizeof(SQLSMALLINT), nullptr);
+  GetAttribute(record.m_datetimeIntervalCode, SubType, sizeof(SQLSMALLINT), nullptr);
+  GetAttribute(record.m_length, Length, sizeof(SQLLEN), nullptr);
+  GetAttribute(record.m_precision, Precision, sizeof(SQLSMALLINT), nullptr);
+  GetAttribute(record.m_scale, Scale, sizeof(SQLSMALLINT), nullptr);
+  GetAttribute(record.m_nullable, Nullable, sizeof(SQLSMALLINT), nullptr);
+
+  return SQL_SUCCESS;
 }
 
 /*	new function */

@@ -59,17 +59,11 @@ SQLAllocHandle(SQLSMALLINT HandleType,
 			LEAVE_ENV_CS((EnvironmentClass *) InputHandle);
 			break;
 		case SQL_HANDLE_STMT:
-			conn = (ConnectionClass *) InputHandle;
-			CC_examine_global_transaction(conn);
 			ENTER_CONN_CS(conn);
 			ret = WD_AllocStmt(InputHandle, OutputHandle, PODBC_EXTERNAL_STATEMENT | PODBC_INHERIT_CONNECT_OPTIONS);
-			if (*OutputHandle)
-				((StatementClass *) (*OutputHandle))->external = 1;
 			LEAVE_CONN_CS(conn);
 			break;
 		case SQL_HANDLE_DESC:
-			conn = (ConnectionClass *) InputHandle;
-			CC_examine_global_transaction(conn);
 			ENTER_CONN_CS(conn);
 			ret = WD_AllocDesc(InputHandle, OutputHandle);
 			LEAVE_CONN_CS(conn);
@@ -142,17 +136,9 @@ SQLColAttribute(SQLHSTMT StatementHandle,
 	StatementClass	*stmt = (StatementClass *) StatementHandle;
 
 	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
 	ret = WD_ColAttributes(StatementHandle, ColumnNumber,
 					   FieldIdentifier, CharacterAttribute, BufferLength,
 							   StringLength, static_cast<SQLLEN*>(NumericAttribute));
-	ret = DiscardStatementSvp(stmt,ret, FALSE);
-	LEAVE_STMT_CS(stmt);
 	return ret;
 }
 #endif /* UNICODE_SUPPORTXX */
@@ -206,6 +192,9 @@ RETCODE		SQL_API
 SQLFetchScroll(HSTMT StatementHandle,
 			   SQLSMALLINT FetchOrientation, SQLLEN FetchOffset)
 {
+	// TODO
+	return SQL_NO_DATA;
+	/*
 	CSTR func = "SQLFetchScroll";
 	StatementClass *stmt = (StatementClass *) StatementHandle;
 	RETCODE		ret = SQL_SUCCESS;
@@ -247,7 +236,7 @@ MYLOG(0, "bookmark=" FORMAT_LEN " FetchOffset = " FORMAT_LEN "\n", FetchOffset, 
 	LEAVE_STMT_CS(stmt);
 	if (ret != SQL_SUCCESS)
 		MYLOG(0, "leaving return = %d\n", ret);
-	return ret;
+	return ret;*/
 }
 
 /*	SQLFree(Connect/Env/Stmt) -> SQLFreeHandle */
@@ -270,20 +259,7 @@ SQLFreeHandle(SQLSMALLINT HandleType, SQLHANDLE Handle)
 			ret = WD_FreeConnect(Handle);
 			break;
 		case SQL_HANDLE_STMT:
-			stmt = (StatementClass *) Handle;
-
-			if (stmt)
-			{
-				conn = stmt->hdbc;
-				if (conn)
-					ENTER_CONN_CS(conn);
-			}
-
 			ret = WD_FreeStmt(Handle, SQL_DROP);
-
-			if (conn)
-				LEAVE_CONN_CS(conn);
-
 			break;
 		case SQL_HANDLE_DESC:
 			ret = WD_FreeDesc(Handle);
@@ -322,9 +298,12 @@ SQLGetDescRec(SQLHDESC DescriptorHandle,
 			  SQLLEN *Length, SQLSMALLINT *Precision,
 			  SQLSMALLINT *Scale, SQLSMALLINT *Nullable)
 {
+	RETCODE	ret;
+
 	MYLOG(0, "Entering\n");
-	MYLOG(0, "Error not implemented\n");
-	return SQL_ERROR;
+	ret = WD_GetDescRec(DescriptorHandle, RecNumber, Name, BufferLength,
+		StringLength, Type, SubType, Length, Precision, Scale, Nullable);
+	return ret;
 }
 
 /*	new function */

@@ -270,14 +270,10 @@ SQLDescribeColW(HSTMT StatementHandle,
 {
 	CSTR func = "SQLDescribeColW";
 	RETCODE	ret;
-	StatementClass	*stmt = (StatementClass *) StatementHandle;
 	SQLSMALLINT	buflen, nmlen;
 	char	*clName = NULL, *clNamet = NULL;
 
 	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
 	buflen = 0;
 	if (BufferLength > 0)
 		buflen = BufferLength * 3;
@@ -285,14 +281,11 @@ SQLDescribeColW(HSTMT StatementHandle,
 		buflen = 32;
 	if (buflen > 0)
 		clNamet = static_cast<char*>(malloc(buflen));
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
 	for (;; buflen = nmlen + 1, clNamet = static_cast<char*>(realloc(clName, buflen)))
 	{
 		if (!clNamet)
 		{
-			SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Could not allocate memory for column name", func);
+		//	SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Could not allocate memory for column name", func);
 			ret = SQL_ERROR;
 			break;
 		}
@@ -313,13 +306,11 @@ SQLDescribeColW(HSTMT StatementHandle,
 		if (SQL_SUCCESS == ret && BufferLength > 0 && nmcount > BufferLength)
 		{
 			ret = SQL_SUCCESS_WITH_INFO;
-			SC_set_error(stmt, STMT_TRUNCATED, "Column name too large", func);
+		//	SC_set_error(stmt, STMT_TRUNCATED, "Column name too large", func);
 		}
 		if (NameLength)
 			*NameLength = (SQLSMALLINT) nmcount;
 	}
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
 	if (clName)
 		free(clName);
 	return ret;
