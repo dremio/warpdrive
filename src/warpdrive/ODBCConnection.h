@@ -14,6 +14,7 @@
 namespace ODBC
 {
   class ODBCEnvironment;
+  class ODBCDescriptor;
   class ODBCStatement;
 }
 
@@ -43,6 +44,13 @@ class ODBCConnection {
     std::shared_ptr<ODBCStatement> createStatement();
     void dropStatement(ODBCStatement* statement);
 
+    std::shared_ptr<ODBCDescriptor> createDescriptor();
+    void dropDescriptor(ODBCDescriptor* descriptor);
+
+    inline bool IsOdbc2Connection() const {
+      return m_is2xConnection;
+    }
+
     static void getPropertiesFromConnString(const std::string& connStr, 
       driver::odbcabstraction::Connection::ConnPropertyMap &properties);
 
@@ -50,6 +58,8 @@ class ODBCConnection {
     ODBCEnvironment& m_environment;
     std::shared_ptr<driver::odbcabstraction::Connection> m_spiConnection;
     std::vector<std::shared_ptr<ODBCStatement> > m_statements;
+    std::vector<std::shared_ptr<ODBCDescriptor> > m_descriptors;
+    const bool m_is2xConnection;
     bool m_isConnected;
 };
 

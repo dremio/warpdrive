@@ -273,17 +273,9 @@ SQLDescribeCol(HSTMT StatementHandle,
 	StatementClass *stmt = (StatementClass *) StatementHandle;
 
 	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
 	ret = WD_DescribeCol(StatementHandle, ColumnNumber,
 							 ColumnName, BufferLength, NameLength,
 						  DataType, ColumnSize, DecimalDigits, Nullable);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
 	return ret;
 }
 #endif /* UNICODE_SUPPORTXX */
@@ -301,7 +293,6 @@ SQLDisconnect(HDBC ConnectionHandle)
 		CALL_DtcOnDisconnect(conn);
 #endif /* _HANDLE_ENLIST_IN_DTC_ */
 	ENTER_CONN_CS(conn);
-	CC_clear_error(conn);
 	ret = WD_Disconnect(ConnectionHandle);
 	LEAVE_CONN_CS(conn);
 	return ret;
@@ -360,7 +351,9 @@ WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLFetch(HSTMT StatementHandle)
 {
-	RETCODE	ret;
+	// TODO
+	return SQL_NO_DATA;
+/*	RETCODE	ret;
 	StatementClass *stmt = (StatementClass *) StatementHandle;
 	IRDFields	*irdopts = SC_get_IRDF(stmt);
 	ARDFields	*ardopts = SC_get_ARDF(stmt);
@@ -381,7 +374,7 @@ SQLFetch(HSTMT StatementHandle)
 
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS(stmt);
-	return ret;
+	return ret;*/
 }
 
 
@@ -546,24 +539,12 @@ SQLNumResultCols(HSTMT StatementHandle,
 				 SQLSMALLINT *ColumnCount)
 {
 
-#if 0
 	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
 
 	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
 
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
 	ret = WD_NumResultCols(StatementHandle, ColumnCount);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
 	return ret;
-#endif
-	if (ColumnCount) *ColumnCount = 0;
-	return SQL_SUCCESS;
 }
 
 WD_EXPORT_SYMBOL
@@ -641,13 +622,9 @@ SQLRowCount(HSTMT StatementHandle,
 			SQLLEN *RowCount)
 {
 	RETCODE	ret = SQL_SUCCESS;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
 
 	MYLOG(0, "Entering\n");
-	ENTER_STMT_CS(stmt);
-//	ret = WD_RowCount(StatementHandle, RowCount);
-    if (RowCount) *RowCount = -1;
-	LEAVE_STMT_CS(stmt);
+	ret = WD_RowCount(StatementHandle, RowCount);
 	return ret;
 }
 
@@ -1019,6 +996,23 @@ SQLExtendedFetch(HSTMT hstmt,
 #endif /* WITH_UNIXODBC */
 				 SQLUSMALLINT *rgfRowStatus)
 {
+	// TODO
+  return SQL_NO_DATA;
+}
+
+#if 0
+WD_EXPORT_SYMBOL
+RETCODE		SQL_API
+SQLExtendedFetch(HSTMT hstmt,
+				 SQLUSMALLINT fFetchType,
+				 SQLLEN irow,
+#if defined(WITH_UNIXODBC) && (SIZEOF_LONG_INT != 8)
+				 SQLROWSETSIZE *pcrow,
+#else
+				 SQLULEN *pcrow,
+#endif /* WITH_UNIXODBC */
+				 SQLUSMALLINT *rgfRowStatus)
+{
 	RETCODE	ret;
 	StatementClass *stmt = (StatementClass *) hstmt;
 
@@ -1045,6 +1039,7 @@ SQLExtendedFetch(HSTMT hstmt,
 	LEAVE_STMT_CS(stmt);
 	return ret;
 }
+#endif
 
 #ifndef	UNICODE_SUPPORTXX
 WD_EXPORT_SYMBOL
@@ -1153,11 +1148,11 @@ WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLMoreResults(HSTMT hstmt)
 {
-	RETCODE	ret;
+	RETCODE	ret = SQL_NO_DATA;
 	StatementClass *stmt = (StatementClass *) hstmt;
 
 	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
+/*	if (SC_connection_lost_check(stmt, __FUNCTION__))
 		return SQL_ERROR;
 
 	ENTER_STMT_CS(stmt);
@@ -1166,6 +1161,7 @@ SQLMoreResults(HSTMT hstmt)
 	ret = WD_MoreResults(hstmt);
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS(stmt);
+	*/
 	return ret;
 }
 

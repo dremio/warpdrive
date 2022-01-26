@@ -275,17 +275,10 @@ SQLColAttributeW(SQLHSTMT	hstmt,
 {
 	CSTR func = "SQLColAttributeW";
 	RETCODE	ret;
-	StatementClass	*stmt = (StatementClass *) hstmt;
 	SQLSMALLINT	*rgbL, blen = 0, bMax;
         char    *rgbD = NULL, *rgbDt;
 
 	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
 	switch (iField)
 	{
 		case SQL_DESC_BASE_COLUMN_NAME:
@@ -322,7 +315,7 @@ SQLColAttributeW(SQLHSTMT	hstmt,
 				if (SQL_SUCCESS == ret && static_cast<SQLSMALLINT>(blen * WCLEN) >= cbCharAttrMax)
 				{
 					ret = SQL_SUCCESS_WITH_INFO;
-					SC_set_error(stmt, STMT_TRUNCATED, "The buffer was too small for the pCharAttr.", func);
+//					SC_set_error(stmt, STMT_TRUNCATED, "The buffer was too small for the pCharAttr.", func);
 				}
 				if (pcbCharAttr)
 					*pcbCharAttr = blen * WCLEN;
@@ -338,7 +331,6 @@ SQLColAttributeW(SQLHSTMT	hstmt,
 					bMax, rgbL, static_cast<SQLLEN*>(pNumAttr));
 			break;
 	}
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 
 	return ret;
@@ -425,9 +417,51 @@ SQLGetDescRecW(SQLHDESC DescriptorHandle,
 			  SQLLEN *Length, SQLSMALLINT *Precision,
 			  SQLSMALLINT *Scale, SQLSMALLINT *Nullable)
 {
+	RETCODE	ret;
+	SQLSMALLINT	buflen, nmlen;
+	char	*clName = NULL, *clNamet = NULL;
+
 	MYLOG(0, "Entering\n");
-	MYLOG(0, "Error not implemented\n");
-	return SQL_ERROR;
+	buflen = 0;
+	if (BufferLength > 0)
+		buflen = BufferLength * 3;
+	else if (StringLength)
+		buflen = 32;
+	if (buflen > 0)
+		clNamet = static_cast<char*>(malloc(buflen));
+	for (;; buflen = nmlen + 1, clNamet = static_cast<char*>(realloc(clName, buflen)))
+	{
+		if (!clNamet)
+		{
+		//	SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Could not allocate memory for column name", func);
+			ret = SQL_ERROR;
+			break;
+		}
+		clName = clNamet;
+		ret = WD_GetDescRec(DescriptorHandle, RecNumber,
+								(SQLCHAR *) clName, buflen,
+								&nmlen, Type, SubType, Length,
+			Precision, Scale, Nullable);
+		if (SQL_SUCCESS_WITH_INFO != ret || nmlen < buflen)
+			break;
+	}
+	if (SQL_SUCCEEDED(ret))
+	{
+		SQLLEN	nmcount = nmlen;
+
+		if (nmlen < buflen)
+			nmcount = utf8_to_ucs2(clName, nmlen, Name, BufferLength);
+		if (SQL_SUCCESS == ret && BufferLength > 0 && nmcount > BufferLength)
+		{
+			ret = SQL_SUCCESS_WITH_INFO;
+		//	SC_set_error(stmt, STMT_TRUNCATED, "Column name too large", func);
+		}
+		if (StringLength)
+			*StringLength = (SQLSMALLINT) nmcount;
+	}
+	if (clName)
+		free(clName);
+	return ret;
 }
 
 /*	new fucntion */
