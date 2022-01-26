@@ -6,6 +6,8 @@
 #include "ODBCStatement.h"
 
 #include "ODBCConnection.h"
+#include "ODBCDescriptor.h"
+#include "sql.h"
 #include <odbcabstraction/statement.h>
 #include <odbcabstraction/exceptions.h>
 #include <boost/optional.hpp>
@@ -13,13 +15,28 @@
 using namespace ODBC;
 using namespace driver::odbcabstraction;
 
+namespace {
+  void DescriptorToHandle(SQLPOINTER output, ODBCDescriptor* descriptor, SQLLEN* lenPtr) {
+    if (output) {
+      SQLHANDLE* outputHandle = static_cast<SQLHANDLE*>(output);
+      *outputHandle = reinterpret_cast<SQLHANDLE>(descriptor);
+      *lenPtr = sizeof(SQLHANDLE);
+    }
+  }
+}
+
 // Public =========================================================================================
 ODBCStatement::ODBCStatement(ODBCConnection& connection, 
   std::shared_ptr<driver::odbcabstraction::Statement> spiStatement) :
   m_connection(connection),
   m_spiStatement(spiStatement),
+  m_builtInArd(std::make_shared<ODBCDescriptor>(nullptr, true)),
+  m_builtInApd(std::make_shared<ODBCDescriptor>(nullptr, true)),
+  m_ipd(std::make_shared<ODBCDescriptor>(nullptr, false)),
+  m_ird(std::make_shared<ODBCDescriptor>(nullptr, false)),
+  m_currentArd(m_builtInApd.get()),
+  m_currentApd(m_builtInApd.get()),
   m_isPrepared(false) {
-
 }
     
 bool ODBCStatement::isPrepared() const {
@@ -57,6 +74,31 @@ bool ODBCStatement::Fetch(size_t rows) {
 
   // Then call Move(rows) on the ResultSet.
   return false;
+}
+
+void ODBCStatement::GetAttribute(SQLINTEGER statementAttribute, SQLPOINTER output, SQLLEN bufferSize, SQLLEN* strLenPtr) {
+  switch (statementAttribute) {
+    case SQL_ATTR_APP_PARAM_DESC:
+      DescriptorToHandle(output, m_currentApd, strLenPtr);
+      break;
+    case SQL_ATTR_APP_ROW_DESC:
+      DescriptorToHandle(output, m_currentArd, strLenPtr);
+      break;
+    case SQL_ATTR_IMP_PARAM_DESC:
+      DescriptorToHandle(output, m_ipd.get(), strLenPtr);
+      break;
+    case SQL_ATTR_IMP_ROW_DESC:
+      DescriptorToHandle(output, m_ird.get(), strLenPtr);
+      break;
+  }
+}
+
+void ODBCStatement::RevertAppDescriptor(bool isApd) {
+  if (isApd) {
+    m_currentApd = m_builtInApd.get();
+  } else {
+    m_currentArd = m_builtInArd.get();
+  }
 }
 
 void ODBCStatement::closeCursor(bool suppressErrors) {

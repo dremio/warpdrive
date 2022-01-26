@@ -5,6 +5,7 @@
  */
 #include "ODBCConnection.h"
 
+#include "ODBCDescriptor.h"
 #include "ODBCEnvironment.h"
 #include "ODBCStatement.h"
 #include "odbcinst.h"
@@ -120,6 +121,20 @@ void ODBCConnection::dropStatement(ODBCStatement* stmt) {
       [&stmt] (const std::shared_ptr<ODBCStatement>& statement) { return statement.get() == stmt; });
     if (m_statements.end() != it) {
         m_statements.erase(it);
+    }
+}
+
+std::shared_ptr<ODBCDescriptor> ODBCConnection::createDescriptor() {
+  std::shared_ptr<ODBCDescriptor> desc = std::make_shared<ODBCDescriptor>(this, true);
+  m_descriptors.push_back(desc);
+  return desc;
+}
+
+void ODBCConnection::dropDescriptor(ODBCDescriptor* desc) {
+    auto it = std::find_if(m_descriptors.begin(), m_descriptors.end(), 
+      [&desc] (const std::shared_ptr<ODBCDescriptor>& descriptor) { return descriptor.get() == desc; });
+    if (m_descriptors.end() != it) {
+        m_descriptors.erase(it);
     }
 }
 

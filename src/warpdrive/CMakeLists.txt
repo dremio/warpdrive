@@ -102,6 +102,7 @@ set(WARPDRIVE_SRCS
     win_unicode.cc
     xalibname.cc
     ODBCConnection.cc
+    ODBCDescriptor.cc
     ODBCEnvironment.cc
     ODBCStatement.cc
 )
