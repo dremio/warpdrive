@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9de5f07_db24f00b",
+        "filename": "src/warpdrive/AttributeUtils.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-02-07T21:29:38Z",
+      "side": 1,
+      "message": "nit: Using tabs here.. it may mess with code formatter?",
+      "revId": "d4e21d3071ec2b330f6505c96d85b4f5f7a8a8ab",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dcc57881_09d81a91",
+        "filename": "src/warpdrive/EncodingUtils.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-02-07T21:29:38Z",
+      "side": 1,
+      "message": "nit: Whitespace",
+      "revId": "d4e21d3071ec2b330f6505c96d85b4f5f7a8a8ab",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "18c9a5ce_b7cbb678",
+        "filename": "src/warpdrive/EncodingUtils.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-02-07T21:29:38Z",
+      "side": 1,
+      "message": "Should be \\0",
+      "revId": "d4e21d3071ec2b330f6505c96d85b4f5f7a8a8ab",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85ccddd0_3398c81c",
+        "filename": "src/warpdrive/odbcapi30.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-02-07T21:29:38Z",
+      "side": 1,
+      "message": "I think `WD_FreeStmt` doesn\u0027t prevent double-frees",
+      "revId": "d4e21d3071ec2b330f6505c96d85b4f5f7a8a8ab",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ee855b8_69322386",
+        "filename": "src/warpdrive/odbcapi30w.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-02-07T21:29:38Z",
+      "side": 1,
+      "message": "Not sure if you meant to comment this",
+      "revId": "d4e21d3071ec2b330f6505c96d85b4f5f7a8a8ab",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de",
+      "unresolved": true
+    }
+  ]
+}

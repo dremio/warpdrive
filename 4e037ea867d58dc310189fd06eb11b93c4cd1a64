@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1cb90b65_982fd701",
+        "filename": "src/warpdrive/odbcapiw.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-02-07T21:29:38Z",
+      "side": 0,
+      "message": "Maybe we should keep these checks but make `SC_connection_lost_check` a no-op?\nThink we will need to handle this at some point",
+      "revId": "4e037ea867d58dc310189fd06eb11b93c4cd1a64",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de",
+      "unresolved": true
+    }
+  ]
+}
