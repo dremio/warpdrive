@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "be02d421_520ab2f0",
+        "filename": "src/warpdrive/AttributeUtils.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-02-07T22:22:17Z",
+      "side": 1,
+      "message": "Carry-over from PostgreSQL. I would like to just go run clang-format over the whole project in a separate DX.",
+      "parentUuid": "a9de5f07_db24f00b",
+      "revId": "d4e21d3071ec2b330f6505c96d85b4f5f7a8a8ab",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dcc57881_09d81a91",
         "filename": "src/warpdrive/EncodingUtils.h",
         "patchSetId": 9
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "52df86c6_054485bd",
+        "filename": "src/warpdrive/EncodingUtils.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-02-07T22:22:17Z",
+      "side": 1,
+      "message": "Deferred until DSA-565.",
+      "parentUuid": "dcc57881_09d81a91",
+      "revId": "d4e21d3071ec2b330f6505c96d85b4f5f7a8a8ab",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "18c9a5ce_b7cbb678",
         "filename": "src/warpdrive/EncodingUtils.h",
         "patchSetId": 9
@@ -50,6 +86,24 @@
       "revId": "d4e21d3071ec2b330f6505c96d85b4f5f7a8a8ab",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "746517b7_f0ea56ec",
+        "filename": "src/warpdrive/EncodingUtils.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-02-07T22:22:17Z",
+      "side": 1,
+      "message": "Correct. Good catch.",
+      "parentUuid": "18c9a5ce_b7cbb678",
+      "revId": "d4e21d3071ec2b330f6505c96d85b4f5f7a8a8ab",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de",
+      "unresolved": false
     },
     {
       "key": {
@@ -84,6 +138,24 @@
       "revId": "d4e21d3071ec2b330f6505c96d85b4f5f7a8a8ab",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bfd48e39_e59bdc87",
+        "filename": "src/warpdrive/odbcapi30w.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-02-07T22:22:17Z",
+      "side": 1,
+      "message": "Yeah, left as a placeholder for when error handling is added.",
+      "parentUuid": "4ee855b8_69322386",
+      "revId": "d4e21d3071ec2b330f6505c96d85b4f5f7a8a8ab",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de",
+      "unresolved": false
     }
   ]
 }
