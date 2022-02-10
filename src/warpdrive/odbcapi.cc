@@ -384,36 +384,11 @@ SQLFreeStmt(HSTMT StatementHandle,
 			SQLUSMALLINT Option)
 {
 	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
 	ConnectionClass *conn = NULL;
 
 	MYLOG(0, "Entering\n");
 
-	if (stmt)
-	{
-		if (Option == SQL_DROP)
-		{
-			conn = stmt->hdbc;
-			if (conn)
-				ENTER_CONN_CS(conn);
-		}
-		else
-			ENTER_STMT_CS(stmt);
-	}
-
 	ret = WD_FreeStmt(StatementHandle, Option);
-
-	if (stmt)
-	{
-		if (Option == SQL_DROP)
-		{
-			if (conn)
-				LEAVE_CONN_CS(conn);
-		}
-		else
-			LEAVE_STMT_CS(stmt);
-	}
-
 	return ret;
 }
 

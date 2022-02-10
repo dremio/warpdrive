@@ -20,6 +20,7 @@
 #include "misc.h"
 
 #include "environ.h"
+#include "sqltypes.h"
 #include "statement.h"
 #include "descriptor.h"
 #include "qresult.h"
@@ -27,6 +28,10 @@
 #include "multibyte.h"
 
 #include "wdapifunc.h"
+#include "ODBCDescriptor.h"
+#include "ODBCStatement.h"
+
+using namespace ODBC;
 
 
 /*		Bind parameters on a statement handle */
@@ -151,142 +156,11 @@ WD_BindCol(HSTMT hstmt,
 			  SQLLEN cbValueMax,
 			  SQLLEN * pcbValue)
 {
-	StatementClass *stmt = (StatementClass *) hstmt;
-	CSTR func = "WD_BindCol";
-	ARDFields	*opts;
-	GetDataInfo	*gdata_info;
-	BindInfoClass	*bookmark;
-	RETCODE		ret = SQL_SUCCESS;
-
-	MYLOG(0, "entering...\n");
-
-	MYLOG(0, "**** : stmt = %p, icol = %d\n", stmt, icol);
-	MYLOG(0, "**** : fCType=%d rgb=%p valusMax=" FORMAT_LEN " pcb=%p\n", fCType, rgbValue, cbValueMax, pcbValue);
-
-	if (!stmt)
-	{
-		SC_log_error(func, "", NULL);
-		return SQL_INVALID_HANDLE;
-	}
-
-	opts = SC_get_ARDF(stmt);
-	if (stmt->status == STMT_EXECUTING)
-	{
-		SC_set_error(stmt, STMT_SEQUENCE_ERROR, "Can't bind columns while statement is still executing.", func);
-		return SQL_ERROR;
-	}
-
-#define	return	DONT_CALL_RETURN_FROM_HERE ???
-	SC_clear_error(stmt);
-	/* If the bookmark column is being bound, then just save it */
-	if (icol == 0)
-	{
-		bookmark = opts->bookmark;
-		if (rgbValue == NULL)
-		{
-			if (bookmark)
-			{
-				bookmark->buffer = NULL;
-				bookmark->used =
-				bookmark->indicator = NULL;
-			}
-		}
-		else
-		{
-			/* Make sure it is the bookmark data type */
-			switch (fCType)
-			{
-				case SQL_C_BOOKMARK:
-				case SQL_C_VARBOOKMARK:
-					break;
-				default:
-					SC_set_error(stmt, STMT_PROGRAM_TYPE_OUT_OF_RANGE, "Bind column 0 is not of type SQL_C_BOOKMARK", func);
-MYLOG(DETAIL_LOG_LEVEL, "Bind column 0 is type %d not of type SQL_C_BOOKMARK\n", fCType);
-					ret = SQL_ERROR;
-					goto cleanup;
-			}
-
-			bookmark = ARD_AllocBookmark(opts);
-			bookmark->buffer = static_cast<char*>(rgbValue);
-			bookmark->used =
-			bookmark->indicator = pcbValue;
-			bookmark->buflen = cbValueMax;
-			bookmark->returntype = fCType;
-		}
-		goto cleanup;
-	}
-
-	/*
-	 * Allocate enough bindings if not already done. Most likely,
-	 * execution of a statement would have setup the necessary bindings.
-	 * But some apps call BindCol before any statement is executed.
-	 */
-	if (icol > opts->allocated)
-		extend_column_bindings(opts, icol);
-	gdata_info = SC_get_GDTI(stmt);
-	if (icol > gdata_info->allocated)
-		extend_getdata_info(gdata_info, icol, FALSE);
-
-	/* check to see if the bindings were allocated */
-	if (!opts->bindings || !gdata_info->gdata)
-	{
-		SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Could not allocate memory for bindings.", func);
-		ret = SQL_ERROR;
-		goto cleanup;
-	}
-
-	/* use zero based col numbers from here out */
-	icol--;
-
-	/* Reset for SQLGetData */
-	GETDATA_RESET(gdata_info->gdata[icol]);
-
-	if (rgbValue == NULL)
-	{
-		/* we have to unbind the column */
-		opts->bindings[icol].buflen = 0;
-		opts->bindings[icol].buffer = NULL;
-		opts->bindings[icol].used =
-		opts->bindings[icol].indicator = NULL;
-		opts->bindings[icol].returntype = SQL_C_CHAR;
-		opts->bindings[icol].precision = 0;
-		opts->bindings[icol].scale = 0;
-		if (gdata_info->gdata[icol].ttlbuf)
-			free(gdata_info->gdata[icol].ttlbuf);
-		gdata_info->gdata[icol].ttlbuf = NULL;
-		gdata_info->gdata[icol].ttlbuflen = 0;
-		gdata_info->gdata[icol].ttlbufused = 0;
-	}
-	else
-	{
-		/* ok, bind that column */
-		opts->bindings[icol].buflen = cbValueMax;
-		opts->bindings[icol].buffer = static_cast<char*>(rgbValue);
-		opts->bindings[icol].used =
-		opts->bindings[icol].indicator = pcbValue;
-		opts->bindings[icol].returntype = fCType;
-		opts->bindings[icol].precision = 0;
-		switch (fCType)
-		{
-			case SQL_C_NUMERIC:
-				opts->bindings[icol].precision = 32;
-				break;
-			case SQL_C_TIMESTAMP:
-			case SQL_C_INTERVAL_DAY_TO_SECOND:
-			case SQL_C_INTERVAL_HOUR_TO_SECOND:
-			case SQL_C_INTERVAL_MINUTE_TO_SECOND:
-			case SQL_C_INTERVAL_SECOND:
-				opts->bindings[icol].precision = 6;
-				break;
-		}
-		opts->bindings[icol].scale = 0;
-
-		MYLOG(0, "       bound buffer[%d] = %p\n", icol, opts->bindings[icol].buffer);
-	}
-
-cleanup:
-#undef	return
-	return ret;
+  CSTR func = "WD_BindCol";
+  RETCODE ret = SQL_SUCCESS;
+  ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
+  stmt->GetARD()->BindCol(icol, fCType, rgbValue, cbValueMax, pcbValue);
+  return ret;
 }
 
 

@@ -453,9 +453,10 @@ SQLSetDescRec(SQLHDESC DescriptorHandle,
 			  PTR Data, SQLLEN *StringLength,
 			  SQLLEN *Indicator)
 {
+	RETCODE ret;
 	MYLOG(0, "Entering\n");
-	MYLOG(0, "Error not implemented\n");
-	return SQL_ERROR;
+	ret = WD_SetDescRec(DescriptorHandle, RecNumber, Type, SubType, Length, Precision, Scale, Data, StringLength, Indicator);
+	return ret;
 }
 #endif /* UNICODE_SUPPORTXX */
 

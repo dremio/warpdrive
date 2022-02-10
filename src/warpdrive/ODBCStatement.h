@@ -50,6 +50,10 @@ class ODBCStatement {
       return m_ird.get();
     }
 
+    inline ODBCDescriptor* GetARD() {
+      return m_currentArd;
+    }
+
     /**
      * @brief Closes the cursor. This does _not_ un-prepare the statement or change
      * bindings.
