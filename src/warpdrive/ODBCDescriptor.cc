@@ -14,18 +14,37 @@
 #include <odbcabstraction/statement.h>
 #include <odbcabstraction/exceptions.h>
 #include <odbcabstraction/result_set_metadata.h>
+#include <algorithm>
 
 using namespace ODBC;
 using namespace driver::odbcabstraction;
 
+namespace {
+  SQLSMALLINT CalculateHighestBoundRecord(const std::vector<DescriptorRecord>& records) {
+    // Most applications will bind every column, so optimistically assume that we'll
+    // find the next bound record fastest by counting backwards.
+    for (size_t i = records.size() - 1; i >= 0; --i) {
+      if (records[i].m_isBound) {
+        return i + 1;
+      }
+    }
+    return 0;
+  }
+}
+
 // Public =========================================================================================
 ODBCDescriptor::ODBCDescriptor(ODBCConnection* conn, bool isAppDescriptor, bool isWritable, bool is2xConnection) :
   m_owningConnection(conn),
+  m_arrayStatusPtr(nullptr),
+  m_bindOffsetPtr(nullptr),
+  m_rowsProccessedPtr(nullptr),
+  m_arraySize(1),
+  m_bindType(SQL_BIND_BY_COLUMN),
+  m_highestOneBasedBoundRecord(0),
   m_is2xConnection(is2xConnection),
   m_isAppDescriptor(isAppDescriptor),
   m_isWritable(isWritable),
   m_hasBindingsChanged(true) {
-
 }
 
 void ODBCDescriptor::SetHeaderField(SQLSMALLINT fieldIdentifier, SQLPOINTER value, SQLINTEGER bufferLength) {
@@ -33,19 +52,44 @@ void ODBCDescriptor::SetHeaderField(SQLSMALLINT fieldIdentifier, SQLPOINTER valu
     throw DriverException("Cannot modify read-only descriptor");
   }
 
+  // TODO: Remove this check when parameters are supported.
+  if (!m_isAppDescriptor) {
+    throw DriverException("Parameters are not supported. Cannot write to IPD.");
+  }
+
   switch (fieldIdentifier) {
     case SQL_DESC_ALLOC_TYPE:
       throw DriverException("Invalid descriptor field");
     case SQL_DESC_ARRAY_SIZE:
+      SetAttribute(value, m_arraySize);
+      m_hasBindingsChanged = true;
+      break;
     case SQL_DESC_ARRAY_STATUS_PTR:
+      SetPointerAttribute(value, m_arrayStatusPtr);
+      m_hasBindingsChanged = true;
+      break;
     case SQL_DESC_BIND_OFFSET_PTR:
+      SetPointerAttribute(value, m_bindOffsetPtr);
+      m_hasBindingsChanged = true;
+      break;
     case SQL_DESC_BIND_TYPE:
+      SetAttribute(value, m_bindType);
+      m_hasBindingsChanged = true;
+      break;
     case SQL_DESC_ROWS_PROCESSED_PTR:
-      // TODO
+      SetPointerAttribute(value, m_rowsProccessedPtr);
+      m_hasBindingsChanged = true;
       break;
     case SQL_DESC_COUNT: {
       SQLSMALLINT newCount = *reinterpret_cast<SQLSMALLINT*>(value);
       m_records.resize(newCount);
+
+      if (m_isAppDescriptor && newCount <= m_highestOneBasedBoundRecord) {
+        m_highestOneBasedBoundRecord = CalculateHighestBoundRecord(m_records);
+      } else {
+        m_highestOneBasedBoundRecord = newCount;
+      }
+      m_hasBindingsChanged = true;
       break;
     }
   }
@@ -72,35 +116,79 @@ void ODBCDescriptor::SetField(SQLSMALLINT recordNumber, SQLSMALLINT fieldIdentif
     case SQL_DESC_BASE_TABLE_NAME:
     case SQL_DESC_CASE_SENSITIVE:
     case SQL_DESC_CATALOG_NAME:
-    case SQL_DESC_CONCISE_TYPE:
-    case SQL_DESC_DATA_PTR:
-    case SQL_DESC_DATETIME_INTERVAL_CODE:
-    case SQL_DESC_DATETIME_INTERVAL_PRECISION:
     case SQL_DESC_DISPLAY_SIZE:
     case SQL_DESC_FIXED_PREC_SCALE:
-    case SQL_DESC_INDICATOR_PTR:
     case SQL_DESC_LABEL:
-    case SQL_DESC_LENGTH:
     case SQL_DESC_LITERAL_PREFIX:
     case SQL_DESC_LITERAL_SUFFIX:
     case SQL_DESC_LOCAL_TYPE_NAME:
-    case SQL_DESC_NAME:
     case SQL_DESC_NULLABLE:
     case SQL_DESC_NUM_PREC_RADIX:
-    case SQL_DESC_OCTET_LENGTH:
-    case SQL_DESC_OCTET_LENGTH_PTR:
-    case SQL_DESC_PARAMETER_TYPE:
-    case SQL_DESC_PRECISION:
     case SQL_DESC_ROWVER:
-    case SQL_DESC_SCALE:
     case SQL_DESC_SCHEMA_NAME:
     case SQL_DESC_SEARCHABLE:
     case SQL_DESC_TABLE_NAME:
-    case SQL_DESC_TYPE:
     case SQL_DESC_TYPE_NAME:
     case SQL_DESC_UNNAMED:
     case SQL_DESC_UNSIGNED:
     case SQL_DESC_UPDATABLE:
+      throw DriverException("Cannot modify read-only field.");
+    case SQL_DESC_CONCISE_TYPE:
+      SetAttribute(value, record.m_conciseType);
+      record.m_isBound = false;
+      m_hasBindingsChanged = true;
+      break;
+    case SQL_DESC_DATA_PTR:
+      SetDataPtrOnRecord(value, recordNumber);
+      break;
+    case SQL_DESC_DATETIME_INTERVAL_CODE:
+      SetAttribute(value, record.m_datetimeIntervalCode);
+      record.m_isBound = false;
+      m_hasBindingsChanged = true;
+      break;
+    case SQL_DESC_DATETIME_INTERVAL_PRECISION:
+      SetAttribute(value, record.m_datetimeIntervalPrecision);
+      record.m_isBound = false;
+      m_hasBindingsChanged = true;
+      break;
+    case SQL_DESC_INDICATOR_PTR:
+    case SQL_DESC_OCTET_LENGTH_PTR:
+      SetPointerAttribute(value, record.m_indicatorPtr);
+      m_hasBindingsChanged = true;
+      break;
+    case SQL_DESC_LENGTH:
+      SetAttribute(value, record.m_length);
+      record.m_isBound = false;
+      m_hasBindingsChanged = true;
+      break;
+    case SQL_DESC_NAME:
+      SetAttributeUTF8(value, bufferLength, record.m_name);
+      m_hasBindingsChanged = true;
+      break;
+    case SQL_DESC_OCTET_LENGTH:
+      SetAttribute(value, record.m_octetLength);
+      record.m_isBound = false;
+      m_hasBindingsChanged = true;
+      break;
+    case SQL_DESC_PARAMETER_TYPE:
+      SetAttribute(value, record.m_paramType);
+      record.m_isBound = false;
+      m_hasBindingsChanged = true;
+      break;
+    case SQL_DESC_PRECISION:
+      SetAttribute(value, record.m_precision);
+      record.m_isBound = false;
+      m_hasBindingsChanged = true;
+      break;
+    case SQL_DESC_SCALE:
+      SetAttribute(value, record.m_scale);
+      record.m_isBound = false;
+      m_hasBindingsChanged = true;
+      break;
+    case SQL_DESC_TYPE:
+      SetAttribute(value, record.m_type);
+      record.m_isBound = false;
+      m_hasBindingsChanged = true;
       break;
   }
 }
@@ -118,15 +206,22 @@ void ODBCDescriptor::GetHeaderField(SQLSMALLINT fieldIdentifier, SQLPOINTER valu
       break;
     }
     case SQL_DESC_ARRAY_SIZE:
+      GetAttribute(m_arraySize, value, bufferLength, outputLength);
+      break;
     case SQL_DESC_ARRAY_STATUS_PTR:
+      GetAttribute(m_arraySize, value, bufferLength, outputLength);
+      break;
     case SQL_DESC_BIND_OFFSET_PTR:
+      GetAttribute(m_bindOffsetPtr, value, bufferLength, outputLength);
+      break;
     case SQL_DESC_BIND_TYPE:
+      GetAttribute(m_bindType, value, bufferLength, outputLength);
+      break;
     case SQL_DESC_ROWS_PROCESSED_PTR:
-      // TODO:
+      GetAttribute(m_rowsProccessedPtr, value, bufferLength, outputLength);
       break;
     case SQL_DESC_COUNT: {
-      SQLSMALLINT resultCount = m_records.size();
-      GetAttribute(resultCount, value, bufferLength, outputLength);
+      GetAttribute(m_highestOneBasedBoundRecord, value, bufferLength, outputLength);
       break;
     }
   }
@@ -310,6 +405,7 @@ void ODBCDescriptor::ReleaseDescriptor() {
 
 void ODBCDescriptor::PopulateFromResultSetMetadata(ResultSetMetadata* rsmd) {
   m_records.assign(rsmd->GetColumnCount(), DescriptorRecord());
+  m_highestOneBasedBoundRecord = m_records.size() + 1;
 
   for (size_t i = 0; i < m_records.size(); ++i) {
     size_t oneBasedIndex = i + 1;
@@ -351,4 +447,48 @@ void ODBCDescriptor::PopulateFromResultSetMetadata(ResultSetMetadata* rsmd) {
 
 const std::vector<DescriptorRecord>& ODBCDescriptor::GetRecords() const {
   return m_records;
+}
+
+std::vector<DescriptorRecord>& ODBCDescriptor::GetRecords() {
+  return m_records;
+}
+
+void ODBCDescriptor::BindCol(SQLSMALLINT recordNumber, SQLSMALLINT cType, SQLPOINTER dataPtr, SQLLEN bufferLength, SQLLEN* indicatorPtr) {
+  assert(m_isAppDescriptor);
+  assert(m_isWritable);
+
+  // The set of records auto-expands to the supplied record number.
+  if (m_records.size() < recordNumber) {
+    m_records.resize(recordNumber);
+  } 
+  
+  SQLSMALLINT zeroBasedRecordIndex = recordNumber - 1;
+  DescriptorRecord& record = m_records[zeroBasedRecordIndex];
+
+  record.m_type = cType;
+  SetDataPtrOnRecord(dataPtr, recordNumber);
+}
+
+void ODBCDescriptor::SetDataPtrOnRecord(SQLPOINTER dataPtr, SQLSMALLINT recordNumber) {
+  assert(recordNumber <= m_records.size());
+  DescriptorRecord& record = m_records[recordNumber-1];
+  if (dataPtr) {
+    record.CheckConsistency();
+    record.m_isBound = true;
+  } else {
+    record.m_isBound = false;
+  }
+  record.m_dataPtr = dataPtr;
+
+  // Bookkeeping on the highest bound record (used for returning SQL_DESC_COUNT)
+  if (m_highestOneBasedBoundRecord < recordNumber && dataPtr) {
+    m_highestOneBasedBoundRecord = recordNumber;
+  } else if (m_highestOneBasedBoundRecord == recordNumber && !dataPtr) {
+    m_highestOneBasedBoundRecord = CalculateHighestBoundRecord(m_records);
+  }
+  m_hasBindingsChanged = true;
+}
+
+void DescriptorRecord::CheckConsistency() {
+  // TODO.
 }

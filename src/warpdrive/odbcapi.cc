@@ -26,6 +26,7 @@
  *-------
  */
 
+#include "sqlext.h"
 #include "wdodbc.h"
 #include <stdio.h>
 #include <string.h>
@@ -37,6 +38,13 @@
 #include "statement.h"
 #include "qresult.h"
 #include "loadlib.h"
+
+#include <odbcabstraction/exceptions.h>
+#include "ODBCDescriptor.h"
+#include "ODBCStatement.h"
+
+using namespace ODBC;
+using namespace driver::odbcabstraction;
 
 BOOL	SC_connection_lost_check(StatementClass *stmt, const char *funcname)
 {
@@ -351,30 +359,7 @@ WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLFetch(HSTMT StatementHandle)
 {
-	// TODO
-	return SQL_NO_DATA;
-/*	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
-	IRDFields	*irdopts = SC_get_IRDF(stmt);
-	ARDFields	*ardopts = SC_get_ARDF(stmt);
-	SQLUSMALLINT *rowStatusArray = irdopts->rowStatusArray;
-	SQLULEN *pcRow = irdopts->rowsFetched;
-
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-
-	ret = WD_ExtendedFetch(StatementHandle, SQL_FETCH_NEXT, 0,
-							   pcRow, rowStatusArray, 0, ardopts->size_of_rowset);
-	stmt->transition_status = STMT_TRANSITION_FETCH_SCROLL;
-
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;*/
+  return WD_Fetch(StatementHandle);
 }
 
 
@@ -384,36 +369,11 @@ SQLFreeStmt(HSTMT StatementHandle,
 			SQLUSMALLINT Option)
 {
 	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
 	ConnectionClass *conn = NULL;
 
 	MYLOG(0, "Entering\n");
 
-	if (stmt)
-	{
-		if (Option == SQL_DROP)
-		{
-			conn = stmt->hdbc;
-			if (conn)
-				ENTER_CONN_CS(conn);
-		}
-		else
-			ENTER_STMT_CS(stmt);
-	}
-
 	ret = WD_FreeStmt(StatementHandle, Option);
-
-	if (stmt)
-	{
-		if (Option == SQL_DROP)
-		{
-			if (conn)
-				LEAVE_CONN_CS(conn);
-		}
-		else
-			LEAVE_STMT_CS(stmt);
-	}
-
 	return ret;
 }
 
@@ -448,19 +408,10 @@ SQLGetData(HSTMT StatementHandle,
 		   SQLLEN *StrLen_or_Ind)
 {
 	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
 
 	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
 	ret = WD_GetData(StatementHandle, ColumnNumber, TargetType,
 						 TargetValue, BufferLength, StrLen_or_Ind);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
 	return ret;
 }
 
@@ -989,57 +940,56 @@ RETCODE		SQL_API
 SQLExtendedFetch(HSTMT hstmt,
 				 SQLUSMALLINT fFetchType,
 				 SQLLEN irow,
-#if defined(WITH_UNIXODBC) && (SIZEOF_LONG_INT != 8)
-				 SQLROWSETSIZE *pcrow,
-#else
 				 SQLULEN *pcrow,
-#endif /* WITH_UNIXODBC */
 				 SQLUSMALLINT *rgfRowStatus)
 {
-	// TODO
-  return SQL_NO_DATA;
-}
-
-#if 0
-WD_EXPORT_SYMBOL
-RETCODE		SQL_API
-SQLExtendedFetch(HSTMT hstmt,
-				 SQLUSMALLINT fFetchType,
-				 SQLLEN irow,
-#if defined(WITH_UNIXODBC) && (SIZEOF_LONG_INT != 8)
-				 SQLROWSETSIZE *pcrow,
-#else
-				 SQLULEN *pcrow,
-#endif /* WITH_UNIXODBC */
-				 SQLUSMALLINT *rgfRowStatus)
-{
-	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) hstmt;
-
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-#ifdef WITH_UNIXODBC
-	{
-		SQLULEN	retrieved;
-
-		ret = WD_ExtendedFetch(hstmt, fFetchType, irow, &retrieved, rgfRowStatus, 0, SC_get_ARDF(stmt)->size_of_rowset_odbc2);
-		if (pcrow)
-			*pcrow = retrieved;
+  MYLOG(0, "Entering\n");
+  if (fFetchType != SQL_FETCH_NEXT) {
+    throw DriverException("HY016 Fetch type unsupported");
+  }
+  
+  ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
+  ODBCDescriptor* ard = stmt->GetARD();
+  SQLULEN oldArraySize = ard->GetArraySize();
+  SQLULEN* oldRowsFetchedPtr;
+  SQLUSMALLINT* oldRowStatusPtr;
+  ard->GetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, &oldRowsFetchedPtr, 0, nullptr);
+  ard->GetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, &oldRowStatusPtr, 0, nullptr);
+  try {
+	if (irow != oldArraySize) {
+      ard->SetHeaderField(SQL_DESC_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(irow), 0);
 	}
-#else
-	ret = WD_ExtendedFetch(hstmt, fFetchType, irow, pcrow, rgfRowStatus, 0, SC_get_ARDF(stmt)->size_of_rowset_odbc2);
-#endif /* WITH_UNIXODBC */
-	stmt->transition_status = STMT_TRANSITION_EXTENDED_FETCH;
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+	if (pcrow != oldRowsFetchedPtr) {
+      ard->SetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, pcrow, 0);
+	}
+	if (rgfRowStatus != oldRowStatusPtr) {
+	  ard->SetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, rgfRowStatus, 0);
+	}
+
+	RETCODE result = WD_Fetch(hstmt);
+	if (irow != oldArraySize) {
+      ard->SetHeaderField(SQL_DESC_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(oldArraySize), 0);
+	}
+	if (pcrow != oldRowsFetchedPtr) {
+      ard->SetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, oldRowsFetchedPtr, 0);
+	}
+	if (rgfRowStatus != oldRowStatusPtr) {
+	  ard->SetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, oldRowStatusPtr, 0);
+	}
+	return result;
+  } catch (...) {
+	if (irow != oldArraySize) {
+      ard->SetHeaderField(SQL_DESC_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(oldArraySize), 0);
+	}
+	if (pcrow != oldRowsFetchedPtr) {
+      ard->SetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, oldRowsFetchedPtr, 0);
+	}
+	if (rgfRowStatus != oldRowStatusPtr) {
+	  ard->SetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, oldRowStatusPtr, 0);
+	}
+	return SQL_ERROR; 
+  }
 }
-#endif
 
 #ifndef	UNICODE_SUPPORTXX
 WD_EXPORT_SYMBOL

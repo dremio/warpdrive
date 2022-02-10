@@ -186,14 +186,6 @@ RETCODE SQL_API WD_DescribeParam(
 					SQLULEN *pcbParamDef,
 					SQLSMALLINT *pibScale,
 					SQLSMALLINT *pfNullable);
-RETCODE SQL_API WD_ExtendedFetch(
-					HSTMT hstmt,
-					SQLUSMALLINT fFetchType,
-					SQLLEN irow,
-					SQLULEN *pcrow,
-					SQLUSMALLINT *rgfRowStatus,
-					SQLLEN FetchOffset,
-					SQLLEN rowsetSize);
 RETCODE SQL_API WD_ForeignKeys(
 				  HSTMT hstmt,
 				  const SQLCHAR *szPkCatalogName,
@@ -337,6 +329,12 @@ RETCODE SQL_API WD_SetDescField(SQLHDESC DescriptorHandle,
 RETCODE SQL_API WD_GetDescField(SQLHDESC DescriptorHandle,
 			SQLSMALLINT RecNumber, SQLSMALLINT FieldIdentifier,
 			PTR Value, SQLINTEGER BufferLength, SQLINTEGER *StringLength);
+RETCODE SQL_API WD_SetDescRec(SQLHDESC DescriptorHandle,
+			  SQLSMALLINT RecNumber, SQLSMALLINT Type,
+			  SQLSMALLINT SubType, SQLLEN Length,
+			  SQLSMALLINT Precision, SQLSMALLINT Scale,
+			  PTR Data, SQLLEN *StringLength,
+			  SQLLEN *Indicator);
 RETCODE SQL_API WD_GetDescRec(SQLHDESC DescriptorHandle,
 			  SQLSMALLINT RecNumber, SQLCHAR *Name,
 			  SQLSMALLINT BufferLength, SQLSMALLINT *StringLength,

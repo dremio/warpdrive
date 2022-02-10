@@ -38,6 +38,7 @@
 
 #include "wdapifunc.h"
 #include "ODBCConnection.h"
+#include "ODBCDescriptor.h"
 #include "ODBCStatement.h"
 
 using namespace ODBC;
@@ -235,8 +236,7 @@ WD_FreeStmt(HSTMT hstmt,
  		stmt->releaseStatement();
 	}
 	else if (fOption == SQL_UNBIND) {
-		// TODO: Drop bindings from ResultSet.
-		//SC_unbind_cols(stmt);
+		stmt->GetARD()->SetField(0, SQL_DESC_COUNT, reinterpret_cast<SQLPOINTER>(0), 0);
 	}
 	else if (fOption == SQL_CLOSE)
 	{
