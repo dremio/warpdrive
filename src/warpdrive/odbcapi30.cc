@@ -30,10 +30,13 @@
 #include "statement.h"
 #include "wdapifunc.h"
 
+#include <odbcabstraction/exceptions.h>
+#include "ODBCDescriptor.h"
 #include "ODBCEnvironment.h"
 #include "ODBCStatement.h"
 
 using namespace ODBC;
+using namespace driver::odbcabstraction;
 
 extern "C"
 {
@@ -186,57 +189,33 @@ SQLEndTran(SQLSMALLINT HandleType, SQLHANDLE Handle,
 	return ret;
 }
 
-/*	SQLExtendedFetch -> SQLFetchScroll */
 WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLFetchScroll(HSTMT StatementHandle,
 			   SQLSMALLINT FetchOrientation, SQLLEN FetchOffset)
 {
-	// TODO
-	return SQL_NO_DATA;
-	/*
-	CSTR func = "SQLFetchScroll";
-	StatementClass *stmt = (StatementClass *) StatementHandle;
-	RETCODE		ret = SQL_SUCCESS;
-	IRDFields	*irdopts = SC_get_IRDF(stmt);
-	SQLUSMALLINT *rowStatusArray = irdopts->rowStatusArray;
-	SQLULEN *pcRow = irdopts->rowsFetched;
-	SQLLEN	bkmarkoff = 0;
-
-	MYLOG(0, "Entering %d," FORMAT_LEN "\n", FetchOrientation, FetchOffset);
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	if (FetchOrientation == SQL_FETCH_BOOKMARK)
-	{
-		if (stmt->options.bookmark_ptr)
-		{
-			bkmarkoff = FetchOffset;
-			FetchOffset = *((Int4 *) stmt->options.bookmark_ptr);
-MYLOG(0, "bookmark=" FORMAT_LEN " FetchOffset = " FORMAT_LEN "\n", FetchOffset, bkmarkoff);
-		}
-		else
-		{
-			SC_set_error(stmt, STMT_SEQUENCE_ERROR, "Bookmark isn't specifed yet", func);
-			ret = SQL_ERROR;
-		}
+  if (FetchOrientation != SQL_FETCH_NEXT) {
+    throw DriverException("HY016 Fetch type unsupported");
+  }
+  
+  ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(StatementHandle);
+  ODBCDescriptor* ard = stmt->GetARD();
+  SQLULEN oldArraySize = ard->GetArraySize();
+  try {
+	if (FetchOffset != oldArraySize) {
+      ard->SetHeaderField(SQL_DESC_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(FetchOffset), 0);
 	}
-	if (SQL_SUCCESS == ret)
-	{
-		ARDFields	*opts = SC_get_ARDF(stmt);
-
-		ret = WD_ExtendedFetch(StatementHandle, FetchOrientation, FetchOffset,
-				pcRow, rowStatusArray, bkmarkoff, opts->size_of_rowset);
-		stmt->transition_status = STMT_TRANSITION_FETCH_SCROLL;
+	RETCODE result = WD_Fetch(StatementHandle);
+	if (FetchOffset != oldArraySize) {
+      ard->SetHeaderField(SQL_DESC_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(oldArraySize), 0);	  
 	}
-	ret = DiscardStatementSvp(stmt,ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	if (ret != SQL_SUCCESS)
-		MYLOG(0, "leaving return = %d\n", ret);
-	return ret;*/
+	return result;
+  } catch (...) {
+	if (FetchOffset != oldArraySize) {
+      ard->SetHeaderField(SQL_DESC_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(oldArraySize), 0);	  
+	}
+	return SQL_ERROR; 
+  }
 }
 
 /*	SQLFree(Connect/Env/Stmt) -> SQLFreeHandle */
@@ -453,9 +432,10 @@ SQLSetDescRec(SQLHDESC DescriptorHandle,
 			  PTR Data, SQLLEN *StringLength,
 			  SQLLEN *Indicator)
 {
+	RETCODE ret;
 	MYLOG(0, "Entering\n");
-	MYLOG(0, "Error not implemented\n");
-	return SQL_ERROR;
+	ret = WD_SetDescRec(DescriptorHandle, RecNumber, Type, SubType, Length, Precision, Scale, Data, StringLength, Indicator);
+	return ret;
 }
 #endif /* UNICODE_SUPPORTXX */
 

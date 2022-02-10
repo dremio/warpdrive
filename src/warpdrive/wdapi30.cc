@@ -1897,51 +1897,45 @@ WD_SetDescField(SQLHDESC DescriptorHandle,
 				   SQLSMALLINT RecNumber, SQLSMALLINT FieldIdentifier,
 				   PTR Value, SQLINTEGER BufferLength)
 {
-	CSTR func = "WD_SetDescField";
-	RETCODE		ret = SQL_SUCCESS;
-	DescriptorClass *desc = (DescriptorClass *) DescriptorHandle;
+  CSTR func = "WD_SetDescField";
+  RETCODE		ret = SQL_SUCCESS;
+  ODBCDescriptor *desc = reinterpret_cast<ODBCDescriptor*>(DescriptorHandle);
 
-	MYLOG(0, "entering h=%p(%d) rec=" FORMAT_SMALLI " field=" FORMAT_SMALLI " val=%p," FORMAT_INTEGER "\n", DescriptorHandle, DC_get_desc_type(desc), RecNumber, FieldIdentifier, Value, BufferLength);
-	switch (DC_get_desc_type(desc))
-	{
-		case SQL_ATTR_APP_ROW_DESC:
-			ret = ARDSetField(desc, RecNumber, FieldIdentifier, Value, BufferLength);
-			break;
-		case SQL_ATTR_APP_PARAM_DESC:
-			ret = APDSetField(desc, RecNumber, FieldIdentifier, Value, BufferLength);
-			break;
-		case SQL_ATTR_IMP_ROW_DESC:
-			ret = IRDSetField(desc, RecNumber, FieldIdentifier, Value, BufferLength);
-			break;
-		case SQL_ATTR_IMP_PARAM_DESC:
-			ret = IPDSetField(desc, RecNumber, FieldIdentifier, Value, BufferLength);
-			break;
-		default:ret = SQL_ERROR;
-			DC_set_error(desc, DESC_INTERNAL_ERROR, "Error not implemented");
-	}
-	if (ret == SQL_ERROR)
-	{
-		if (!DC_get_errormsg(desc))
-		{
-			switch (DC_get_errornumber(desc))
-			{
-				case DESC_INVALID_DESCRIPTOR_IDENTIFIER:
-					DC_set_errormsg(desc, "can't SQLSetDescField for this descriptor identifier");
-					break;
-				case DESC_INVALID_COLUMN_NUMBER_ERROR:
-					DC_set_errormsg(desc, "can't SQLSetDescField for this column number");
-					break;
-				case DESC_BAD_PARAMETER_NUMBER_ERROR:
-					DC_set_errormsg(desc, "can't SQLSetDescField for this parameter number");
-					break;
-				break;
-			}
-		}
-		DC_log_error(func, "", desc);
-	}
-	return ret;
+  MYLOG(0, "entering h=%p rec=" FORMAT_SMALLI " field=" FORMAT_SMALLI " val=%p," FORMAT_INTEGER "\n", DescriptorHandle, RecNumber, FieldIdentifier, Value, BufferLength);
+  desc->SetField(RecNumber, FieldIdentifier, Value, BufferLength);
+  return ret;
 }
 
+RETCODE SQL_API WD_SetDescRec(SQLHDESC DescriptorHandle,
+			  SQLSMALLINT RecNumber, SQLSMALLINT Type,
+			  SQLSMALLINT SubType, SQLLEN Length,
+			  SQLSMALLINT Precision, SQLSMALLINT Scale,
+			  PTR Data, SQLLEN *StringLength,
+			  SQLLEN *Indicator)
+{
+  CSTR func = "WD_SetDescField";
+  RETCODE		ret = SQL_SUCCESS;
+  ODBCDescriptor *desc = reinterpret_cast<ODBCDescriptor*>(DescriptorHandle);
+
+  if (RecNumber == 0) {
+    throw DriverException("InvalidDescriptorIndex");
+  }
+
+  std::vector<DescriptorRecord>& records = desc->GetRecords();
+
+  SQLUSMALLINT zeroBasedIndex = RecNumber - 1;
+  DescriptorRecord& record = records[zeroBasedIndex];
+
+  record.m_type = Type;
+  record.m_datetimeIntervalCode = SubType;
+  record.m_length = Length;
+  record.m_precision = Precision;
+  record.m_scale = Scale;
+  record.m_indicatorPtr = StringLength;
+  record.m_indicatorPtr = Indicator;
+  desc->SetDataPtrOnRecord(Data, RecNumber);
+}
+			  
 /*	SQLSet(Param/Scroll/Stmt)Option -> SQLSetStmtAttr */
 RETCODE		SQL_API
 WD_SetStmtAttr(HSTMT StatementHandle,

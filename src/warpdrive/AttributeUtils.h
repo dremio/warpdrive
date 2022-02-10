@@ -46,4 +46,20 @@ namespace ODBC {
       *outputLenPtr = static_cast<SQLINTEGER>(result);
     }
   }
+
+  template<typename T>
+  inline void SetAttribute(SQLPOINTER newValue, T& attributeToWrite) {
+    SQLLEN valueAsLen = reinterpret_cast<SQLLEN>(newValue);
+    attributeToWrite = static_cast<T>(valueAsLen);
+  }
+
+  template<typename T>
+  inline void SetPointerAttribute(SQLPOINTER newValue, T& attributeToWrite) {
+    attributeToWrite = static_cast<T>(newValue);
+  }
+
+  inline void SetAttributeUTF8(SQLPOINTER newValue, SQLINTEGER inputLength, std::string& attributeToWrite) {
+    const char* newValueAsChar = static_cast<const char*>(newValue);
+    attributeToWrite.assign(newValueAsChar, inputLength == SQL_NTS ? strlen(newValueAsChar) : inputLength);
+  }
 }
