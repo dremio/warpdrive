@@ -38,6 +38,10 @@ class ODBCStatement {
     void Prepare(const std::string& query);
     void ExecutePrepared();
     void ExecuteDirect(const std::string& query);
+
+    /**
+     * @brief Returns true if the number of rows fetch was greater than zero.
+     */
     bool Fetch(size_t rows);
     bool isPrepared() const;
 
@@ -49,6 +53,12 @@ class ODBCStatement {
     inline const ODBCDescriptor* GetIRD() const {
       return m_ird.get();
     }
+
+    inline ODBCDescriptor* GetARD() {
+      return m_currentArd;
+    }
+
+    bool GetData(SQLSMALLINT recordNumber, SQLSMALLINT cType, SQLPOINTER dataPtr, SQLLEN bufferLength, SQLLEN* indicatorPtr);
 
     /**
      * @brief Closes the cursor. This does _not_ un-prepare the statement or change
@@ -73,5 +83,6 @@ class ODBCStatement {
     ODBCDescriptor* m_currentArd;
     ODBCDescriptor* m_currentApd;
     bool m_isPrepared;
+    bool m_hasReachedEndOfResult;
 };
 }

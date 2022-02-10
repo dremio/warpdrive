@@ -8,10 +8,14 @@
 #include "ODBCConnection.h"
 #include "ODBCDescriptor.h"
 #include "sql.h"
+#include "sqlext.h"
+#include "sqltypes.h"
+#include "wdodbc.h"
 #include <odbcabstraction/statement.h>
 #include <odbcabstraction/exceptions.h>
 #include <odbcabstraction/result_set.h>
 #include <odbcabstraction/result_set_metadata.h>
+#include <odbcabstraction/types.h>
 #include <boost/optional.hpp>
 
 using namespace ODBC;
@@ -23,6 +27,149 @@ namespace {
       SQLHANDLE* outputHandle = static_cast<SQLHANDLE*>(output);
       *outputHandle = reinterpret_cast<SQLHANDLE>(descriptor);
       *lenPtr = sizeof(SQLHANDLE);
+    }
+  }
+
+  size_t GetLength(const DescriptorRecord& record) {
+    switch (record.m_type) {
+      case SQL_C_CHAR:
+      case SQL_C_WCHAR:
+      case SQL_C_BINARY:
+        return record.m_length;
+      
+      case SQL_C_BIT:
+      case SQL_C_TINYINT:
+      case SQL_C_STINYINT:
+      case SQL_C_UTINYINT:
+        return sizeof(SQLSCHAR);
+      
+      case SQL_C_SHORT:
+      case SQL_C_SSHORT:
+      case SQL_C_USHORT:
+        return sizeof(SQLSMALLINT);
+
+      case SQL_C_LONG:
+      case SQL_C_SLONG:
+      case SQL_C_ULONG:
+      case SQL_C_FLOAT:
+       return sizeof(SQLINTEGER);
+
+      case SQL_C_SBIGINT:
+      case SQL_C_UBIGINT:
+      case SQL_C_DOUBLE:
+        return sizeof(SQLBIGINT);
+
+      case SQL_C_NUMERIC:
+        return sizeof(SQL_NUMERIC_STRUCT);
+
+      case SQL_C_DATE:
+      case SQL_C_TYPE_DATE:
+        return sizeof(SQL_DATE_STRUCT);
+      
+      case SQL_C_TIME:
+      case SQL_C_TYPE_TIME:
+        return sizeof(SQL_TIME_STRUCT);
+
+      case SQL_C_TIMESTAMP:
+      case SQL_C_TYPE_TIMESTAMP:
+        return sizeof(SQL_TIMESTAMP_STRUCT);
+
+      case SQL_C_INTERVAL_DAY:
+      case SQL_C_INTERVAL_DAY_TO_HOUR:
+      case SQL_C_INTERVAL_DAY_TO_MINUTE:
+      case SQL_C_INTERVAL_DAY_TO_SECOND:
+      case SQL_C_INTERVAL_HOUR:
+      case SQL_C_INTERVAL_HOUR_TO_MINUTE:
+      case SQL_C_INTERVAL_HOUR_TO_SECOND:
+      case SQL_C_INTERVAL_MINUTE:
+      case SQL_C_INTERVAL_MINUTE_TO_SECOND:
+      case SQL_C_INTERVAL_SECOND:
+      case SQL_C_INTERVAL_YEAR:
+      case SQL_C_INTERVAL_YEAR_TO_MONTH:
+      case SQL_C_INTERVAL_MONTH:
+        return sizeof(SQL_INTERVAL_STRUCT);
+      default:
+        return record.m_length;
+    }
+  }
+
+  SQLSMALLINT getCTypeForSQLType(const DescriptorRecord& record) {
+    switch (record.m_conciseType) {
+      case SQL_CHAR:
+      case SQL_VARCHAR:
+      case SQL_LONGVARCHAR:
+        return SQL_C_CHAR;
+
+      case SQL_WCHAR:
+      case SQL_WVARCHAR:
+      case SQL_WLONGVARCHAR:
+       return SQL_C_WCHAR;
+
+      case SQL_BINARY:
+      case SQL_VARBINARY:
+      case SQL_LONGVARBINARY:
+        return SQL_C_BINARY;
+
+      case SQL_TINYINT:
+        return record.m_unsigned ? SQL_C_UTINYINT : SQL_C_STINYINT;
+      
+      case SQL_SMALLINT:
+        return record.m_unsigned ? SQL_C_USHORT : SQL_C_SSHORT;
+
+      case SQL_INTEGER:
+        return record.m_unsigned ? SQL_C_ULONG : SQL_C_SLONG;
+      
+      case SQL_BIGINT:
+        return record.m_unsigned ? SQL_C_UBIGINT : SQL_C_SBIGINT;
+
+      case SQL_REAL:
+        return SQL_C_FLOAT;
+
+      case SQL_FLOAT:
+      case SQL_DOUBLE:
+        return SQL_C_DOUBLE;
+
+      case SQL_DATE:
+      case SQL_TYPE_DATE:
+        return SQL_C_TYPE_DATE;
+
+      case SQL_TIME:
+      case SQL_TYPE_TIME:
+        return SQL_C_TYPE_TIME;
+
+      case SQL_TIMESTAMP:
+      case SQL_TYPE_TIMESTAMP:
+        return SQL_C_TYPE_TIMESTAMP;
+
+      case SQL_C_INTERVAL_DAY:
+        return SQL_INTERVAL_DAY;
+      case SQL_C_INTERVAL_DAY_TO_HOUR:
+        return SQL_INTERVAL_DAY_TO_HOUR;
+      case SQL_C_INTERVAL_DAY_TO_MINUTE:
+        return SQL_INTERVAL_DAY_TO_MINUTE;
+      case SQL_C_INTERVAL_DAY_TO_SECOND:
+        return SQL_INTERVAL_DAY_TO_SECOND;
+      case SQL_C_INTERVAL_HOUR:
+        return SQL_INTERVAL_HOUR;
+      case SQL_C_INTERVAL_HOUR_TO_MINUTE:
+        return SQL_INTERVAL_HOUR_TO_MINUTE;
+      case SQL_C_INTERVAL_HOUR_TO_SECOND:
+        return SQL_INTERVAL_HOUR_TO_SECOND;
+      case SQL_C_INTERVAL_MINUTE:
+        return SQL_INTERVAL_MINUTE;
+      case SQL_C_INTERVAL_MINUTE_TO_SECOND:
+        return SQL_INTERVAL_MINUTE_TO_SECOND;
+      case SQL_C_INTERVAL_SECOND:
+        return SQL_INTERVAL_SECOND;
+      case SQL_C_INTERVAL_YEAR:
+        return SQL_INTERVAL_YEAR;
+      case SQL_C_INTERVAL_YEAR_TO_MONTH:
+        return SQL_INTERVAL_YEAR_TO_MONTH;
+      case SQL_C_INTERVAL_MONTH:
+        return SQL_INTERVAL_MONTH;
+
+      default:
+        throw DriverException("Unknown type");
     }
   }
 }
@@ -38,7 +185,8 @@ ODBCStatement::ODBCStatement(ODBCConnection& connection,
   m_ird(std::make_shared<ODBCDescriptor>(nullptr, false, false, connection.IsOdbc2Connection())),
   m_currentArd(m_builtInApd.get()),
   m_currentApd(m_builtInApd.get()),
-  m_isPrepared(false) {
+  m_isPrepared(false),
+  m_hasReachedEndOfResult(false) {
 }
     
 bool ODBCStatement::isPrepared() const {
@@ -60,13 +208,17 @@ void ODBCStatement::ExecutePrepared() {
   }
 
   if (m_spiStatement->ExecutePrepared()) {
+    m_currenResult = m_spiStatement->GetResultSet();
     m_ird->PopulateFromResultSetMetadata(m_spiStatement->GetResultSet()->GetMetadata().get());
+    m_hasReachedEndOfResult = false;
   }
 }
 
 void ODBCStatement::ExecuteDirect(const std::string& query) {
   if (m_spiStatement->Execute(query)) {
-    m_ird->PopulateFromResultSetMetadata(m_spiStatement->GetResultSet()->GetMetadata().get());
+    m_currenResult = m_spiStatement->GetResultSet();
+    m_ird->PopulateFromResultSetMetadata(m_currenResult->GetMetadata().get());
+    m_hasReachedEndOfResult = false;
   }
 
   // Direct execution wipes out the prepared state.
@@ -74,11 +226,34 @@ void ODBCStatement::ExecuteDirect(const std::string& query) {
 }
 
 bool ODBCStatement::Fetch(size_t rows) {
-  // Check ARD if bindings have changed.
-  // If they have, apply binding changes to ResultSet.
+  if (m_hasReachedEndOfResult) {
+    return false;
+  }
 
-  // Then call Move(rows) on the ResultSet.
-  return false;
+  if (m_currentArd->HaveBindingsChanged()) {
+    // TODO: Deal handle when offset != bufferlength.
+
+    // Wipe out all bindings in the ResultSet.
+    // Note that the number of ARD records can both be more or less
+    // than the number of columns.
+    SQLULEN bindOffset = m_currentArd->GetBindOffset();
+    for (size_t i = 0; i < m_ird->GetRecords().size(); i++) {
+      if (i < m_currentArd->GetRecords().size() && m_currentArd->GetRecords()[i].m_isBound) {
+        const DescriptorRecord& ardRecord = m_currentArd->GetRecords()[i];
+        m_currenResult->BindColumn(i+1, static_cast<CDataType>(ardRecord.m_type), ardRecord.m_precision,
+          ardRecord.m_scale, reinterpret_cast<char*>(ardRecord.m_dataPtr) + bindOffset,
+          GetLength(ardRecord),
+          reinterpret_cast<ssize_t*>(
+            reinterpret_cast<char*>(ardRecord.m_indicatorPtr) + bindOffset));
+      } else {
+        m_currenResult->BindColumn(i+1, CDataType_CHAR /* arbitrary type, not used */, 0, 0, nullptr, 0, nullptr);
+      }
+    }
+  }
+
+  size_t rowsFetched = m_currenResult->Move(rows);
+  m_hasReachedEndOfResult = rowsFetched != rows;
+  return rowsFetched != 0;
 }
 
 void ODBCStatement::GetAttribute(SQLINTEGER statementAttribute, SQLPOINTER output, SQLLEN bufferSize, SQLLEN* strLenPtr) {
@@ -149,6 +324,40 @@ void ODBCStatement::closeCursor(bool suppressErrors) {
   if (m_currenResult.get()) {
     // TODO: call close() on the current ResultSet, but preserve bindings.
   }
+}
+
+bool ODBCStatement::GetData(SQLSMALLINT recordNumber, SQLSMALLINT cType, SQLPOINTER dataPtr, SQLLEN bufferLength, SQLLEN* indicatorPtr) {
+  if (recordNumber == 0) {
+    throw DriverException("Bookmarks are not supported");
+  }
+
+  SQLSMALLINT evaluatedCType = cType;
+
+  // TODO: Get proper default precision and scale from abstraction.
+  int precision = 0;
+  int scale = 0;
+
+  if (cType == SQL_ARD_TYPE) {
+    // DM should validate the ARD size.
+    assert(m_currentArd->GetRecords().size() <= recordNumber);
+    const DescriptorRecord& record = m_currentArd->GetRecords()[recordNumber-1];
+    evaluatedCType = record.m_conciseType;
+    precision = record.m_precision;
+    scale = record.m_scale;
+  }
+
+  // Note: this is intentionally not an else if, since the type can be SQL_C_DEFAULT in the ARD.
+  if (evaluatedCType == SQL_C_DEFAULT) {
+    const DescriptorRecord& ardRecord = m_currentArd->GetRecords()[recordNumber-1];
+    precision = ardRecord.m_precision;
+    scale = ardRecord.m_scale;
+
+    const DescriptorRecord& irdRecord = m_ird->GetRecords()[recordNumber-1];
+    evaluatedCType = getCTypeForSQLType(irdRecord);
+  }
+
+  return m_currenResult->GetData(recordNumber, static_cast<CDataType>(evaluatedCType), precision,
+                       scale, dataPtr, bufferLength, indicatorPtr);
 }
 
 void ODBCStatement::releaseStatement() {

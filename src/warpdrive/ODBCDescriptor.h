@@ -5,6 +5,7 @@
  */
 #pragma once
 
+#include "sqlext.h"
 #include "sqltypes.h"
 #include <sql.h>
 #include <memory>
@@ -44,19 +45,22 @@ namespace ODBC
     SQLINTEGER m_caseSensitive;
     SQLINTEGER m_datetimeIntervalPrecision;
     SQLINTEGER m_numPrecRadix;
-    SQLSMALLINT m_conciseType;
+    SQLSMALLINT m_conciseType = SQL_C_DEFAULT;
     SQLSMALLINT m_datetimeIntervalCode;
     SQLSMALLINT m_fixedPrecScale;
     SQLSMALLINT m_nullable;
-    SQLSMALLINT m_paramType;
+    SQLSMALLINT m_paramType = SQL_PARAM_INPUT;
     SQLSMALLINT m_precision;
     SQLSMALLINT m_rowVer;
     SQLSMALLINT m_scale;
     SQLSMALLINT m_searchable;
-    SQLSMALLINT m_type;
+    SQLSMALLINT m_type = SQL_C_DEFAULT;
     SQLSMALLINT m_unnamed;
     SQLSMALLINT m_unsigned;
     SQLSMALLINT m_updatable;
+    bool m_isBound = false;
+
+    void CheckConsistency();
   };
 
   class ODBCDescriptor {
@@ -81,12 +85,40 @@ namespace ODBC
       void PopulateFromResultSetMetadata(driver::odbcabstraction::ResultSetMetadata* rsmd);
 
       const std::vector<DescriptorRecord>& GetRecords() const;
+      std::vector<DescriptorRecord>& GetRecords();
+
+      void BindCol(SQLSMALLINT recordNumber, SQLSMALLINT cType, SQLPOINTER dataPtr, SQLLEN bufferLength, SQLLEN* indicatorPtr);
+      void SetDataPtrOnRecord(SQLPOINTER dataPtr, SQLSMALLINT recNumber);
+
+      inline SQLULEN GetBindOffset() {
+        return m_bindOffsetPtr ? *m_bindOffsetPtr : 0UL;
+      }
+
+      inline SQLULEN GetBoundStructOffset() {
+        // If this is SQL_BIND_BY_COLUMN, m_bindType is zero which indicates no offset due to use of a bound struct.
+        // If this is non-zero, row-wise binding is being used so the app should set this to sizeof(their struct).
+        return m_bindType;
+      }
+
+      inline SQLULEN GetArraySize() {
+        return m_arraySize;
+      }
+
+      void NotifyBindingsHavePropagated() {
+        m_hasBindingsChanged = false;
+      }
 
     private:
-      ODBCConnection* m_owningConnection;
       std::vector<ODBCStatement*> m_registeredOnStatementsAsApd;
       std::vector<ODBCStatement*> m_registeredOnStatementsAsArd;
       std::vector<DescriptorRecord> m_records;
+      ODBCConnection* m_owningConnection;
+      SQLUSMALLINT* m_arrayStatusPtr;
+      SQLLEN* m_bindOffsetPtr;
+      SQLULEN* m_rowsProccessedPtr;
+      SQLULEN m_arraySize;
+      SQLINTEGER m_bindType;
+      SQLSMALLINT m_highestOneBasedBoundRecord;
       const bool m_is2xConnection;
       bool m_isAppDescriptor;
       bool m_isWritable;
