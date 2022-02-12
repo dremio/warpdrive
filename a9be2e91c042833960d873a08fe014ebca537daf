@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ff14e86_576c7342",
+        "filename": "src/warpdrive/odbcapi.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 956,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-02-12T17:42:55Z",
+      "side": 1,
+      "message": "I\u0027ll go create a locally scoped class for tracking/reverting these temporary ARD changes.",
+      "revId": "a9be2e91c042833960d873a08fe014ebca537daf",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5917b72e_e7e79955",
+        "filename": "src/warpdrive/odbcapi30.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-02-12T17:42:55Z",
+      "side": 1,
+      "message": "Will create a class to track/revert temporary ARD changes instead of copy/paste",
+      "revId": "a9be2e91c042833960d873a08fe014ebca537daf",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de",
+      "unresolved": true
+    }
+  ]
+}
