@@ -197,25 +197,33 @@ SQLFetchScroll(HSTMT StatementHandle,
   if (FetchOrientation != SQL_FETCH_NEXT) {
     throw DriverException("HY016 Fetch type unsupported");
   }
-  
+
+  struct ARDArraySizeTracker {
+    ARDArraySizeTracker(ODBCDescriptor* ard, SQLLEN newSize) :
+      m_ard(ard), m_newSize(newSize), m_oldSize(ard->GetArraySize()) {
+      if (m_newSize != m_oldSize) {
+        m_ard->SetHeaderField(SQL_DESC_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(m_newSize), 0);
+      }
+    }
+
+    ~ARDArraySizeTracker() {
+      if (m_newSize != m_oldSize) {
+        m_ard->SetHeaderField(SQL_DESC_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(m_oldSize), 0);
+      }
+    }
+
+    ODBCDescriptor* m_ard;
+    SQLLEN m_newSize;
+    SQLLEN m_oldSize;
+  };
+
   ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(StatementHandle);
   ODBCDescriptor* ard = stmt->GetARD();
-  SQLULEN oldArraySize = ard->GetArraySize();
-  try {
-	if (FetchOffset != oldArraySize) {
-      ard->SetHeaderField(SQL_DESC_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(FetchOffset), 0);
-	}
-	RETCODE result = WD_Fetch(StatementHandle);
-	if (FetchOffset != oldArraySize) {
-      ard->SetHeaderField(SQL_DESC_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(oldArraySize), 0);	  
-	}
-	return result;
-  } catch (...) {
-	if (FetchOffset != oldArraySize) {
-      ard->SetHeaderField(SQL_DESC_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(oldArraySize), 0);	  
-	}
-	return SQL_ERROR; 
-  }
+
+  ARDArraySizeTracker tracker(ard, FetchOffset);
+
+  RETCODE result = WD_Fetch(StatementHandle);
+  return result;
 }
 
 /*	SQLFree(Connect/Env/Stmt) -> SQLFreeHandle */
