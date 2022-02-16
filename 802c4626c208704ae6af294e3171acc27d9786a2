@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66f31c18_a2f2140f",
+        "filename": "src/warpdrive/ODBCDescriptor.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-02-16T17:32:23Z",
+      "side": 1,
+      "message": "Typo",
+      "revId": "802c4626c208704ae6af294e3171acc27d9786a2",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de",
+      "unresolved": true
+    }
+  ]
+}
