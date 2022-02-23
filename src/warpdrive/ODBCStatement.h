@@ -71,6 +71,10 @@ class ODBCStatement {
      */
     void releaseStatement();
 
+    void GetTables(const std::string* catalog, const std::string* schema, const std::string* table, const std::string* tableType);
+    void GetColumns(const std::string* catalog, const std::string* schema, const std::string* table, const std::string* column);
+    void GetTypeInfo(SQLSMALLINT dataType);
+
   private:
     ODBCConnection& m_connection;
     std::shared_ptr<driver::odbcabstraction::Statement> m_spiStatement;

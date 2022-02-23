@@ -112,76 +112,11 @@ SQLColumns(HSTMT StatementHandle,
 {
 	CSTR func = "SQLColumns";
 	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
 	SQLCHAR	*ctName = CatalogName, *scName = SchemaName,
 		*tbName = TableName, *clName = ColumnName;
-	ConnInfo *ci = &(SC_get_conn(stmt)->connInfo);
-	UWORD	flag	= PODBC_SEARCH_PUBLIC_SCHEMA;
-
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	if (stmt->options.metadata_id)
-		flag |= PODBC_NOT_SEARCH_PATTERN;
-	if (atoi(ci->show_oid_column))
-		flag |= PODBC_SHOW_OID_COLUMN;
-	if (atoi(ci->row_versioning))
-		flag |= PODBC_ROW_VERSIONING;
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
-	else
-		ret = WD_Columns(StatementHandle, ctName, NameLength1,
-				scName, NameLength2, tbName, NameLength3,
-				clName, NameLength4, flag, 0, 0);
-	if (SQL_SUCCESS == ret && theResultIsEmpty(stmt))
-	{
-		BOOL	ifallupper = TRUE, reexec = FALSE;
-		SQLCHAR *newCt = NULL, *newSc = NULL, *newTb = NULL, *newCl = NULL;
-		ConnectionClass *conn = SC_get_conn(stmt);
-
-		if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier */
-			ifallupper = FALSE;
-		if (newCt = make_lstring_ifneeded(conn, CatalogName, NameLength1, ifallupper), NULL != newCt)
-		{
-			ctName = newCt;
-			reexec = TRUE;
-		}
-		if (newSc = make_lstring_ifneeded(conn, SchemaName, NameLength2, ifallupper), NULL != newSc)
-		{
-			scName = newSc;
-			reexec = TRUE;
-		}
-		if (newTb = make_lstring_ifneeded(conn, TableName, NameLength3, ifallupper), NULL != newTb)
-		{
-			tbName = newTb;
-			reexec = TRUE;
-		}
-		if (newCl = make_lstring_ifneeded(conn, ColumnName, NameLength4, ifallupper), NULL != newCl)
-		{
-			clName = newCl;
-			reexec = TRUE;
-		}
-		if (reexec)
-		{
-			ret = WD_Columns(StatementHandle, ctName, NameLength1,
-				scName, NameLength2, tbName, NameLength3,
-				clName, NameLength4, flag, 0, 0);
-			if (newCt)
-				free(newCt);
-			if (newSc)
-				free(newSc);
-			if (newTb)
-				free(newTb);
-			if (newCl)
-				free(newCl);
-		}
-	}
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
+	ret = WD_Columns(StatementHandle, ctName, NameLength1,
+		scName, NameLength2, tbName, NameLength3,
+		clName, NameLength4);
 	return ret;
 }
 
@@ -463,23 +398,7 @@ SQLGetTypeInfo(HSTMT StatementHandle,
 {
 	CSTR func = "SQLGetTypeInfo";
 	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
-
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check((StatementClass *) StatementHandle, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
-	else
-	{
-		StartRollbackState(stmt);
-		ret = WD_GetTypeInfo(StatementHandle, DataType);
-		ret = DiscardStatementSvp(stmt, ret, FALSE);
-	}
-	LEAVE_STMT_CS(stmt);
+	ret = WD_GetTypeInfo(StatementHandle, DataType);
 	return ret;
 }
 #endif /* UNICODE_SUPPORTXX */
@@ -766,63 +685,13 @@ SQLTables(HSTMT StatementHandle,
 {
 	CSTR func = "SQLTables";
 	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
 	SQLCHAR *ctName = CatalogName, *scName = SchemaName, *tbName = TableName;
 	UWORD	flag = 0;
 
 	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	if (stmt->options.metadata_id)
-		flag |= PODBC_NOT_SEARCH_PATTERN;
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
-	else
-		ret = WD_Tables(StatementHandle, ctName, NameLength1,
-				scName, NameLength2, tbName, NameLength3,
-					TableType, NameLength4, flag);
-	if (SQL_SUCCESS == ret && theResultIsEmpty(stmt))
-	{
-		BOOL	ifallupper = TRUE, reexec = FALSE;
-		SQLCHAR *newCt =NULL, *newSc = NULL, *newTb = NULL;
-		ConnectionClass *conn = SC_get_conn(stmt);
-
-		if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier */
-			ifallupper = FALSE;
-		if (newCt = make_lstring_ifneeded(conn, CatalogName, NameLength1, ifallupper), NULL != newCt)
-		{
-			ctName = newCt;
-			reexec = TRUE;
-		}
-		if (newSc = make_lstring_ifneeded(conn, SchemaName, NameLength2, ifallupper), NULL != newSc)
-		{
-			scName = newSc;
-			reexec = TRUE;
-		}
-		if (newTb = make_lstring_ifneeded(conn, TableName, NameLength3, ifallupper), NULL != newTb)
-		{
-			tbName = newTb;
-			reexec = TRUE;
-		}
-		if (reexec)
-		{
-			ret = WD_Tables(StatementHandle, ctName, NameLength1,
-				scName, NameLength2, tbName, NameLength3,
-						TableType, NameLength4, flag);
-			if (newCt)
-				free(newCt);
-			if (newSc)
-				free(newSc);
-			if (newTb)
-				free(newTb);
-		}
-	}
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
+	ret = WD_Tables(StatementHandle, ctName, NameLength1,
+			scName, NameLength2, tbName, NameLength3,
+				TableType, NameLength4);
 	return ret;
 }
 

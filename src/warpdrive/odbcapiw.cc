@@ -40,43 +40,16 @@ SQLColumnsW(HSTMT StatementHandle,
 	RETCODE	ret;
 	char	*ctName, *scName, *tbName, *clName;
 	SQLLEN	nmlen1, nmlen2, nmlen3, nmlen4;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
-	ConnectionClass *conn;
-	BOOL	lower_id;
-	UWORD	flag = PODBC_SEARCH_PUBLIC_SCHEMA;
-	ConnInfo	*ci;
-
 	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	conn = SC_get_conn(stmt);
-	ci = &(conn->connInfo);
-	lower_id = SC_is_lower_case(stmt, conn);
-	ctName = ucs2_to_utf8(CatalogName, NameLength1, &nmlen1, lower_id);
-	scName = ucs2_to_utf8(SchemaName, NameLength2, &nmlen2, lower_id);
-	tbName = ucs2_to_utf8(TableName, NameLength3, &nmlen3, lower_id);
-	clName = ucs2_to_utf8(ColumnName, NameLength4, &nmlen4, lower_id);
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	if (stmt->options.metadata_id)
-		flag |= PODBC_NOT_SEARCH_PATTERN;
-	if (atoi(ci->show_oid_column))
-		flag |= PODBC_SHOW_OID_COLUMN;
-	if (atoi(ci->row_versioning))
-		flag |= PODBC_ROW_VERSIONING;
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
-	else
-		ret = WD_Columns(StatementHandle,
-							(SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
-							(SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
-							(SQLCHAR *) tbName, (SQLSMALLINT) nmlen3,
-							(SQLCHAR *) clName, (SQLSMALLINT) nmlen4,
-							flag, 0, 0);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
+	ctName = ucs2_to_utf8(CatalogName, NameLength1, &nmlen1, FALSE);
+	scName = ucs2_to_utf8(SchemaName, NameLength2, &nmlen2, FALSE);
+	tbName = ucs2_to_utf8(TableName, NameLength3, &nmlen3, FALSE);
+	clName = ucs2_to_utf8(ColumnName, NameLength4, &nmlen4, FALSE);
+	ret = WD_Columns(StatementHandle,
+						(SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
+						(SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
+						(SQLCHAR *) tbName, (SQLSMALLINT) nmlen3,
+						(SQLCHAR *) clName, (SQLSMALLINT) nmlen4);
 	if (ctName)
 		free(ctName);
 	if (scName)
@@ -561,36 +534,17 @@ SQLTablesW(HSTMT StatementHandle,
 	RETCODE	ret;
 	char	*ctName, *scName, *tbName, *tbType;
 	SQLLEN	nmlen1, nmlen2, nmlen3, nmlen4;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
-	ConnectionClass *conn;
-	BOOL lower_id;
-	UWORD	flag = 0;
 
 	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	conn = SC_get_conn(stmt);
-	lower_id = SC_is_lower_case(stmt, conn);
-	ctName = ucs2_to_utf8(CatalogName, NameLength1, &nmlen1, lower_id);
-	scName = ucs2_to_utf8(SchemaName, NameLength2, &nmlen2, lower_id);
-	tbName = ucs2_to_utf8(TableName, NameLength3, &nmlen3, lower_id);
+	ctName = ucs2_to_utf8(CatalogName, NameLength1, &nmlen1, FALSE);
+	scName = ucs2_to_utf8(SchemaName, NameLength2, &nmlen2, FALSE);
+	tbName = ucs2_to_utf8(TableName, NameLength3, &nmlen3, FALSE);
 	tbType = ucs2_to_utf8(TableType, NameLength4, &nmlen4, FALSE);
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	if (stmt->options.metadata_id)
-		flag |= PODBC_NOT_SEARCH_PATTERN;
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
-	else
-		ret = WD_Tables(StatementHandle,
-						   (SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
-						   (SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
-						   (SQLCHAR *) tbName, (SQLSMALLINT) nmlen3,
-						   (SQLCHAR *) tbType, (SQLSMALLINT) nmlen4, flag);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
+	ret = WD_Tables(StatementHandle,
+						(SQLCHAR *) ctName, (SQLSMALLINT) nmlen1,
+						(SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
+						(SQLCHAR *) tbName, (SQLSMALLINT) nmlen3,
+						(SQLCHAR *) tbType, (SQLSMALLINT) nmlen4);
 	if (ctName)
 		free(ctName);
 	if (scName)
@@ -1003,21 +957,7 @@ SQLGetTypeInfoW(SQLHSTMT	StatementHandle,
 {
 	CSTR func = "SQLGetTypeInfoW";
 	RETCODE	ret;
-	StatementClass * stmt = (StatementClass *) StatementHandle;
-
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
-	else
-		ret = WD_GetTypeInfo(StatementHandle, DataType);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
+	ret = WD_GetTypeInfo(StatementHandle, DataType);
 	return ret;
 }
 

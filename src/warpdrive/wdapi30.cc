@@ -1934,6 +1934,8 @@ RETCODE SQL_API WD_SetDescRec(SQLHDESC DescriptorHandle,
   record.m_indicatorPtr = StringLength;
   record.m_indicatorPtr = Indicator;
   desc->SetDataPtrOnRecord(Data, RecNumber);
+
+  return SQL_SUCCESS;
 }
 			  
 /*	SQLSet(Param/Scroll/Stmt)Option -> SQLSetStmtAttr */

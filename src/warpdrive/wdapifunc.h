@@ -44,10 +44,7 @@ RETCODE SQL_API WD_Columns(HSTMT StatementHandle,
 			  const SQLCHAR *CatalogName, SQLSMALLINT NameLength1,
 			  const SQLCHAR *SchemaName, SQLSMALLINT NameLength2,
 			  const SQLCHAR *TableName, SQLSMALLINT NameLength3,
-			  const SQLCHAR *ColumnName, SQLSMALLINT NameLength4,
-			  UWORD flag,
-			  OID	reloid,
-			  Int2 attnum);
+			  const SQLCHAR *ColumnName, SQLSMALLINT NameLength4);
 RETCODE SQL_API WD_Connect(HDBC ConnectionHandle,
 		const SQLCHAR *ServerName, SQLSMALLINT NameLength1,
 		const SQLCHAR *UserName, SQLSMALLINT NameLength2,
@@ -156,8 +153,7 @@ RETCODE SQL_API WD_Tables(HSTMT StatementHandle,
 			 const SQLCHAR *CatalogName, SQLSMALLINT NameLength1,
 			 const SQLCHAR *SchemaName, SQLSMALLINT NameLength2,
 			 const SQLCHAR *TableName, SQLSMALLINT NameLength3,
-			 const SQLCHAR *TableType, SQLSMALLINT NameLength4,
-			UWORD flag);
+			 const SQLCHAR *TableType, SQLSMALLINT NameLength4);
 RETCODE SQL_API WD_Transact(HENV EnvironmentHandle,
 			   HDBC ConnectionHandle, SQLUSMALLINT CompletionType);
 RETCODE SQL_API WD_ColAttributes(

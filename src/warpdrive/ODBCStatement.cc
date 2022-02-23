@@ -322,7 +322,7 @@ void ODBCStatement::closeCursor(bool suppressErrors) {
   }
   
   if (m_currenResult.get()) {
-    // TODO: call close() on the current ResultSet, but preserve bindings.
+    m_currenResult->Close();
   }
 }
 
@@ -363,4 +363,44 @@ bool ODBCStatement::GetData(SQLSMALLINT recordNumber, SQLSMALLINT cType, SQLPOIN
 void ODBCStatement::releaseStatement() {
   closeCursor(true);
   m_connection.dropStatement(this);
+}
+
+void ODBCStatement::GetTables(const std::string* catalog, const std::string* schema, const std::string* table, const std::string* tableType) {
+  closeCursor(true);
+  if (m_connection.IsOdbc2Connection()) {
+    m_currenResult = m_spiStatement->GetTables_V2(catalog, schema, table, tableType);
+  } else {
+    m_currenResult = m_spiStatement->GetTables_V3(catalog, schema, table, tableType);
+  }
+  m_ird->PopulateFromResultSetMetadata(m_currenResult->GetMetadata().get());
+  m_hasReachedEndOfResult = false;
+
+  // Direct execution wipes out the prepared state.
+  m_isPrepared = false;
+}
+
+void ODBCStatement::GetColumns(const std::string* catalog, const std::string* schema, const std::string* table, const std::string* column) {
+  closeCursor(true);
+  if (m_connection.IsOdbc2Connection()) {
+    m_currenResult = m_spiStatement->GetColumns_V2(catalog, schema, table, column);
+  } else {
+    m_currenResult = m_spiStatement->GetColumns_V3(catalog, schema, table, column);
+  }
+  m_ird->PopulateFromResultSetMetadata(m_currenResult->GetMetadata().get());
+  m_hasReachedEndOfResult = false;
+
+  // Direct execution wipes out the prepared state.
+  m_isPrepared = false;
+}
+
+void ODBCStatement::GetTypeInfo(SQLSMALLINT dataType) {
+  closeCursor(true);
+  m_currenResult = m_spiStatement->GetTypeInfo(dataType);
+
+  m_ird->PopulateFromResultSetMetadata(m_currenResult->GetMetadata().get());
+  m_hasReachedEndOfResult = false;
+
+  // Direct execution wipes out the prepared state.
+  m_isPrepared = false;
+
 }

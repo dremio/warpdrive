@@ -554,7 +554,7 @@ else()
   set(ODBCABSTRACTION_REPO https://github.com/jcralmeida/flightsql-odbc.git)
 endif()
 
-define_option(ODBCABSTRACTION_GIT_TAG, "Tag for the ODBC Abstraction project", "master")
+define_option(ODBCABSTRACTION_GIT_TAG, "Tag for the ODBC Abstraction project" "master")
 
 ExternalProject_Add(ODBCAbstraction
     GIT_REPOSITORY ${ODBCABSTRACTION_REPO}

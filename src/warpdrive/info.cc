@@ -41,6 +41,12 @@
 #include "multibyte.h"
 #include "catfunc.h"
 
+#include <string>
+
+#include "ODBCStatement.h"
+
+using namespace ODBC;
+
 /*	Trigger related stuff for SQLForeign Keys */
 #define TRIGGER_SHIFT 3
 #define TRIGGER_MASK   0x03
@@ -1145,187 +1151,9 @@ WD_GetTypeInfo(HSTMT hstmt,
 				  SQLSMALLINT fSqlType)
 {
 	CSTR func = "WD_GetTypeInfo";
-	StatementClass *stmt = (StatementClass *) hstmt;
-	ConnectionClass	*conn;
-	QResultClass	*res = NULL;
-	TupleField	*tuple;
-	int			i, result_cols;
-
-	/* Int4 type; */
-	Int4		wdtype;
-	Int2		sqlType;
-	RETCODE		ret = SQL_ERROR, result;
-	static const char *catcn[][2] = {
-		{"TYPE_NAME", "TYPE_NAME"},
-		{"DATA_TYPE", "DATA_TYPE"},
-		{"COLUMN_SIZE", "PRECISION"},
-		{"LITERAL_PREFIX", "LITERAL_PREFIX"},
-		{"LITERAL_SUFFIX", "LITERAL_SUFFIX"},
-		{"CREATE_PARAMS", "CREATE_PARAMS"},
-		{"NULLABLE", "NULLABLE"},
-		{"CASE_SENSITIVE", "CASE_SENSITIVE"},
-		{"SEARCHABLE", "SEARCHABLE"},
-		{"UNSIGNED_ATTRIBUTE", "UNSIGNED_ATTRIBUTE"},
-		{"FIXED_PREC_SCALE", "MONEY"},
-		{"AUTO_UNIQUE_VALUE", "AUTO_INCREMENT"},
-		{"LOCAL_TYPE_NAME", "LOCAL_TYPE_NAME"},
-		{"MINIMUM_SCALE", "MINIMUM_SCALE"},
-		{"MAXIMUM_SCALE", "MAXIMUM_SCALE"},
-		{"SQL_DATA_TYPE", "SQL_DATA_TYPE"},
-		{"SQL_DATETIME_SUB", "SQL_DATETIME_SUB"},
-		{"NUM_PREC_RADIX", "NUM_PREC_RADIX"},
-		{"INTERVAL_PRECISION", "INTERVAL_PRECISION"} };
-	EnvironmentClass	*env;
-	BOOL is_ODBC2;
-
-	MYLOG(0, "entering...fSqlType=%d\n", fSqlType);
-
-	if (result = SC_initialize_and_recycle(stmt), SQL_SUCCESS != result)
-		return result;
-
-	conn = SC_get_conn(stmt);
-	env = CC_get_env(conn);
-	is_ODBC2 = EN_is_odbc2(env);
-	if (res = QR_Constructor(), !res)
-	{
-		SC_set_error(stmt, STMT_INTERNAL_ERROR, "Error creating result.", func);
-		return SQL_ERROR;
-	}
-	SC_set_Result(stmt, res);
-
-#define	return	DONT_CALL_RETURN_FROM_HERE???
-	result_cols = NUM_OF_GETTYPE_FIELDS;
-	extend_column_bindings(SC_get_ARDF(stmt), result_cols);
-
-	stmt->catalog_result = TRUE;
-	QR_set_num_fields(res, result_cols);
-	QR_set_field_info_EN(res, 0, WD_TYPE_VARCHAR, MAX_INFO_STRING);
-	QR_set_field_info_EN(res, 1, WD_TYPE_INT2, 2);
-	QR_set_field_info_EN(res, 2, WD_TYPE_INT4, 4);
-	QR_set_field_info_EN(res, 3, WD_TYPE_VARCHAR, MAX_INFO_STRING);
-	QR_set_field_info_EN(res, 4, WD_TYPE_VARCHAR, MAX_INFO_STRING);
-	QR_set_field_info_EN(res, 5, WD_TYPE_VARCHAR, MAX_INFO_STRING);
-	QR_set_field_info_EN(res, 6, WD_TYPE_INT2, 2);
-	QR_set_field_info_EN(res, 7, WD_TYPE_INT2, 2);
-	QR_set_field_info_EN(res, 8, WD_TYPE_INT2, 2);
-	QR_set_field_info_EN(res, 9, WD_TYPE_INT2, 2);
-	QR_set_field_info_EN(res, 10, WD_TYPE_INT2, 2);
-	QR_set_field_info_EN(res, 11, WD_TYPE_INT2, 2);
-	QR_set_field_info_EN(res, 12, WD_TYPE_VARCHAR, MAX_INFO_STRING);
-	QR_set_field_info_EN(res, 13, WD_TYPE_INT2, 2);
-	QR_set_field_info_EN(res, 14, WD_TYPE_INT2, 2);
-	QR_set_field_info_EN(res, 15, WD_TYPE_INT2, 2);
-	QR_set_field_info_EN(res, 16, WD_TYPE_INT2, 2);
-	QR_set_field_info_EN(res, 17, WD_TYPE_INT4, 4);
-	QR_set_field_info_EN(res, 18, WD_TYPE_INT2, 2);
-
-	for (i = 0, sqlType = sqlTypes[0]; sqlType; sqlType = sqlTypes[++i])
-	{
-		/* Filter unsupported data types when fSqlType = SQL_ALL_TYPES */
-		if (SQL_ALL_TYPES == fSqlType && EN_is_odbc2(env))
-		{
-			switch (sqlType)
-			{
-				case SQL_TYPE_DATE:
-				case SQL_TYPE_TIME:
-				case SQL_TYPE_TIMESTAMP:
-					continue;
-			}
-		}
-
-		wdtype = sqltype_to_wdtype(conn, sqlType);
-
-if (sqlType == SQL_LONGVARBINARY)
-{
-ConnInfo	*ci = &(conn->connInfo);
-MYLOG(DETAIL_LOG_LEVEL, "%d sqltype=%d -> wdtype=%d\n", ci->bytea_as_longvarbinary, sqlType, wdtype);
-}
-
-		if (fSqlType == SQL_ALL_TYPES || fSqlType == sqlType)
-		{
-			int	pgtcount = 1, aunq_match = -1, cnt;
-
-			/*if (SQL_INTEGER == sqlType || SQL_TINYINT == sqlType)*/
-			if (SQL_INTEGER == sqlType)
-			{
-MYLOG(0, "sqlType=%d ms_jet=%d\n", sqlType, conn->ms_jet);
-				if (conn->ms_jet)
-				{
-					aunq_match = 1;
-					pgtcount = 2;
-				}
-MYLOG(0, "aunq_match=%d pgtcount=%d\n", aunq_match, pgtcount);
-			}
-			for (cnt = 0; cnt < pgtcount; cnt ++)
-			{
-				if (tuple = QR_AddNew(res), NULL == tuple)
-				{
-					SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Couldn't QR_AddNew.", func);
-					goto cleanup;
-				}
-
-				/* These values can't be NULL */
-				if (aunq_match == cnt)
-				{
-					set_tuplefield_string(&tuple[GETTYPE_TYPE_NAME], wdtype_TO_NAME(conn, wdtype, TRUE));
-					set_tuplefield_int2(&tuple[GETTYPE_NULLABLE], SQL_NO_NULLS);
-MYLOG(DETAIL_LOG_LEVEL, "serial in\n");
-				}
-				else
-				{
-					set_tuplefield_string(&tuple[GETTYPE_TYPE_NAME], wdtype_TO_NAME(conn, wdtype, FALSE));
-					set_tuplefield_int2(&tuple[GETTYPE_NULLABLE], wdtype_nullable(conn, wdtype));
-				}
-				set_tuplefield_int2(&tuple[GETTYPE_DATA_TYPE], (Int2) sqlType);
-				set_tuplefield_int2(&tuple[GETTYPE_CASE_SENSITIVE], wdtype_case_sensitive(conn, wdtype));
-				set_tuplefield_int2(&tuple[GETTYPE_SEARCHABLE], wdtype_searchable(conn, wdtype));
-				set_tuplefield_int2(&tuple[GETTYPE_FIXED_PREC_SCALE], wdtype_money(conn, wdtype));
-
-			/*
-			 * Localized data-source dependent data type name (always
-			 * NULL)
-			 */
-				set_tuplefield_null(&tuple[GETTYPE_LOCAL_TYPE_NAME]);
-
-				/* These values can be NULL */
-				set_nullfield_int4(&tuple[GETTYPE_COLUMN_SIZE], wdtype_COLUMN_SIZE(conn, wdtype));
-				set_nullfield_string(&tuple[GETTYPE_LITERAL_PREFIX], wdtype_literal_prefix(conn, wdtype));
-				set_nullfield_string(&tuple[GETTYPE_LITERAL_SUFFIX], wdtype_literal_suffix(conn, wdtype));
-				set_nullfield_string(&tuple[GETTYPE_CREATE_PARAMS], wdtype_create_params(conn, wdtype));
-				if (1 < pgtcount)
-					set_tuplefield_int2(&tuple[GETTYPE_UNSIGNED_ATTRIBUTE], SQL_TRUE);
-				else
-					set_nullfield_int2(&tuple[GETTYPE_UNSIGNED_ATTRIBUTE], wdtype_unsigned(conn, wdtype));
-				if (aunq_match == cnt)
-					set_tuplefield_int2(&tuple[GETTYPE_AUTO_UNIQUE_VALUE], SQL_TRUE);
-				else
-					set_nullfield_int2(&tuple[GETTYPE_AUTO_UNIQUE_VALUE], wdtype_auto_increment(conn, wdtype));
-				set_nullfield_int2(&tuple[GETTYPE_MINIMUM_SCALE], wdtype_min_decimal_digits(conn, wdtype));
-				set_nullfield_int2(&tuple[GETTYPE_MAXIMUM_SCALE], wdtype_max_decimal_digits(conn, wdtype));
-				set_tuplefield_int2(&tuple[GETTYPE_SQL_DATA_TYPE], wdtype_TO_SQLDESCTYPE(conn, wdtype));
-				set_nullfield_int2(&tuple[GETTYPE_SQL_DATETIME_SUB], wdtype_TO_DATETIME_SUB(conn, wdtype));
-				set_nullfield_int4(&tuple[GETTYPE_NUM_PREC_RADIX], wdtype_radix(conn, wdtype));
-				set_nullfield_int4(&tuple[GETTYPE_INTERVAL_PRECISION], 0);
-			}
-		}
-	}
-	ret = SQL_SUCCESS;
-
-cleanup:
-#undef	return
-	/*
-	 * also, things need to think that this statement is finished so the
-	 * results can be retrieved.
-	 */
-	stmt->status = STMT_FINISHED;
-	stmt->currTuple = -1;
-	if (SQL_SUCCEEDED(ret))
-		SC_set_rowset_start(stmt, -1, FALSE);
-	else
-		SC_set_Result(stmt, NULL);
-	SC_set_current_col(stmt, -1);
-
-	return ret;
+	ODBCStatement* statement = reinterpret_cast<ODBCStatement*>(hstmt);
+	statement->GetTypeInfo(fSqlType);
+	return SQL_SUCCESS;
 }
 
 
@@ -1764,474 +1592,41 @@ WD_Tables(HSTMT hstmt,
 			 const SQLCHAR * szTableName, /* PV E*/
 			 SQLSMALLINT cbTableName,
 			 const SQLCHAR * szTableType,
-			 SQLSMALLINT cbTableType,
-			 UWORD	flag)
+			 SQLSMALLINT cbTableType)
 {
-	return SQL_SUCCESS;
-	#if 0
 	CSTR func = "WD_Tables";
-	StatementClass *stmt = (StatementClass *) hstmt;
-	StatementClass *tbl_stmt = NULL;
-	QResultClass	*res;
-	TupleField	*tuple;
-	RETCODE		ret = SQL_ERROR, result;
-	int		result_cols;
-	char		*tableType = NULL;
-	PQExpBufferData		tables_query = {0};
-	char		table_name[MAX_INFO_STRING],
-				table_owner[MAX_INFO_STRING],
-				relkind_or_hasrules[MAX_INFO_STRING];
-#ifdef	HAVE_STRTOK_R
-	char		*last;
-#endif /* HAVE_STRTOK_R */
-	ConnectionClass *conn;
-	ConnInfo   *ci;
-	char	*escCatName = NULL, *escSchemaName = NULL, *escTableName = NULL;
-	/* Support up to 32 system table prefixes. Should be more than enough. */
-#define MAX_PREFIXES 32
-	char	   *prefix[MAX_PREFIXES],
-				prefixes[MEDIUM_REGISTRY_LEN];
-	int			nprefixes;
-	char		show_system_tables,
-				show_regular_tables,
-				show_views,
-				show_matviews,
-				show_foreign_tables;
-	char		regular_table,
-				view,
-				matview,
-				foreign_table,
-				systable;
-	int			i;
-	SQLSMALLINT		internal_asis_type = SQL_C_CHAR, cbSchemaName;
-	const char	*like_or_eq, *op_string;
-	const SQLCHAR *szSchemaName;
-	BOOL		search_pattern;
-	BOOL		list_cat = FALSE, list_schemas = FALSE, list_table_types = FALSE, list_some = FALSE;
-	SQLLEN		cbRelname, cbRelkind, cbSchName;
-	EnvironmentClass *env;
-	BOOL is_ODBC2;
-	static const char *catcn[][2] = {
-		{"TABLE_CAT", "TABLE_QUALIFIER"},
-		{"TABLE_SCHEM", "TABLE_OWNER"},
-		{"TABLE_NAME", "TABLE_NAME"},
-		{"TABLE_TYPE", "TABLE_TYPE"},
-		{"REMARKS", "REMARKS"}};
-
-	MYLOG(0, "entering...stmt=%p scnm=%p len=%d\n", stmt, szTableOwner, cbTableOwner);
-
-	if (result = SC_initialize_and_recycle(stmt), SQL_SUCCESS != result)
-		return result;
-
-	conn = SC_get_conn(stmt);
-	ci = &(conn->connInfo);
-	env = static_cast<EnvironmentClass*>(CC_get_env(conn));
-	is_ODBC2 = EN_is_odbc2(env);
-
-	result = WD_AllocStmt(conn, (HSTMT *) &tbl_stmt, 0);
-	if (!SQL_SUCCEEDED(result))
-	{
-		SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Couldn't allocate statement for WD_Tables result.", func);
-		return SQL_ERROR;
-	}
-	szSchemaName = szTableOwner;
-	cbSchemaName = cbTableOwner;
-
-#define	return	DONT_CALL_RETURN_FROM_HERE???
-	search_pattern = (0 == (flag & PODBC_NOT_SEARCH_PATTERN));
-	if (search_pattern)
-	{
-		like_or_eq = likeop;
-		escCatName = adjustLikePattern(szTableQualifier, cbTableQualifier, conn);
-		escTableName = adjustLikePattern(szTableName, cbTableName, conn);
-	}
-	else
-	{
-		like_or_eq = eqop;
-		escCatName = simpleCatalogEscape(szTableQualifier, cbTableQualifier, conn);
-		escTableName = simpleCatalogEscape(szTableName, cbTableName, conn);
-	}
-retry_public_schema:
-	if (escSchemaName)
-		free(escSchemaName);
-	if (search_pattern)
-		escSchemaName = adjustLikePattern(szSchemaName, cbSchemaName, conn);
-	else
-		escSchemaName = simpleCatalogEscape(szSchemaName, cbSchemaName, conn);
-	/*
-	 * Create the query to find out the tables
-	 */
-	/* make_string mallocs memory */
-	tableType = make_string(szTableType, cbTableType, NULL, 0);
-	if (search_pattern &&
-	    escTableName && '\0' == escTableName[0] &&
-	    escCatName && escSchemaName)
-	{
-		if ('\0' == escSchemaName[0])
-		{
-			if (stricmp(escCatName, SQL_ALL_CATALOGS) == 0)
-				list_cat = TRUE;
-			else if ('\0' == escCatName[0] &&
-				 stricmp(tableType, SQL_ALL_TABLE_TYPES) == 0)
-				list_table_types = TRUE;
-		}
-		else if ('\0' == escCatName[0] &&
-			 stricmp(escSchemaName, SQL_ALL_SCHEMAS) == 0)
-			list_schemas = TRUE;
-	}
-	list_some = (list_cat || list_schemas || list_table_types);
-	initPQExpBuffer(&tables_query);
-#define	return	DONT_CALL_RETURN_FROM_HERE???
-	if (list_cat)
-		appendPQExpBufferStr(&tables_query, "select NULL, NULL, NULL");
-	else if (list_table_types)
-	{
-		/*
-		 * Query relations depending on what is available:
-		 * - 10  and newer versions have partition tables
-		 * - 9.3 and newer versions have materialized views
-		 * - 9.1 and newer versions have foreign tables
-		 */
-		appendPQExpBufferStr(&tables_query,
-				"select NULL, NULL, relkind from (select 'r' as relkind "
-				"union select 'v' "
-				"union select 'm' "
-				"union select 'f' "
-				"union select 'p') as a");
-	}
-	else if (list_schemas)
-	{
-		appendPQExpBufferStr(&tables_query, "select NULL, nspname, NULL"
-			" from WD_catalog.WD_namespace n where true");
-	}
-	else
-	{
-		/*
-		 * View is represented by its relkind since 7.1,
-		 * Materialized views are added in 9.3, and foreign
-		 * tables in 9.1.
-		 */
-		appendPQExpBufferStr(&tables_query, "select relname, nspname, relkind "
-			"from WD_catalog.WD_class c, WD_catalog.WD_namespace n "
-			"where relkind in " TABLE_IN_RELKIND);
+	ODBCStatement* statement = reinterpret_cast<ODBCStatement*>(hstmt);
+	
+	std::string qualifier;
+	if (szTableQualifier) {
+	  const char* qualifierCstr = reinterpret_cast<const char*>(szTableQualifier);
+	  qualifier = std::string(qualifierCstr, cbTableQualifier == SQL_NTS ? strlen(qualifierCstr) : cbTableQualifier);
 	}
 
-	op_string = gen_opestr(like_or_eq, conn);
-	if (!list_some)
-	{
-		schema_appendPQExpBuffer1(&tables_query, " and nspname %s'%.*s'", op_string, escSchemaName, TABLE_IS_VALID(szTableName, cbTableName), conn);
-		if (IS_VALID_NAME(escTableName))
-			appendPQExpBuffer(&tables_query,
-					 " and relname %s'%s'", op_string, escTableName);
+	std::string owner;
+	if (szTableOwner) {
+	  const char* ownerCstr = reinterpret_cast<const char*>(szTableOwner);
+	  owner = std::string(ownerCstr, cbTableOwner == SQL_NTS ? strlen(ownerCstr) : cbTableOwner);
 	}
 
-	/*
-	 * Parse the extra systable prefix configuration variable into an array
-	 * of prefixes.
-	 */
-	STRCPY_FIXED(prefixes, ci->drivers.extra_systable_prefixes);
-	for (i = 0; i < MAX_PREFIXES; i++)
-	{
-		char	*str = (i == 0) ? prefixes : NULL;
-
-#ifdef	HAVE_STRTOK_R
-		prefix[i] = strtok_r(str, ";", &last);
-#else
-		prefix[i] = strtok(str, ";");
-#endif /* HAVE_STRTOK_R */
-
-		if (prefix[i] == NULL)
-			break;
-	}
-	nprefixes = i;
-
-	/* Parse the desired table types to return */
-	show_system_tables = FALSE;
-	show_regular_tables = FALSE;
-	show_views = FALSE;
-	show_foreign_tables = FALSE;
-	show_matviews = FALSE;
-
-	/* TABLE_TYPE */
-	if (!tableType)
-	{
-		show_regular_tables = TRUE;
-		show_views = TRUE;
-		show_foreign_tables = TRUE;
-		show_matviews = TRUE;
-	}
-	else if (list_some || stricmp(tableType, SQL_ALL_TABLE_TYPES) == 0)
-	{
-		show_regular_tables = TRUE;
-		show_views = TRUE;
-		show_foreign_tables = TRUE;
-		show_matviews = TRUE;
-	}
-	else
-	{
-		/* Check for desired table types to return */
-		char *srcstr;
-		for (srcstr = tableType;; srcstr = NULL)
-		{
-			char *typestr;
-
-#ifdef	HAVE_STRTOK_R
-			typestr = strtok_r(srcstr, ",", &last);
-#else
-			typestr = strtok(srcstr, ",");
-#endif /* HAVE_STRTOK_R */
-
-			if (typestr == NULL)
-				break;
-
-			while (isspace((unsigned char) *typestr))
-				typestr++;
-			if (*typestr == '\'')
-				typestr++;
-			if (strnicmp(typestr, CSTR_SYS_TABLE, strlen(CSTR_SYS_TABLE)) == 0)
-				show_system_tables = TRUE;
-			else if (strnicmp(typestr, CSTR_TABLE, strlen(CSTR_TABLE)) == 0)
-				show_regular_tables = TRUE;
-			else if (strnicmp(typestr, CSTR_VIEW, strlen(CSTR_VIEW)) == 0)
-				show_views = TRUE;
-			else if (strnicmp(typestr, CSTR_FOREIGN_TABLE, strlen(CSTR_FOREIGN_TABLE)) == 0)
-				show_foreign_tables = TRUE;
-			else if (strnicmp(typestr, CSTR_MATVIEW, strlen(CSTR_MATVIEW)) == 0)
-				show_matviews = TRUE;
-		}
+	std::string name;
+	if (szTableName) {
+	  const char* nameCstr = reinterpret_cast<const char*>(szTableName);
+	  name = std::string(nameCstr, cbTableName == SQL_NTS ? strlen(nameCstr) : cbTableName);
 	}
 
-	/*
-	 * If not interested in SYSTEM TABLES then filter them out to save
-	 * some time on the query.	If treating system tables as regular
-	 * tables, then dont filter either.
-	 */
-	if ((list_schemas || !list_some) && !atoi(ci->show_system_tables) && !show_system_tables)
-		appendPQExpBufferStr(&tables_query, " and nspname not in ('WD_catalog', 'information_schema', 'WD_toast', 'WD_temp_1')");
-
-	if (!list_some)
-	{
-		if (CC_accessible_only(conn))
-			appendPQExpBufferStr(&tables_query, " and has_table_privilege(c.oid, 'select')");
-	}
-	if (list_schemas)
-		appendPQExpBufferStr(&tables_query, " order by nspname");
-	else if (list_some)
-		;
-	else
-		appendPQExpBufferStr(&tables_query, " and n.oid = relnamespace order by nspname, relname");
-
-	if (PQExpBufferDataBroken(tables_query))
-	{
-		SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Out of memory in WD_Tables()", func);
-		goto cleanup;
-	}
-	result = WD_ExecDirect(tbl_stmt, (SQLCHAR *) tables_query.data, SQL_NTS, PODBC_RDONLY);
-	if (!SQL_SUCCEEDED(result))
-	{
-		SC_full_error_copy(stmt, tbl_stmt, FALSE);
-		goto cleanup;
+	std::string type;
+	if (szTableType) {
+	  const char* typeCstr = reinterpret_cast<const char*>(szTableType);
+	  type = std::string(typeCstr, cbTableType == SQL_NTS ? strlen(typeCstr) : cbTableType);
 	}
 
-	/* If not found */
-	if ((res = SC_get_Result(tbl_stmt)) &&
-	    0 == QR_get_num_total_tuples(res))
-	{
-		if (allow_public_schema(conn, szSchemaName, cbSchemaName))
-		{
-			szSchemaName = pubstr;
-			cbSchemaName = SQL_NTS;
-			goto retry_public_schema;
-		}
-	}
-#ifdef	UNICODE_SUPPORT
-	if (CC_is_in_unicode_driver(conn))
-		internal_asis_type = INTERNAL_ASIS_TYPE;
-#endif /* UNICODE_SUPPORT */
-	result = WD_BindCol(tbl_stmt, 1, internal_asis_type,
-			table_name, MAX_INFO_STRING, &cbRelname);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
+	statement->GetTables(szTableQualifier ? &qualifier : nullptr, 
+	  szTableOwner ? &owner : nullptr,
+	  szTableName ? &name : nullptr,
+	  szTableType ? &type : nullptr);
 
-	result = WD_BindCol(tbl_stmt, 2, internal_asis_type,
-						   table_owner, MAX_INFO_STRING, &cbSchName);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-	result = WD_BindCol(tbl_stmt, 3, internal_asis_type,
-			relkind_or_hasrules, MAX_INFO_STRING, &cbRelkind);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-
-	if (res = QR_Constructor(), !res)
-	{
-		SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Couldn't allocate memory for WD_Tables result.", func);
-		goto cleanup;
-	}
-	SC_set_Result(stmt, res);
-
-	/* the binding structure for a statement is not set up until */
-
-	/*
-	 * a statement is actually executed, so we'll have to do this
-	 * ourselves.
-	 */
-	result_cols = NUM_OF_TABLES_FIELDS;
-	extend_column_bindings(SC_get_ARDF(stmt), result_cols);
-
-	stmt->catalog_result = TRUE;
-	/* set the field names */
-	QR_set_num_fields(res, result_cols);
-	QR_set_field_info_EN(res, TABLES_CATALOG_NAME, WD_TYPE_VARCHAR, MAX_INFO_STRING);
-	QR_set_field_info_EN(res, TABLES_SCHEMA_NAME, WD_TYPE_VARCHAR, MAX_INFO_STRING);
-	QR_set_field_info_EN(res, TABLES_TABLE_NAME, WD_TYPE_VARCHAR, MAX_INFO_STRING);
-	QR_set_field_info_EN(res, TABLES_TABLE_TYPE, WD_TYPE_VARCHAR, MAX_INFO_STRING);
-	QR_set_field_info_EN(res, TABLES_REMARKS, WD_TYPE_VARCHAR, INFO_VARCHAR_SIZE);
-
-	/* add the tuples */
-	table_name[0] = '\0';
-	table_owner[0] = '\0';
-	result = WD_Fetch(tbl_stmt);
-	while (SQL_SUCCEEDED(result))
-	{
-		/*
-		 * Determine if this table name is a system table. If treating
-		 * system tables as regular tables, then no need to do this test.
-		 */
-		systable = FALSE;
-		if (!atoi(ci->show_system_tables))
-		{
-			if (stricmp(table_owner, "WD_catalog") == 0 ||
-			    stricmp(table_owner, "WD_toast") == 0 ||
-			    strnicmp(table_owner, "WD_temp_", 8) == 0 ||
-			    stricmp(table_owner, "information_schema") == 0)
-				systable = TRUE;
-			else
-			{
-				/* Check extra system table prefixes */
-				for (i = 0; i < nprefixes; i++)
-				{
-					MYLOG(0, "table_name='%s', prefix[%d]='%s'\n", table_name, i, prefix[i]);
-					if (strncmp(table_name, prefix[i], strlen(prefix[i])) == 0)
-					{
-						systable = TRUE;
-						break;
-					}
-				}
-			}
-		}
-
-		/* Determine if the table name is a view */
-		view = (relkind_or_hasrules[0] == 'v');
-
-		/* Check for foreign tables and materialized views ... */
-		foreign_table = (relkind_or_hasrules[0] == 'f');
-		matview =  (relkind_or_hasrules[0] == 'm');
-
-		/* It must be a regular table */
-		regular_table = (!systable && !view);
-
-		/* Include the row in the result set if meets all criteria */
-
-		/*
-		 * NOTE: Unsupported table types (i.e., LOCAL TEMPORARY, ALIAS,
-		 * etc) will return nothing
-		 */
-		if ((systable && show_system_tables) ||
-			(view && show_views) ||
-			(foreign_table && show_foreign_tables) ||
-			(matview && show_matviews) ||
-			(regular_table && show_regular_tables))
-		{
-			tuple = QR_AddNew(res);
-
-			if (list_cat || !list_some)
-				set_tuplefield_string(&tuple[TABLES_CATALOG_NAME], CurrCat(conn));
-			else
-				set_tuplefield_null(&tuple[TABLES_CATALOG_NAME]);
-
-			/*
-			 * I have to hide the table owner from Access, otherwise it
-			 * insists on referring to the table as 'owner.table'. (this
-			 * is valid according to the ODBC SQL grammar, but Postgres
-			 * won't support it.)
-			 *
-			 * set_tuplefield_string(&tuple[TABLES_SCHEMA_NAME], table_owner);
-			 */
-
-			MYLOG(0, "table_name = '%s'\n", table_name);
-
-			if (list_schemas || !list_some)
-				set_tuplefield_string(&tuple[TABLES_SCHEMA_NAME], GET_SCHEMA_NAME(table_owner));
-			else
-				set_tuplefield_null(&tuple[TABLES_SCHEMA_NAME]);
-			if (list_some)
-				set_tuplefield_null(&tuple[TABLES_TABLE_NAME]);
-			else
-				set_tuplefield_string(&tuple[TABLES_TABLE_NAME], table_name);
-			if (list_table_types || !list_some)
-			{
-				if (systable)
-					set_tuplefield_string(&tuple[TABLES_TABLE_TYPE], CSTR_SYS_TABLE);
-				else if (view)
-					set_tuplefield_string(&tuple[TABLES_TABLE_TYPE], CSTR_VIEW);
-				else if (matview)
-					set_tuplefield_string(&tuple[TABLES_TABLE_TYPE], CSTR_MATVIEW);
-				else if (foreign_table)
-					set_tuplefield_string(&tuple[TABLES_TABLE_TYPE], CSTR_FOREIGN_TABLE);
-				else
-					set_tuplefield_string(&tuple[TABLES_TABLE_TYPE], CSTR_TABLE);
-			}
-			else
-				set_tuplefield_null(&tuple[TABLES_TABLE_TYPE]);
-			set_tuplefield_string(&tuple[TABLES_REMARKS], NULL_STRING);
-			/*** set_tuplefield_string(&tuple[TABLES_REMARKS], "TABLE"); ***/
-		}
-		result = WD_Fetch(tbl_stmt);
-	}
-	if (result != SQL_NO_DATA_FOUND)
-	{
-		SC_full_error_copy(stmt, tbl_stmt, FALSE);
-		goto cleanup;
-	}
-	ret = SQL_SUCCESS;
-
-cleanup:
-#undef	return
-	/*
-	 * also, things need to think that this statement is finished so the
-	 * results can be retrieved.
-	 */
-	stmt->status = STMT_FINISHED;
-
-	if (!SQL_SUCCEEDED(ret) && 0 >= SC_get_errornumber(stmt))
-		SC_error_copy(stmt, tbl_stmt, TRUE);
-	if (!PQExpBufferDataBroken(tables_query))
-		termPQExpBuffer(&tables_query);
-	if (escCatName)
-		free(escCatName);
-	if (escSchemaName)
-		free(escSchemaName);
-	if (escTableName)
-		free(escTableName);
-	if (tableType)
-		free(tableType);
-	/* set up the current tuple pointer for SQLFetch */
-	stmt->currTuple = -1;
-	SC_set_rowset_start(stmt, -1, FALSE);
-	SC_set_current_col(stmt, -1);
-
-	if (tbl_stmt)
-		WD_FreeStmt(tbl_stmt, SQL_DROP);
-
-	MYLOG(0, "leaving stmt=%p, ret=%d\n", stmt, ret);
-	return ret;
-#endif
+	return SQL_SUCCESS;
 }
 
 /*
@@ -2295,597 +1690,41 @@ WD_Columns(HSTMT hstmt,
 			  const SQLCHAR * szTableName, /* PV E*/
 			  SQLSMALLINT cbTableName,
 			  const SQLCHAR * szColumnName, /* PV E*/
-			  SQLSMALLINT cbColumnName,
-			  UWORD	flag,
-			  OID	reloid,
-			  Int2	attnum)
+			  SQLSMALLINT cbColumnName)
 {
+	CSTR func = "WD_Tables";
+	ODBCStatement* statement = reinterpret_cast<ODBCStatement*>(hstmt);
+	
+	std::string qualifier;
+	if (szTableQualifier) {
+	  const char* qualifierCstr = reinterpret_cast<const char*>(szTableQualifier);
+	  qualifier = std::string(qualifierCstr, cbTableQualifier == SQL_NTS ? strlen(qualifierCstr) : cbTableQualifier);
+	}
+
+	std::string owner;
+	if (szTableOwner) {
+	  const char* ownerCstr = reinterpret_cast<const char*>(szTableOwner);
+	  owner = std::string(ownerCstr, cbTableOwner == SQL_NTS ? strlen(ownerCstr) : cbTableOwner);
+	}
+
+	std::string name;
+	if (szTableName) {
+	  const char* nameCstr = reinterpret_cast<const char*>(szTableName);
+	  name = std::string(nameCstr, cbTableName == SQL_NTS ? strlen(nameCstr) : cbTableName);
+	}
+
+	std::string colName;
+	if (szColumnName) {
+	  const char* colCstr = reinterpret_cast<const char*>(szColumnName);
+	  colName = std::string(colCstr, cbColumnName == SQL_NTS ? strlen(colCstr) : cbColumnName);
+	}
+
+	statement->GetColumns(szTableQualifier ? &qualifier : nullptr, 
+	  szTableOwner ? &owner : nullptr,
+	  szTableName ? &name : nullptr,
+	  szColumnName ? &colName : nullptr);
+
 	return SQL_SUCCESS;
-	#if 0
-	CSTR func = "WD_Columns";
-	StatementClass *stmt = (StatementClass *) hstmt;
-	QResultClass	*res;
-	TupleField	*tuple;
-	StatementClass *col_stmt = NULL;
-	PQExpBufferData		columns_query = {0};
-	RETCODE		ret = SQL_ERROR, result;
-	char		table_owner[MAX_INFO_STRING],
-				table_name[MAX_INFO_STRING],
-				field_name[MAX_INFO_STRING],
-				field_type_name[MAX_INFO_STRING];
-	Int2		field_number, sqltype, concise_type,
-				result_cols;
-	Int4		mod_length,
-				ordinal,
-				typmod, relhasoids, relhassubclass;
-	OID		field_type, greloid, basetype;
-	char		not_null[MAX_INFO_STRING],
-				relhasrules[MAX_INFO_STRING], relkind[8], attidentity[2];
-	char	*escSchemaName = NULL, *escTableName = NULL, *escColumnName = NULL;
-	BOOL	search_pattern = TRUE, search_by_ids, relisaview, show_oid_column, row_versioning;
-	ConnInfo   *ci;
-	ConnectionClass *conn;
-	SQLSMALLINT	internal_asis_type = SQL_C_CHAR, cbSchemaName;
-	const char	*like_or_eq = likeop, *op_string;
-	const SQLCHAR *szSchemaName;
-	BOOL	setIdentity = FALSE;
-	int	table_info = 0;
-
-	static const char *catcn[][2] = {
-		{"TABLE_CAT", "TABLE_QUALIFIER"},
-		{"TABLE_SCHEM", "TABLE_OWNER"},
-		{"TABLE_NAME", "TABLE_NAME"},
-		{"COLUMN_NAME", "COLUMN_NAME"},
-		{"DATA_TYPE", "DATA_TYPE"},
-		{"TYPE_NAME", "TYPE_NAME"},
-		{"COLUMN_SIZE", "PRECISION"},
-		{"BUFFER_LENGTH", "LENGTH"},
-		{"DECIMAL_DIGITS", "SCALE"},
-		{"NUM_PREC_RADIX", "RADIX"},
-		{"NULLABLE", "NULLABLE"},
-		{"REMARKS", "REMARKS"},
-		{"COLUMN_DEF", "COLUMN_DEF"},
-		{"SQL_DATA_TYPE", "SQL_DATA_TYPE"},
-		{"SQL_DATETIME_SUB", "SQL_DATETIME_SUB"},
-		{"CHAR_OCTET_LENGTH", "CHAR_OCTET_LENGTH"},
-		{"ORDINAL_POSITION", "ORDINAL_POSITION"},
-		{"IS_NULLABLE", "IS_NULLABLE"},
-	/* User defined fields */
-		{"DISPLAY_SIZE", "DISPLAY_SIZE"},
-		{"FIELD_TYPE", "FIELD_TYPE"},
-		{"AUTO_INCREMENT", "AUTO_INCREMENT"},
-		{"PHYSICAL NUMBER", "PHYSICAL NUMBER"},
-		{"TABLE OID", "TABLE OID"},
-		{"BASE TYPEID", "BASE TYPEID"},
-		{"TYPMOD", "TYPMOD"},
-		{"TABLE INFO", "TABLE INFO"} };
-	EnvironmentClass *env;
-	BOOL is_ODBC2;
-
-	MYLOG(0, "entering...stmt=%p scnm=%p len=%d columnOpt=%x\n", stmt, szTableOwner, cbTableOwner, flag);
-
-	if (result = SC_initialize_and_recycle(stmt), SQL_SUCCESS != result)
-		return result;
-
-	conn = SC_get_conn(stmt);
-	ci = &(conn->connInfo);
-	env = CC_get_env(conn);
-	is_ODBC2 = EN_is_odbc2(env);
-#ifdef	UNICODE_SUPPORT
-	if (CC_is_in_unicode_driver(conn))
-		internal_asis_type = INTERNAL_ASIS_TYPE;
-#endif /* UNICODE_SUPPORT */
-
-#define	return	DONT_CALL_RETURN_FROM_HERE???
-	show_oid_column = ((flag & PODBC_SHOW_OID_COLUMN) != 0);
-	row_versioning = ((flag & PODBC_ROW_VERSIONING) != 0);
-	search_by_ids = ((flag & PODBC_SEARCH_BY_IDS) != 0);
-	if (search_by_ids)
-	{
-		szSchemaName = NULL;
-		cbSchemaName = SQL_NULL_DATA;
-	}
-	else
-	{
-		szSchemaName = szTableOwner;
-		cbSchemaName = cbTableOwner;
-		reloid = 0;
-		attnum = 0;
-		/*
-		 *	TableName or ColumnName is ordinarily an pattern value,
-		 */
-		search_pattern = ((flag & PODBC_NOT_SEARCH_PATTERN) == 0);
-		if (search_pattern)
-		{
-			like_or_eq = likeop;
-			escTableName = adjustLikePattern(szTableName, cbTableName, conn);
-			escColumnName = adjustLikePattern(szColumnName, cbColumnName, conn);
-		}
-		else
-		{
-			like_or_eq = eqop;
-			escTableName = simpleCatalogEscape(szTableName, cbTableName, conn);
-			escColumnName = simpleCatalogEscape(szColumnName, cbColumnName, conn);
-		}
-	}
-retry_public_schema:
-	if (!search_by_ids)
-	{
-		if (escSchemaName)
-			free(escSchemaName);
-		if (search_pattern)
-			escSchemaName = adjustLikePattern(szSchemaName, cbSchemaName, conn);
-		else
-			escSchemaName = simpleCatalogEscape(szSchemaName, cbSchemaName, conn);
-	}
-	initPQExpBuffer(&columns_query);
-#define	return	DONT_CALL_RETURN_FROM_HERE???
-	/*
-	 * Create the query to find out the columns (Note: pre 6.3 did not
-	 * have the atttypmod field)
-	 */
-	op_string = gen_opestr(like_or_eq, conn);
-	printfPQExpBuffer(&columns_query,
-		"select n.nspname, c.relname, a.attname, a.atttypid, "
-		"t.typname, a.attnum, a.attlen, a.atttypmod, a.attnotnull, "
-		"c.relhasrules, c.relkind, c.oid, WD_get_expr(d.adbin, d.adrelid), "
-        "case t.typtype when 'd' then t.typbasetype else 0 end, t.typtypmod, "
-        "%s, %s, c.relhassubclass "
-		"from (((WD_catalog.WD_class c "
-		"inner join WD_catalog.WD_namespace n on n.oid = c.relnamespace",
-            WD_VERSION_GE(conn, 12.0) ? "0" : "c.relhasoids",
-            WD_VERSION_GE(conn, 10.0) ? "attidentity" : "''");
-	if (search_by_ids)
-		appendPQExpBuffer(&columns_query, " and c.oid = %u", reloid);
-	else
-	{
-		if (escTableName)
-			appendPQExpBuffer(&columns_query, " and c.relname %s'%s'", op_string, escTableName);
-		schema_appendPQExpBuffer1(&columns_query, " and n.nspname %s'%.*s'", op_string, escSchemaName, TABLE_IS_VALID(szTableName, cbTableName), conn);
-	}
-	appendPQExpBufferStr(&columns_query, ") inner join WD_catalog.WD_attribute a"
-		" on (not a.attisdropped)");
-	if (0 == attnum && (NULL == escColumnName || like_or_eq != eqop))
-		appendPQExpBufferStr(&columns_query, " and a.attnum > 0");
-	if (search_by_ids)
-	{
-		if (attnum != 0)
-			appendPQExpBuffer(&columns_query, " and a.attnum = %d", attnum);
-	}
-	else if (escColumnName)
-		appendPQExpBuffer(&columns_query, " and a.attname %s'%s'", op_string, escColumnName);
-	appendPQExpBufferStr(&columns_query,
-		" and a.attrelid = c.oid) inner join WD_catalog.WD_type t"
-		" on t.oid = a.atttypid) left outer join WD_attrdef d"
-		" on a.atthasdef and d.adrelid = a.attrelid and d.adnum = a.attnum");
-	appendPQExpBufferStr(&columns_query, " order by n.nspname, c.relname, attnum");
-	if (PQExpBufferDataBroken(columns_query))
-	{
-		SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Out of memory in WD_Columns()", func);
-		goto cleanup;
-	}
-	result = WD_AllocStmt(conn, (HSTMT *) &col_stmt, 0);
-	if (!SQL_SUCCEEDED(result))
-	{
-		SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Couldn't allocate statement for WD_Columns result.", func);
-		goto cleanup;
-	}
-
-	MYLOG(0, "col_stmt = %p\n", col_stmt);
-
-	result = WD_ExecDirect(col_stmt, (SQLCHAR *) columns_query.data, SQL_NTS, PODBC_RDONLY);
-	if (!SQL_SUCCEEDED(result))
-	{
-		SC_full_error_copy(stmt, col_stmt, FALSE);
-		goto cleanup;
-	}
-
-	/* If not found */
-	if ((flag & PODBC_SEARCH_PUBLIC_SCHEMA) != 0 &&
-	    (res = SC_get_Result(col_stmt)) &&
-	    0 == QR_get_num_total_tuples(res))
-	{
-		if (!search_by_ids &&
-		    allow_public_schema(conn, szSchemaName, cbSchemaName))
-		{
-			WD_FreeStmt(col_stmt, SQL_DROP);
-			col_stmt = NULL;
-			szSchemaName = pubstr;
-			cbSchemaName = SQL_NTS;
-			goto retry_public_schema;
-		}
-	}
-
-	result = WD_BindCol(col_stmt, 1, internal_asis_type,
-						   table_owner, MAX_INFO_STRING, NULL);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-
-	result = WD_BindCol(col_stmt, 2, internal_asis_type,
-						   table_name, MAX_INFO_STRING, NULL);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-
-	result = WD_BindCol(col_stmt, 3, internal_asis_type,
-						   field_name, MAX_INFO_STRING, NULL);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-
-	result = WD_BindCol(col_stmt, 4, SQL_C_ULONG,
-						   &field_type, 4, NULL);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-
-	result = WD_BindCol(col_stmt, 5, internal_asis_type,
-						   field_type_name, MAX_INFO_STRING, NULL);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-
-	result = WD_BindCol(col_stmt, 6, SQL_C_SHORT,
-						   &field_number, MAX_INFO_STRING, NULL);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-
-#ifdef	NOT_USED
-	result = WD_BindCol(col_stmt, 7, SQL_C_LONG,
-						   &field_length, MAX_INFO_STRING, NULL);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-#endif /* NOT_USED */
-
-	result = WD_BindCol(col_stmt, 8, SQL_C_LONG,
-						   &mod_length, MAX_INFO_STRING, NULL);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-
-	result = WD_BindCol(col_stmt, 9, internal_asis_type,
-						   not_null, MAX_INFO_STRING, NULL);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-
-	result = WD_BindCol(col_stmt, 10, internal_asis_type,
-						   relhasrules, MAX_INFO_STRING, NULL);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-
-	result = WD_BindCol(col_stmt, 11, internal_asis_type,
-						   relkind, sizeof(relkind), NULL);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-
-	result = WD_BindCol(col_stmt, 12, SQL_C_LONG,
-					&greloid, sizeof(greloid), NULL);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-
-	result = WD_BindCol(col_stmt, 14, SQL_C_ULONG,
-					&basetype, sizeof(basetype), NULL);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-
-	result = WD_BindCol(col_stmt, 15, SQL_C_LONG,
-					&typmod, sizeof(typmod), NULL);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-
-	result = WD_BindCol(col_stmt, 16, SQL_C_LONG,
-					&relhasoids, sizeof(relhasoids), NULL);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-
-	result = WD_BindCol(col_stmt, 17, SQL_C_CHAR,
-					attidentity, sizeof(attidentity), NULL);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-
-	result = WD_BindCol(col_stmt, 18, SQL_C_LONG,
-					&relhassubclass, sizeof(relhassubclass), NULL);
-	if (!SQL_SUCCEEDED(result))
-	{
-		goto cleanup;
-	}
-	if (res = QR_Constructor(), !res)
-	{
-		SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Couldn't allocate memory for WD_Columns result.", func);
-		goto cleanup;
-	}
-	SC_set_Result(stmt, res);
-
-	/* the binding structure for a statement is not set up until */
-
-	/*
-	 * a statement is actually executed, so we'll have to do this
-	 * ourselves.
-	 */
-	result_cols = NUM_OF_COLUMNS_FIELDS;
-	extend_column_bindings(SC_get_ARDF(stmt), result_cols);
-
-	/*
-	 * Setting catalog_result here affects the behavior of
-	 * wdtype_xxx() functions. So set it later.
-	 * stmt->catalog_result = TRUE;
-	 */
-	/* set the field names */
-	QR_set_num_fields(res, result_cols);
-	QR_set_field_info_EN(res, COLUMNS_CATALOG_NAME, WD_TYPE_VARCHAR, MAX_INFO_STRING);
-	QR_set_field_info_EN(res, COLUMNS_SCHEMA_NAME, WD_TYPE_VARCHAR, MAX_INFO_STRING);
-	QR_set_field_info_EN(res, COLUMNS_TABLE_NAME, WD_TYPE_VARCHAR, MAX_INFO_STRING);
-	QR_set_field_info_EN(res, COLUMNS_COLUMN_NAME, WD_TYPE_VARCHAR, MAX_INFO_STRING);
-	QR_set_field_info_EN(res, COLUMNS_DATA_TYPE, WD_TYPE_INT2, 2);
-	QR_set_field_info_EN(res, COLUMNS_TYPE_NAME, WD_TYPE_VARCHAR, MAX_INFO_STRING);
-	QR_set_field_info_EN(res, COLUMNS_PRECISION, WD_TYPE_INT4, 4); /* COLUMN_SIZE */
-	QR_set_field_info_EN(res, COLUMNS_LENGTH, WD_TYPE_INT4, 4); /* BUFFER_LENGTH */
-	QR_set_field_info_EN(res, COLUMNS_SCALE, WD_TYPE_INT2, 2); /* DECIMAL_DIGITS ***/
-	QR_set_field_info_EN(res, COLUMNS_RADIX, WD_TYPE_INT2, 2);
-	QR_set_field_info_EN(res, COLUMNS_NULLABLE, WD_TYPE_INT2, 2);
-	QR_set_field_info_EN(res, COLUMNS_REMARKS, WD_TYPE_VARCHAR, INFO_VARCHAR_SIZE);
-	QR_set_field_info_EN(res, COLUMNS_COLUMN_DEF, WD_TYPE_VARCHAR, INFO_VARCHAR_SIZE);
-	QR_set_field_info_EN(res, COLUMNS_SQL_DATA_TYPE, WD_TYPE_INT2, 2);
-	QR_set_field_info_EN(res, COLUMNS_SQL_DATETIME_SUB, WD_TYPE_INT2, 2);
-	QR_set_field_info_EN(res, COLUMNS_CHAR_OCTET_LENGTH, WD_TYPE_INT4, 4);
-	QR_set_field_info_EN(res, COLUMNS_ORDINAL_POSITION, WD_TYPE_INT4, 4);
-	QR_set_field_info_EN(res, COLUMNS_IS_NULLABLE, WD_TYPE_VARCHAR, INFO_VARCHAR_SIZE);
-
-	/* User defined fields */
-	QR_set_field_info_EN(res, COLUMNS_DISPLAY_SIZE, WD_TYPE_INT4, 4);
-	QR_set_field_info_EN(res, COLUMNS_FIELD_TYPE, WD_TYPE_INT4, 4);
-	QR_set_field_info_EN(res, COLUMNS_AUTO_INCREMENT, WD_TYPE_INT4, 4);
-	QR_set_field_info_EN(res, COLUMNS_PHYSICAL_NUMBER, WD_TYPE_INT2, 2);
-	QR_set_field_info_EN(res, COLUMNS_TABLE_OID, WD_TYPE_OID, 4);
-	QR_set_field_info_EN(res, COLUMNS_BASE_TYPEID, WD_TYPE_OID, 4);
-	QR_set_field_info_EN(res, COLUMNS_ATTTYPMOD, WD_TYPE_INT4, 4);
-	QR_set_field_info_EN(res, COLUMNS_TABLE_INFO, WD_TYPE_INT4, 4);
-
-	ordinal = 1;
-	result = WD_Fetch(col_stmt);
-
-	/*
-	 * Only show oid if option AND there are other columns AND it's not
-	 * being called by SQLStatistics . Always show OID if it's a system
-	 * table
-	 */
-	relisaview = (relkind[0] == 'v');
-
-	if (SQL_SUCCEEDED(result))
-	{
-		if (relhasoids)
-			table_info |= TBINFO_HASOIDS;
-		if (relhassubclass)
-			table_info |= TBINFO_HASSUBCLASS;
-		if (!relisaview &&
-			relhasoids &&
-			(show_oid_column ||
-			 strncmp(table_name, POSTGRES_SYS_PREFIX, strlen(POSTGRES_SYS_PREFIX)) == 0) &&
-			(NULL == escColumnName ||
-			 0 == strcmp(escColumnName, OID_NAME)))
-		{
-			const char *typname;
-
-			/* For OID fields */
-			tuple = QR_AddNew(res);
-
-			if (CC_fake_mss(conn))
-			{
-				typname = "OID identity";
-				setIdentity = TRUE;
-			}
-			else
-				typname = OID_NAME;
-			add_tuple_for_oid_or_xmin(tuple, ordinal, OID_NAME, WD_TYPE_OID, typname, conn, table_owner, table_name, greloid, OID_ATTNUM, TRUE, table_info);
-			ordinal++;
-		}
-	}
-
-	while (SQL_SUCCEEDED(result))
-	{
-		int	auto_unique;
-		SQLLEN	len_needed;
-		char	*attdef;
-
-		attdef = NULL;
-		WD_SetPos(col_stmt, 1, SQL_POSITION, 0);
-		WD_GetData(col_stmt, 13, internal_asis_type, NULL, 0, &len_needed);
-		if (len_needed > 0)
-		{
-MYLOG(0, "len_needed=" FORMAT_LEN "\n", len_needed);
-			attdef = malloc(len_needed + 1);
-			if (!attdef)
-			{
-				SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Couldn't allocate memory for attdef.", func);
-				goto cleanup;
-			}
-
-			WD_GetData(col_stmt, 13, internal_asis_type, attdef, len_needed + 1, &len_needed);
-MYLOG(0, " and the data=%s\n", attdef);
-		}
-		tuple = QR_AddNew(res);
-
-		sqltype = SQL_TYPE_NULL;	/* unspecified */
-		set_tuplefield_string(&tuple[COLUMNS_CATALOG_NAME], CurrCat(conn));
-		/* see note in SQLTables() */
-		set_tuplefield_string(&tuple[COLUMNS_SCHEMA_NAME], GET_SCHEMA_NAME(table_owner));
-		set_tuplefield_string(&tuple[COLUMNS_TABLE_NAME], table_name);
-		set_tuplefield_string(&tuple[COLUMNS_COLUMN_NAME], field_name);
-		auto_unique = SQL_FALSE;
-		if (field_type = WD_true_type(conn, field_type, basetype), field_type == basetype)
-			mod_length = typmod;
-		switch (field_type)
-		{
-			case WD_TYPE_OID:
-				if (0 != atoi(ci->fake_oid_index))
-				{
-					auto_unique = SQL_TRUE;
-					set_tuplefield_string(&tuple[COLUMNS_TYPE_NAME], "identity");
-					break;
-				}
-			case WD_TYPE_INT4:
-			case WD_TYPE_INT8:
-				if (attidentity[0] != 0 ||
-				    (attdef && strnicmp(attdef, "nextval(", 8) == 0 &&
-				     not_null[0] != '0'))
-				{
-					auto_unique = SQL_TRUE;
-					if (!setIdentity &&
-					    CC_fake_mss(conn))
-					{
-						char	tmp[256];
-
-						SPRINTF_FIXED(tmp, "%s identity", field_type_name);
-						set_tuplefield_string(&tuple[COLUMNS_TYPE_NAME], tmp);
-						break;
-					}
-				}
-			default:
-				set_tuplefield_string(&tuple[COLUMNS_TYPE_NAME], field_type_name);
-				break;
-		}
-
-		/*----------
-		 * Some Notes about Postgres Data Types:
-		 *
-		 * VARCHAR - the length is stored in the WD_attribute.atttypmod field
-		 * BPCHAR  - the length is also stored as varchar is
-		 *
-		 * NUMERIC - the decimal_digits is stored in atttypmod as follows:
-		 *
-		 *	column_size =((atttypmod - VARHDRSZ) >> 16) & 0xffff
-		 *	decimal_digits	 = (atttypmod - VARHDRSZ) & 0xffff
-		 *
-		 *----------
-		 */
-		MYLOG(0, "table='%s',field_name='%s',type=%d,name='%s'\n",
-			 table_name, field_name, field_type, field_type_name);
-
-		/* Subtract the header length */
-		switch (field_type)
-		{
-			case WD_TYPE_DATETIME:
-			case WD_TYPE_TIMESTAMP_NO_TMZONE:
-			case WD_TYPE_TIME:
-			case WD_TYPE_TIME_WITH_TMZONE:
-			case WD_TYPE_BIT:
-				break;
-			default:
-				if (mod_length >= 4)
-					mod_length -= 4;
-		}
-		set_tuplefield_int4(&tuple[COLUMNS_PRECISION], wdtype_ATTR_COLUMN_SIZE(conn, field_type, mod_length));
-		set_tuplefield_int4(&tuple[COLUMNS_LENGTH], wdtype_ATTR_BUFFER_LENGTH(conn, field_type, mod_length));
-		set_tuplefield_int4(&tuple[COLUMNS_DISPLAY_SIZE], wdtype_ATTR_DISPLAY_SIZE(conn, field_type, mod_length));
-		set_nullfield_int2(&tuple[COLUMNS_SCALE], wdtype_ATTR_DECIMAL_DIGITS(conn, field_type, mod_length));
-
-		sqltype = wdtype_ATTR_TO_CONCISE_TYPE(conn, field_type, mod_length);
-		concise_type = wdtype_ATTR_TO_SQLDESCTYPE(conn, field_type, mod_length);
-
-		set_tuplefield_int2(&tuple[COLUMNS_DATA_TYPE], sqltype);
-
-		set_nullfield_int2(&tuple[COLUMNS_RADIX], wdtype_radix(conn, field_type));
-		set_tuplefield_int2(&tuple[COLUMNS_NULLABLE], (Int2) (not_null[0] != '0' ? SQL_NO_NULLS : wdtype_nullable(conn, field_type)));
-		set_tuplefield_string(&tuple[COLUMNS_REMARKS], NULL_STRING);
-		if (attdef && strlen(attdef) > INFO_VARCHAR_SIZE)
-			set_tuplefield_string(&tuple[COLUMNS_COLUMN_DEF], "TRUNCATE");
-		else
-			set_tuplefield_string(&tuple[COLUMNS_COLUMN_DEF], attdef);
-		set_tuplefield_int2(&tuple[COLUMNS_SQL_DATA_TYPE], concise_type);
-		set_nullfield_int2(&tuple[COLUMNS_SQL_DATETIME_SUB], wdtype_attr_to_datetime_sub(conn, field_type, mod_length));
-		set_tuplefield_int4(&tuple[COLUMNS_CHAR_OCTET_LENGTH], wdtype_ATTR_TRANSFER_OCTET_LENGTH(conn, field_type, mod_length));
-		set_tuplefield_int4(&tuple[COLUMNS_ORDINAL_POSITION], ordinal);
-		set_tuplefield_null(&tuple[COLUMNS_IS_NULLABLE]);
-		set_tuplefield_int4(&tuple[COLUMNS_FIELD_TYPE], field_type);
-		set_tuplefield_int4(&tuple[COLUMNS_AUTO_INCREMENT], auto_unique);
-		set_tuplefield_int2(&tuple[COLUMNS_PHYSICAL_NUMBER], field_number);
-		set_tuplefield_int4(&tuple[COLUMNS_TABLE_OID], greloid);
-		set_tuplefield_int4(&tuple[COLUMNS_BASE_TYPEID], basetype);
-		set_tuplefield_int4(&tuple[COLUMNS_ATTTYPMOD], mod_length);
-		set_tuplefield_int4(&tuple[COLUMNS_TABLE_INFO], table_info);
-		ordinal++;
-
-		result = WD_Fetch(col_stmt);
-		if (attdef)
-			free(attdef);
-	}
-	if (result != SQL_NO_DATA_FOUND)
-	{
-		SC_full_error_copy(stmt, col_stmt, FALSE);
-		goto cleanup;
-	}
-
-	/*
-	 * Put the row version column at the end so it might not be mistaken
-	 * for a key field.
-	 */
-	if (!relisaview && row_versioning &&
-		(NULL == escColumnName ||
-		 0 == strcmp(escColumnName, XMIN_NAME)))
-	{
-		/* For Row Versioning fields */
-		tuple = QR_AddNew(res);
-
-		add_tuple_for_oid_or_xmin(tuple, ordinal, XMIN_NAME, WD_TYPE_XID, "xid", conn, table_owner, table_name, greloid, XMIN_ATTNUM, FALSE, table_info);
-		ordinal++;
-	}
-	ret = SQL_SUCCESS;
-
-cleanup:
-#undef	return
-	/*
-	 * also, things need to think that this statement is finished so the
-	 * results can be retrieved.
-	 */
-	stmt->status = STMT_FINISHED;
-	stmt->catalog_result = TRUE;
-
-	if (!SQL_SUCCEEDED(ret) && 0 >= SC_get_errornumber(stmt))
-		SC_error_copy(stmt, col_stmt, TRUE);
-	/* set up the current tuple pointer for SQLFetch */
-	stmt->currTuple = -1;
-	SC_set_rowset_start(stmt, -1, FALSE);
-	SC_set_current_col(stmt, -1);
-
-	if (!PQExpBufferDataBroken(columns_query))
-		termPQExpBuffer(&columns_query);
-	if (escSchemaName)
-		free(escSchemaName);
-	if (escTableName)
-		free(escTableName);
-	if (escColumnName)
-		free(escColumnName);
-	if (col_stmt)
-		WD_FreeStmt(col_stmt, SQL_DROP);
-	MYLOG(0, "leaving stmt=%p\n", stmt);
-	return ret;
 }
 
 
@@ -2901,6 +1740,8 @@ WD_SpecialColumns(HSTMT hstmt,
 					 SQLUSMALLINT fScope,
 					 SQLUSMALLINT fNullable)
 {
+	return SQL_SUCCESS;
+	#if 0
 	CSTR func = "WD_SpecialColumns";
 	TupleField	*tuple;
 	StatementClass *stmt = (StatementClass *) hstmt;
@@ -3167,6 +2008,8 @@ WD_Statistics(HSTMT hstmt,
 				 SQLUSMALLINT fUnique,
 				 SQLUSMALLINT fAccuracy)
 {
+	return SQL_SUCCESS;
+	#if 0
 	CSTR func = "WD_Statistics";
 	StatementClass *stmt = (StatementClass *) hstmt;
 	ConnectionClass *conn;
@@ -3665,6 +2508,7 @@ cleanup:
 	MYLOG(0, "leaving stmt=%p, ret=%d\n", stmt, ret);
 
 	return ret;
+	#endif
 }
 
 
@@ -3680,6 +2524,8 @@ WD_ColumnPrivileges(HSTMT hstmt,
 					   SQLSMALLINT cbColumnName,
 					   UWORD flag)
 {
+	return SQL_SUCCESS;
+	#if 0
 	CSTR func = "WD_ColumnPrivileges";
 	StatementClass	*stmt = (StatementClass *) hstmt;
 	ConnectionClass	*conn = SC_get_conn(stmt);
@@ -3855,4 +2701,5 @@ getClientColumnName(ConnectionClass *conn, UInt4 relid, char *serverColumnName, 
 	}
 	QR_Destructor(res);
 	return ret;
+	#endif
 }

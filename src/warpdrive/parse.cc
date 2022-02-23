@@ -792,6 +792,8 @@ COL_INFO **coli)
 static BOOL
 getColumnsInfo(ConnectionClass *conn, TABLE_INFO *wti, OID greloid, StatementClass *stmt)
 {
+	return FALSE;
+	#if 0
 	BOOL		found = FALSE;
 	RETCODE		result;
 	HSTMT		hcol_stmt = NULL;
@@ -976,6 +978,7 @@ cleanup:
 	if (hcol_stmt)
 		WD_FreeStmt(hcol_stmt, SQL_DROP);
 	return found;
+	#endif
 }
 
 BOOL getCOLIfromTI(const char *func, ConnectionClass *conn, StatementClass *stmt, const OID reloid, TABLE_INFO **pti)
