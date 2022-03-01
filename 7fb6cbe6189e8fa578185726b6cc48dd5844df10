@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "edf55fbd_6301bfce",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-03-01T20:47:27Z",
+      "side": 1,
+      "message": "Probably should remove the comma after ODBCABSTRACTION_GIT_TAG as well",
+      "revId": "7fb6cbe6189e8fa578185726b6cc48dd5844df10",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2c94390f_9a04a748",
         "filename": "src/warpdrive/info.cc",
         "patchSetId": 1
