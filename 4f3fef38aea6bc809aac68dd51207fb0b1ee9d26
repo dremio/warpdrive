@@ -1,6 +1,57 @@
 {
   "comments": [
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "328da3c6_8a3937eb",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-03-16T17:32:07Z",
+      "side": 1,
+      "message": "Is there a patch on flightsql-odbc as well?",
+      "revId": "4f3fef38aea6bc809aac68dd51207fb0b1ee9d26",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f14d097a_fec511c6",
+        "filename": "src/warpdrive/ODBCConnection.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-03-16T17:32:07Z",
+      "side": 1,
+      "message": "Typo: \"break;\"",
+      "revId": "4f3fef38aea6bc809aac68dd51207fb0b1ee9d26",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "83e6b435_df7112c7",
+        "filename": "src/warpdrive/ODBCConnection.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-03-16T17:32:07Z",
+      "side": 1,
+      "message": "Missing \"break;\" after",
+      "revId": "4f3fef38aea6bc809aac68dd51207fb0b1ee9d26",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "ce7f6dc0_9ab3d3e2",
