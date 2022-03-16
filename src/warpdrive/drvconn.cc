@@ -115,8 +115,8 @@ WD_DriverConnect(HDBC hdbc,
 	}
 	Connection::ConnPropertyMap properties;
 	std::vector<std::string> missing_properties;
-	ODBCConnection::getPropertiesFromConnString(connStr, properties);
-	conn->connect(properties, missing_properties);
+	std::string dsn = ODBCConnection::getPropertiesFromConnString(connStr, properties);
+	conn->connect(dsn, properties, missing_properties);
 
 	return SQL_SUCCESS;
 }

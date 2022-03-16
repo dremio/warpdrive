@@ -1877,16 +1877,16 @@ WD_GetDescRec(SQLHDESC DescriptorHandle,
   SQLUSMALLINT zeroBasedIndex = RecNumber - 1;
   const DescriptorRecord& record = records[zeroBasedIndex];
   SQLINTEGER totalColumnNameLen;
-  GetAttributeUTF8(record.m_name, Name, BufferLength, &totalColumnNameLen);
+  GetAttributeUTF8(record.m_name, Name, static_cast<SQLINTEGER>(BufferLength), &totalColumnNameLen);
   if (StringLength) {
     *StringLength = static_cast<SQLSMALLINT>(totalColumnNameLen);
   }
-  GetAttribute(record.m_type, Type, sizeof(SQLSMALLINT), nullptr);
-  GetAttribute(record.m_datetimeIntervalCode, SubType, sizeof(SQLSMALLINT), nullptr);
-  GetAttribute(record.m_length, Length, sizeof(SQLLEN), nullptr);
-  GetAttribute(record.m_precision, Precision, sizeof(SQLSMALLINT), nullptr);
-  GetAttribute(record.m_scale, Scale, sizeof(SQLSMALLINT), nullptr);
-  GetAttribute(record.m_nullable, Nullable, sizeof(SQLSMALLINT), nullptr);
+  GetAttribute<SQLSMALLINT, size_t>(record.m_type, Type, sizeof(SQLSMALLINT), nullptr);
+  GetAttribute<SQLSMALLINT, size_t>(record.m_datetimeIntervalCode, SubType, sizeof(SQLSMALLINT), nullptr);
+  GetAttribute<SQLINTEGER, size_t>(record.m_length, Length, sizeof(SQLLEN), nullptr);
+  GetAttribute<SQLSMALLINT, size_t>(record.m_precision, Precision, sizeof(SQLSMALLINT), nullptr);
+  GetAttribute<SQLSMALLINT, size_t>(record.m_scale, Scale, sizeof(SQLSMALLINT), nullptr);
+  GetAttribute<SQLSMALLINT, size_t>(record.m_nullable, Nullable, sizeof(SQLSMALLINT), nullptr);
 
   return SQL_SUCCESS;
 }
