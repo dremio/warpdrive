@@ -14,8 +14,8 @@
 #include "EncodingUtils.h"
 
 namespace ODBC {
-  template <typename T>
-  inline void GetAttribute(T attributeValue, SQLPOINTER output, SQLINTEGER outputSize, SQLINTEGER* outputLenPtr) {
+  template <typename T, typename O>
+  inline void GetAttribute(T attributeValue, SQLPOINTER output, O outputSize, O* outputLenPtr) {
     if (output) {
       T* typedOutput = reinterpret_cast<T*>(output);
       *typedOutput = attributeValue;
@@ -26,24 +26,35 @@ namespace ODBC {
     }
   }
 
-  inline void GetAttributeUTF8(const std::string& attributeValue, SQLPOINTER output, SQLINTEGER outputSize, SQLINTEGER* outputLenPtr) {
+  template <typename O>
+  inline void GetAttributeUTF8(const std::string& attributeValue, SQLPOINTER output, O outputSize, O* outputLenPtr) {
     if (output) {
-      size_t outputLen = std::min(static_cast<SQLINTEGER>(attributeValue.size()), outputSize);
+      size_t outputLen = std::min(static_cast<O>(attributeValue.size()), outputSize);
       memcpy(output, attributeValue.c_str(), outputLen);
       reinterpret_cast<char*>(output)[outputLen] = '\0';
     }
 
     if (outputLenPtr) {
-      *outputLenPtr = attributeValue.size();
+      *outputLenPtr = static_cast<O>(attributeValue.size());
     }
     // TODO: Warn if outputSize is too short.
   }
 
-  inline void GetAttributeSQLWCHAR(const std::string& attributeValue, SQLPOINTER output, SQLINTEGER outputSize, SQLINTEGER* outputLenPtr) {
+  template <typename O>
+  inline void GetAttributeSQLWCHAR(const std::string& attributeValue, SQLPOINTER output, O outputSize, O* outputLenPtr) {
     size_t result = ConvertToSqlWChar(attributeValue, reinterpret_cast<SQLWCHAR*>(output), outputSize);
 
     if (outputLenPtr) {
-      *outputLenPtr = static_cast<SQLINTEGER>(result);
+      *outputLenPtr = static_cast<O>(result);
+    }
+  }
+
+  template <typename O>
+  inline void GetStringAttribute(bool isUnicode, const std::string& attributeValue, SQLPOINTER output, O outputSize, O* outputLenPtr) {
+    if (isUnicode) {
+      GetAttributeSQLWCHAR(attributeValue, output, outputSize, outputLenPtr);
+    } else {
+      GetAttributeUTF8(attributeValue, output, outputSize, outputLenPtr);
     }
   }
 
