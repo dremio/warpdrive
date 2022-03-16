@@ -8,7 +8,9 @@
 #include "ODBCDescriptor.h"
 #include "ODBCEnvironment.h"
 #include "ODBCStatement.h"
+#include "AttributeUtils.h"
 #include "odbcinst.h"
+#include "sql.h"
 #include "sqlext.h"
 #include <iterator>
 #include <memory>
@@ -65,7 +67,7 @@ void loadPropertiesFromDSN(const std::string& dsn, Connection::ConnPropertyMap& 
     outputBuffer.clear();
     outputBuffer.resize(BUFFER_SIZE, '\0');
     SQLGetPrivateProfileString(dsn.c_str(), key.c_str(), "", &outputBuffer[0], BUFFER_SIZE, NULL);
-    std:: string value = std::string(&outputBuffer[0]);
+    std::string value = std::string(&outputBuffer[0]);
     auto propIter = properties.find(key);
     if (propIter == properties.end()) {
       properties.emplace(std::make_pair(std::move(key), std::move(value)));
@@ -90,7 +92,7 @@ bool ODBCConnection::isConnected() const
     return m_isConnected;
 }
 
-void ODBCConnection::connect(const Connection::ConnPropertyMap &properties,
+void ODBCConnection::connect(std::string dsn, const Connection::ConnPropertyMap &properties,
   std::vector<std::string> &missing_properties)
 {
   if (m_isConnected) {
@@ -98,6 +100,248 @@ void ODBCConnection::connect(const Connection::ConnPropertyMap &properties,
   }
   m_spiConnection->Connect(properties, missing_properties);
   m_isConnected = true;
+  m_dsn = std::move(dsn);
+}
+
+void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLINT bufferLength, SQLSMALLINT* outputLength, bool isUnicode)
+{
+  
+  switch (infoType) {
+    case SQL_ACTIVE_ENVIRONMENTS:
+      GetAttribute(static_cast<SQLUSMALLINT>(0), value, bufferLength, outputLength);
+      break;
+    #ifdef SQL_ASYNC_DBC_FUNCTIONS
+    case SQL_ASYNC_DBC_FUNCTIONS:
+      GetAttribute(static_cast<SQLUINTEGER>(SQL_ASYNC_DBC_NOT_CAPABLE, value, bufferLength, outputLength);
+      breakl
+    #endif
+    case SQL_ASYNC_MODE:
+      GetAttribute(static_cast<SQLUINTEGER>(SQL_AM_NONE), value, bufferLength, outputLength);
+      break;
+    #ifdef SQL_ASYNC_NOTIFICATION
+    case SQL_ASYNC_NOTIFICATION:
+      GetAttribute(static_cast<SQLUINTEGER>(SQL_ASYNC_NOTIFICATION_NOT_CAPABLE), value, bufferLength, outputLength);
+    #endif
+    case SQL_DATA_SOURCE_NAME:
+      GetStringAttribute(isUnicode, m_dsn, value, bufferLength, outputLength);
+      break;
+    case SQL_DRIVER_ODBC_VER:
+      GetStringAttribute(isUnicode, "3.81", value, bufferLength, outputLength);
+      break;
+    case SQL_DYNAMIC_CURSOR_ATTRIBUTES1:
+      GetAttribute(static_cast<SQLUINTEGER>(0), value, bufferLength, outputLength);
+      break;
+    case SQL_DYNAMIC_CURSOR_ATTRIBUTES2:
+      GetAttribute(static_cast<SQLUINTEGER>(0), value, bufferLength, outputLength);
+      break;
+    case SQL_FORWARD_ONLY_CURSOR_ATTRIBUTES1:
+      GetAttribute(static_cast<SQLUINTEGER>(SQL_CA1_NEXT), value, bufferLength, outputLength);
+      break;
+    case SQL_FORWARD_ONLY_CURSOR_ATTRIBUTES2:
+      GetAttribute(static_cast<SQLUINTEGER>(SQL_CA2_READ_ONLY_CONCURRENCY), value, bufferLength, outputLength);
+      break;
+    case SQL_FILE_USAGE:
+      GetAttribute(static_cast<SQLUSMALLINT>(SQL_FILE_NOT_SUPPORTED), value, bufferLength, outputLength);
+      break;
+    case SQL_KEYSET_CURSOR_ATTRIBUTES1:
+      GetAttribute(static_cast<SQLUINTEGER>(0), value, bufferLength, outputLength);
+      break;
+    case SQL_KEYSET_CURSOR_ATTRIBUTES2:
+      GetAttribute(static_cast<SQLUINTEGER>(0), value, bufferLength, outputLength);
+      break;
+    case SQL_MAX_ASYNC_CONCURRENT_STATEMENTS:
+      GetAttribute(static_cast<SQLUINTEGER>(0), value, bufferLength, outputLength);
+      break;
+    case SQL_ODBC_INTERFACE_CONFORMANCE:
+      GetAttribute(static_cast<SQLUINTEGER>(SQL_OIC_CORE), value, bufferLength, outputLength);
+      break;
+    // case SQL_ODBC_STANDARD_CLI_CONFORMANCE: - mentioned in SQLGetInfo spec with no description
+    // and there is no constant for this.
+    case SQL_PARAM_ARRAY_ROW_COUNTS:
+      GetAttribute(static_cast<SQLUINTEGER>(SQL_PARC_NO_BATCH), value, bufferLength, outputLength);
+      break;
+    case SQL_PARAM_ARRAY_SELECTS:
+      GetAttribute(static_cast<SQLUINTEGER>(SQL_PAS_NO_SELECT), value, bufferLength, outputLength);
+      break;
+    case SQL_ROW_UPDATES:
+      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength);
+      break;
+    case SQL_SCROLL_OPTIONS:
+      GetAttribute(static_cast<SQLUINTEGER>(SQL_SO_FORWARD_ONLY), value, bufferLength, outputLength);
+      break;
+    case SQL_STATIC_CURSOR_ATTRIBUTES1:
+      GetAttribute(static_cast<SQLUINTEGER>(0), value, bufferLength, outputLength);
+      break;
+    case SQL_STATIC_CURSOR_ATTRIBUTES2:
+      GetAttribute(static_cast<SQLUINTEGER>(0), value, bufferLength, outputLength);
+      break;
+    case SQL_BOOKMARK_PERSISTENCE:
+      GetAttribute(static_cast<SQLUINTEGER>(0), value, bufferLength, outputLength);
+      break;
+    case SQL_DESCRIBE_PARAMETER:
+      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength);
+      break;
+    case SQL_MULT_RESULT_SETS:
+      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength);
+      break;
+    case SQL_MULTIPLE_ACTIVE_TXN:
+      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength);
+      break;
+    case SQL_NEED_LONG_DATA_LEN:
+      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength);
+      break;
+    case SQL_TXN_CAPABLE:
+      GetAttribute(static_cast<SQLUSMALLINT>(SQL_TC_NONE), value, bufferLength, outputLength);
+      break;
+    case SQL_TXN_ISOLATION_OPTION:
+      GetAttribute(static_cast<SQLUINTEGER>(0), value, bufferLength, outputLength);
+      break;
+    case SQL_TABLE_TERM:
+      GetStringAttribute(isUnicode, "table", value, bufferLength, outputLength);
+      break;
+    case SQL_COLUMN_ALIAS:
+      GetStringAttribute(isUnicode, "Y", value, bufferLength, outputLength);
+      break;
+
+    // Driver-level string properties.
+    case SQL_USER_NAME:
+    case SQL_DRIVER_NAME:
+    case SQL_SEARCH_PATTERN_ESCAPE:
+    case SQL_SERVER_NAME:
+    case SQL_DATA_SOURCE_READ_ONLY:
+    case SQL_ACCESSIBLE_TABLES:
+    case SQL_ACCESSIBLE_PROCEDURES:
+    case SQL_CATALOG_TERM:
+    case SQL_COLLATION_SEQ:
+    case SQL_SCHEMA_TERM:
+    case SQL_CATALOG_NAME:
+    case SQL_CATALOG_NAME_SEPARATOR:
+    case SQL_EXPRESSIONS_IN_ORDERBY:
+    case SQL_IDENTIFIER_QUOTE_CHAR:
+    case SQL_INTEGRITY:
+    case SQL_KEYWORDS:
+    case SQL_OUTER_JOINS: // Not documented in SQLGetInfo, but other drivers return Y/N strings
+    case SQL_PROCEDURES:
+    case SQL_SPECIAL_CHARACTERS:
+    case SQL_MAX_ROW_SIZE_INCLUDES_LONG:
+    {
+      const auto& info = m_spiConnection->GetInfo(infoType);
+      const std::string& infoValue = boost::get<std::string>(info);
+      GetStringAttribute(isUnicode, infoValue, value, bufferLength, outputLength);
+      break;
+    }
+
+    // Driver-level 32-bit integer propreties.
+    case SQL_GETDATA_EXTENSIONS:
+    case SQL_INFO_SCHEMA_VIEWS:
+    case SQL_CURSOR_SENSITIVITY:
+    case SQL_DEFAULT_TXN_ISOLATION:
+    case SQL_AGGREGATE_FUNCTIONS:
+    case SQL_ALTER_DOMAIN:
+//    case SQL_ALTER_SCHEMA:
+    case SQL_ALTER_TABLE:
+    case SQL_DATETIME_LITERALS:
+    case SQL_CATALOG_USAGE:
+    case SQL_CREATE_ASSERTION:
+    case SQL_CREATE_CHARACTER_SET:
+    case SQL_CREATE_COLLATION:
+    case SQL_CREATE_DOMAIN:
+    case SQL_CREATE_SCHEMA:
+    case SQL_CREATE_TABLE:
+    case SQL_INDEX_KEYWORDS:
+    case SQL_INSERT_STATEMENT:
+    case SQL_LIKE_ESCAPE_CLAUSE:
+    case SQL_OJ_CAPABILITIES:
+    case SQL_ORDER_BY_COLUMNS_IN_SELECT:
+    case SQL_SCHEMA_USAGE:
+    case SQL_SQL_CONFORMANCE:
+    case SQL_SUBQUERIES:
+    case SQL_UNION:
+    case SQL_MAX_BINARY_LITERAL_LEN:
+    case SQL_MAX_CHAR_LITERAL_LEN:
+    case SQL_MAX_ROW_SIZE:
+    case SQL_MAX_STATEMENT_LEN:
+    case SQL_CONVERT_FUNCTIONS:
+    case SQL_NUMERIC_FUNCTIONS:
+    case SQL_STRING_FUNCTIONS:
+    case SQL_SYSTEM_FUNCTIONS:
+    case SQL_TIMEDATE_ADD_INTERVALS:
+    case SQL_TIMEDATE_DIFF_INTERVALS:
+    case SQL_TIMEDATE_FUNCTIONS:
+    case SQL_CONVERT_BIGINT:
+    case SQL_CONVERT_BINARY:
+    case SQL_CONVERT_BIT:
+    case SQL_CONVERT_CHAR:
+    case SQL_CONVERT_DATE:
+    case SQL_CONVERT_DECIMAL:
+    case SQL_CONVERT_DOUBLE:
+    case SQL_CONVERT_FLOAT:
+    case SQL_CONVERT_INTEGER:
+    case SQL_CONVERT_INTERVAL_DAY_TIME:
+    case SQL_CONVERT_INTERVAL_YEAR_MONTH:
+    case SQL_CONVERT_LONGVARBINARY:
+    case SQL_CONVERT_LONGVARCHAR:
+    case SQL_CONVERT_NUMERIC:
+    case SQL_CONVERT_REAL:
+    case SQL_CONVERT_SMALLINT:
+    case SQL_CONVERT_TIME:
+    case SQL_CONVERT_TIMESTAMP:
+    case SQL_CONVERT_TINYINT:
+    case SQL_CONVERT_VARBINARY:
+    case SQL_CONVERT_VARCHAR:
+    {
+      const auto& info = m_spiConnection->GetInfo(infoType);
+      uint32_t infoValue = boost::get<uint32_t>(info);
+      GetAttribute(infoValue, value, bufferLength, outputLength);
+      break;
+    }
+    
+    // Driver-level 16-bit integer properties.
+    case SQL_MAX_CONCURRENT_ACTIVITIES:
+    case SQL_MAX_DRIVER_CONNECTIONS:
+    case SQL_CONCAT_NULL_BEHAVIOR:
+    case SQL_CURSOR_COMMIT_BEHAVIOR:
+    case SQL_CURSOR_ROLLBACK_BEHAVIOR:
+    case SQL_NULL_COLLATION:
+    case SQL_CATALOG_LOCATION:
+    case SQL_CORRELATION_NAME:
+    case SQL_CREATE_TRANSLATION:
+    case SQL_DDL_INDEX:
+    case SQL_DROP_ASSERTION:
+    case SQL_DROP_CHARACTER_SET:
+    case SQL_DROP_COLLATION:
+    case SQL_DROP_DOMAIN:
+    case SQL_DROP_SCHEMA:
+    case SQL_DROP_TABLE:
+    case SQL_DROP_TRANSLATION:
+    case SQL_DROP_VIEW:
+    case SQL_GROUP_BY:
+    case SQL_IDENTIFIER_CASE:
+    case SQL_NON_NULLABLE_COLUMNS:
+    case SQL_QUOTED_IDENTIFIER_CASE:
+    case SQL_MAX_CATALOG_NAME_LEN:
+    case SQL_MAX_COLUMN_NAME_LEN:
+    case SQL_MAX_COLUMNS_IN_GROUP_BY:
+    case SQL_MAX_COLUMNS_IN_INDEX:
+    case SQL_MAX_COLUMNS_IN_ORDER_BY:
+    case SQL_MAX_COLUMNS_IN_SELECT:
+    case SQL_MAX_COLUMNS_IN_TABLE:
+    case SQL_MAX_CURSOR_NAME_LEN:
+    case SQL_MAX_IDENTIFIER_LEN:
+    case SQL_MAX_SCHEMA_NAME_LEN:
+    case SQL_MAX_TABLE_NAME_LEN:
+    case SQL_MAX_TABLES_IN_SELECT:
+    case SQL_MAX_USER_NAME_LEN:
+    {
+      const auto& info = m_spiConnection->GetInfo(infoType);
+      uint16_t infoValue = boost::get<uint16_t>(info);
+      GetAttribute(infoValue, value, bufferLength, outputLength);
+      break;
+    }
+
+    default:
+      throw DriverException("Unknown SQLGetInfo type: " + std::to_string(infoType));
+  }
 }
 
 void ODBCConnection::disconnect() {
@@ -142,7 +386,7 @@ void ODBCConnection::dropDescriptor(ODBCDescriptor* desc) {
 }
 
 // Public Static ===================================================================================
-void ODBCConnection::getPropertiesFromConnString(const std::string& connStr,
+std::string ODBCConnection::getPropertiesFromConnString(const std::string& connStr,
   Connection::ConnPropertyMap &properties)
 {
   const int groups[] = { 1, 2 }; // CONNECTION_STR_REGEX has two groups. key: 1, value: 2
@@ -151,6 +395,7 @@ void ODBCConnection::getPropertiesFromConnString(const std::string& connStr,
   
   bool isDsnFirst = false;
   bool isDriverFirst = false;
+  std::string dsn;
   for (auto it = regexIter; end != regexIter; ++regexIter) {
     std::string key = *regexIter;
     std::string value = *++regexIter;
@@ -163,6 +408,7 @@ void ODBCConnection::getPropertiesFromConnString(const std::string& connStr,
         if (!isDsnFirst) {
           isDsnFirst = true;
           loadPropertiesFromDSN(value, properties);
+          dsn.swap(value);
         }
       }
       continue;
@@ -182,5 +428,5 @@ void ODBCConnection::getPropertiesFromConnString(const std::string& connStr,
     // including over entries in the DSN.
     properties[key] = std::move(value);
   }
-
+  return dsn;
 }

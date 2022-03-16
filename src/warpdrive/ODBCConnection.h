@@ -32,8 +32,10 @@ class ODBCConnection {
       std::shared_ptr<driver::odbcabstraction::Connection> spiConnection);
     
     bool isConnected() const;
-    void connect(const driver::odbcabstraction::Connection::ConnPropertyMap &properties,
+    void connect(std::string dsn, const driver::odbcabstraction::Connection::ConnPropertyMap &properties,
                        std::vector<std::string> &missing_properties);
+
+    void GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLINT bufferLength, SQLSMALLINT* outputLength, bool isUnicode);
     
     ~ODBCConnection() = default;
 
@@ -51,7 +53,8 @@ class ODBCConnection {
       return m_is2xConnection;
     }
 
-    static void getPropertiesFromConnString(const std::string& connStr, 
+    /// @return the DSN or empty string if Driver was used.
+    static std::string getPropertiesFromConnString(const std::string& connStr, 
       driver::odbcabstraction::Connection::ConnPropertyMap &properties);
 
   private:
@@ -59,6 +62,7 @@ class ODBCConnection {
     std::shared_ptr<driver::odbcabstraction::Connection> m_spiConnection;
     std::vector<std::shared_ptr<ODBCStatement> > m_statements;
     std::vector<std::shared_ptr<ODBCDescriptor> > m_descriptors;
+    std::string m_dsn;
     const bool m_is2xConnection;
     bool m_isConnected;
 };
