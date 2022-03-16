@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ce7f6dc0_9ab3d3e2",
+        "filename": "src/warpdrive/ODBCConnection.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1000319
+      },
+      "writtenOn": "2022-03-16T16:16:49Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this start with small case to match all the other methods?",
+      "revId": "4f3fef38aea6bc809aac68dd51207fb0b1ee9d26",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
