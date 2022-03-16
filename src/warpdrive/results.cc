@@ -122,7 +122,7 @@ WD_NumResultCols(HSTMT hstmt,
   const ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
   const std::vector<DescriptorRecord>& records = stmt->GetIRD()->GetRecords();
 
-  GetAttribute(static_cast<SQLSMALLINT>(records.size()), pccol, sizeof(SQLSMALLINT), nullptr);
+  GetAttribute<SQLSMALLINT,size_t>(static_cast<SQLSMALLINT>(records.size()), pccol, sizeof(SQLSMALLINT), nullptr);
   return SQL_SUCCESS;
 }
 
@@ -154,14 +154,14 @@ WD_DescribeCol(HSTMT hstmt,
 
   SQLUSMALLINT zeroBasedIndex = icol - 1;
   const DescriptorRecord& record = records[zeroBasedIndex];
-  SQLINTEGER totalColumnNameLen;
+  SQLSMALLINT totalColumnNameLen;
   GetAttributeUTF8(record.m_name, szColName, cbColNameMax, &totalColumnNameLen);
   if (pcbColName) {
-    *pcbColName = static_cast<SQLSMALLINT>(totalColumnNameLen);
+    *pcbColName = totalColumnNameLen;
   }
-  GetAttribute(record.m_type, pfSqlType, sizeof(SQLUSMALLINT), nullptr);
-  GetAttribute(record.m_length, pcbColDef, sizeof(SQLULEN), nullptr);
-  GetAttribute(record.m_nullable, pfNullable, sizeof(SQLSMALLINT), nullptr);
+  GetAttribute<SQLSMALLINT, size_t>(record.m_type, pfSqlType, sizeof(SQLUSMALLINT), nullptr);
+  GetAttribute<SQLUINTEGER, size_t>(record.m_length, pcbColDef, sizeof(SQLULEN), nullptr);
+  GetAttribute<SQLSMALLINT, size_t>(record.m_nullable, pfNullable, sizeof(SQLSMALLINT), nullptr);
 
   return SQL_SUCCESS;
 }
@@ -295,7 +295,7 @@ WD_ColAttributes(HSTMT hstmt,
   // Character attribute.
   if (recordStrValue) {
 	SQLINTEGER outputLen = 0;
-    GetAttributeUTF8(*recordStrValue, rgbDesc, cbDescMax, &outputLen);
+    GetAttributeUTF8(*recordStrValue, rgbDesc, static_cast<SQLINTEGER>(cbDescMax), &outputLen);
 	if (pcbDesc) {
 	  *pcbDesc = static_cast<SQLSMALLINT>(outputLen);
 	}
@@ -303,7 +303,7 @@ WD_ColAttributes(HSTMT hstmt,
   }
 
   // Numeric attribute.
-  GetAttribute(recordNumericValue, pfDesc, sizeof(SQLLEN), nullptr);
+  GetAttribute<SQLINTEGER, size_t>(recordNumericValue, pfDesc, sizeof(SQLLEN), nullptr);
   return SQL_SUCCESS;
 }
 
