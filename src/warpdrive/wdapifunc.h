@@ -114,7 +114,7 @@ RETCODE SQL_API WD_GetFunctions30(HDBC ConnectionHandle,
 					 SQLUSMALLINT FunctionId, SQLUSMALLINT *Supported);
 RETCODE SQL_API WD_GetInfo(HDBC ConnectionHandle,
 			  SQLUSMALLINT InfoType, PTR InfoValue,
-			  SQLSMALLINT BufferLength, SQLSMALLINT *StringLength);
+			  SQLSMALLINT BufferLength, SQLSMALLINT *StringLength, UWORD UnicodeOption);
 RETCODE SQL_API WD_GetStmtOption(HSTMT StatementHandle,
 			SQLUSMALLINT Option, PTR Value,
 			SQLINTEGER *StringLength, SQLINTEGER BufferLength);

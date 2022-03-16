@@ -399,14 +399,11 @@ SQLGetInfoW(HDBC ConnectionHandle,
 			SQLUSMALLINT InfoType, PTR InfoValue,
 			SQLSMALLINT BufferLength, SQLSMALLINT *StringLength)
 {
-	ConnectionClass	*conn = (ConnectionClass *) ConnectionHandle;
 	RETCODE	ret = SQL_SUCCESS;
 
-	ENTER_CONN_CS(conn);
 	MYLOG(0, "Entering\n");
-//	if ((ret = WD_GetInfo(ConnectionHandle, InfoType, InfoValue,
-//							 BufferLength, StringLength)) == SQL_ERROR)
-	LEAVE_CONN_CS(conn);
+    ret = WD_GetInfo(ConnectionHandle, InfoType, InfoValue,
+							 BufferLength, StringLength, TRUE);
 	return ret;
 }
 
