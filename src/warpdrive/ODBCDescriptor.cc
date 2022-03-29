@@ -93,6 +93,8 @@ void ODBCDescriptor::SetHeaderField(SQLSMALLINT fieldIdentifier, SQLPOINTER valu
       m_hasBindingsChanged = true;
       break;
     }
+    default:
+      throw DriverException("Invalid descriptor field");
   }
 }
 
@@ -191,6 +193,8 @@ void ODBCDescriptor::SetField(SQLSMALLINT recordNumber, SQLSMALLINT fieldIdentif
       record.m_isBound = false;
       m_hasBindingsChanged = true;
       break;
+    default:
+      throw DriverException("Invalid descriptor field");
   }
 }
 
@@ -210,7 +214,7 @@ void ODBCDescriptor::GetHeaderField(SQLSMALLINT fieldIdentifier, SQLPOINTER valu
       GetAttribute(m_arraySize, value, bufferLength, outputLength);
       break;
     case SQL_DESC_ARRAY_STATUS_PTR:
-      GetAttribute(m_arraySize, value, bufferLength, outputLength);
+      GetAttribute(m_arrayStatusPtr, value, bufferLength, outputLength);
       break;
     case SQL_DESC_BIND_OFFSET_PTR:
       GetAttribute(m_bindOffsetPtr, value, bufferLength, outputLength);
@@ -225,6 +229,8 @@ void ODBCDescriptor::GetHeaderField(SQLSMALLINT fieldIdentifier, SQLPOINTER valu
       GetAttribute(m_highestOneBasedBoundRecord, value, bufferLength, outputLength);
       break;
     }
+    default:
+      throw DriverException("Invalid descriptor field");
   }
 }
 
@@ -240,6 +246,8 @@ void ODBCDescriptor::GetField(SQLSMALLINT recordNumber, SQLSMALLINT fieldIdentif
     case SQL_DESC_COUNT:
       GetHeaderField(fieldIdentifier, value, bufferLength, outputLength);
       return;
+    default:
+      break;
   }
 
   if (recordNumber == 0) {
@@ -359,6 +367,8 @@ void ODBCDescriptor::GetField(SQLSMALLINT recordNumber, SQLSMALLINT fieldIdentif
     case SQL_DESC_UPDATABLE:
       GetAttribute(record.m_updatable, value, bufferLength, outputLength);
       break;
+    default:
+      throw DriverException("Invalid descriptor field");
   }
 }
 

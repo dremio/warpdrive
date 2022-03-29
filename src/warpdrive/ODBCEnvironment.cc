@@ -7,6 +7,7 @@
 
 #include "wdodbc.h"
 #include <algorithm>
+#include <utility>
 #include "sqlext.h"
 #include <odbcabstraction/driver.h>
 #include <odbcabstraction/connection.h>
@@ -18,7 +19,7 @@ using namespace driver::odbcabstraction;
 
 // Public =========================================================================================
 ODBCEnvironment::ODBCEnvironment(std::shared_ptr<Driver> driver) :
-  m_driver(driver),
+  m_driver(std::move(driver)),
   m_version(SQL_OV_ODBC2),
   m_connectionPooling(SQL_CP_OFF) {
 
