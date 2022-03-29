@@ -47,8 +47,10 @@ class ODBCStatement {
     bool Fetch(size_t rows);
     bool isPrepared() const;
 
-    void GetAttribute(SQLINTEGER statementAttribute, SQLPOINTER output, SQLLEN bufferSize, SQLLEN* strLenPtr);
-    void SetAttribute(SQLINTEGER statementAttribute, SQLPOINTER value, SQLLEN bufferSize);
+    void GetStmtAttr(SQLINTEGER statementAttribute, SQLPOINTER output,
+                     SQLINTEGER bufferSize, SQLINTEGER *strLenPtr, bool isUnicode);
+    void SetStmtAttr(SQLINTEGER statementAttribute, SQLPOINTER value,
+                     SQLINTEGER bufferSize, bool isUnicode);
 
     void RevertAppDescriptor(bool isApd);
 

@@ -33,13 +33,9 @@ SQLGetStmtAttrW(SQLHSTMT hstmt,
 				SQLINTEGER	*pcbValue)
 {
 	RETCODE	ret = SQL_SUCCESS;
-	StatementClass	*stmt = (StatementClass *) hstmt;
 
-	MYLOG(0, "Entering\n");
-	ENTER_STMT_CS((StatementClass *) hstmt);
-//	ret = WD_GetStmtAttr(hstmt, fAttribute, rgbValue,
-//		cbValueMax, pcbValue);
-	LEAVE_STMT_CS((StatementClass *) hstmt);
+	ret = WD_GetStmtAttr(hstmt, fAttribute, rgbValue,
+		cbValueMax, pcbValue, true);
 	return ret;
 }
 
@@ -51,13 +47,9 @@ SQLSetStmtAttrW(SQLHSTMT hstmt,
 				SQLINTEGER	cbValueMax)
 {
 	RETCODE	ret = SQL_SUCCESS;
-	StatementClass	*stmt = (StatementClass *) hstmt;
 
 	MYLOG(0, "Entering\n");
-	ENTER_STMT_CS(stmt);
-//	ret = WD_SetStmtAttr(hstmt, fAttribute, rgbValue,
-//		cbValueMax);
-	LEAVE_STMT_CS(stmt);
+	ret = WD_SetStmtAttr(hstmt, fAttribute, rgbValue,cbValueMax, true);
 	return ret;
 }
 

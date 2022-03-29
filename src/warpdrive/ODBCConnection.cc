@@ -10,7 +10,6 @@
 #include "ODBCEnvironment.h"
 #include "ODBCStatement.h"
 #include "AttributeUtils.h"
-#include "EncodingUtils.h"
 #include "odbcinst.h"
 #include "sql.h"
 #include "sqlext.h"
@@ -74,13 +73,6 @@ void loadPropertiesFromDSN(const std::string& dsn, Connection::ConnPropertyMap& 
     if (propIter == properties.end()) {
       properties.emplace(std::make_pair(std::move(key), std::move(value)));
     }
-  }
-}
-
-template <typename T>
-void CheckIfAttributeIsSetToOnlyValidValue(SQLPOINTER value, T allowed_value) {
-  if (static_cast<T>(reinterpret_cast<SQLULEN>(value)) != allowed_value) {
-    throw DriverException("Optional feature not implemented");
   }
 }
 
