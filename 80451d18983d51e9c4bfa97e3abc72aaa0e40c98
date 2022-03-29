@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "329ea05b_62135469",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-03-29T18:08:13Z",
+      "side": 1,
+      "message": "No DX numbers since this repo will later be open-sourced",
+      "revId": "80451d18983d51e9c4bfa97e3abc72aaa0e40c98",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "474f9c55_01610c3a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-03-29T18:08:13Z",
+      "side": 1,
+      "message": "We need a detailed description of what changed.",
+      "revId": "80451d18983d51e9c4bfa97e3abc72aaa0e40c98",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
