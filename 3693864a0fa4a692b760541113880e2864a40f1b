@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "58e2bd0e_2fece86c",
+        "filename": "src/warpdrive/ODBCConnection.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-03-29T20:55:33Z",
+      "side": 1,
+      "message": "Maybe a typo, shouldn\u0027t it be\n\nstatic_cast\u003cT\u003e(reinterpret_cast\u003cSQLULEN\u003e(value)) !\u003d allowed_value\n\n?",
+      "revId": "3693864a0fa4a692b760541113880e2864a40f1b",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2169f004_b1504b93",
+        "filename": "src/warpdrive/ODBCConnection.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 411,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-03-29T20:55:33Z",
+      "side": 1,
+      "message": "Maybe an encoding error here",
+      "revId": "3693864a0fa4a692b760541113880e2864a40f1b",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "80a46e0c_a2f2b89a",
+        "filename": "src/warpdrive/wdapi30.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-03-29T20:55:33Z",
+      "side": 1,
+      "message": "Can we have a more descriptive name for \"b\"?",
+      "revId": "3693864a0fa4a692b760541113880e2864a40f1b",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
