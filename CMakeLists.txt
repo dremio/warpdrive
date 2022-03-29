@@ -544,7 +544,21 @@ if(APPLE)
   add_compile_definitions(HAVE_LONG_LONG SQLCOLATTRIBUTE_SQLLEN WITH_IODBC)
 else()
   find_package(ODBC REQUIRED)
+  if(UNIX)
+    add_compile_definitions(WITH_UNIXODBC)
+  endif()
 endif()
+
+# Add OpenSSL dependencies needed by ODBCAbstraction. Should be pre-installed.
+# May need to set OPENSSL_ROOT_DIR first. On Mac if using brew:
+# brew install openssl@1.1
+# add to the cmake line -DOPENSSL_ROOT_DIR=/usr/local/Cellar/openssl@1.1/1.1.1m
+if (NOT DEFINED OPENSSL_ROOT_DIR AND DEFINED APPLE)
+  set(OPENSSL_ROOT_DIR /usr/local/Cellar/openssl@1.1/1.1.1m)
+endif()
+set(OpenSSL_USE_STATIC_LIBS ON)
+set(OPENSSL_USE_STATIC_LIBS ON)
+find_package(OpenSSL REQUIRED)
 
 # Add dependency on the ODBC Abstraction, which also gets and builds Arrow.
 define_option(GITHUB_ACCESS_TOKEN "Github access token" "")
@@ -559,7 +573,7 @@ define_option(ODBCABSTRACTION_GIT_TAG, "Tag for the ODBC Abstraction project" "m
 ExternalProject_Add(ODBCAbstraction
     GIT_REPOSITORY ${ODBCABSTRACTION_REPO}
     GIT_TAG ${ODBCABSTRACTION_GIT_TAG}
-    CMAKE_ARGS "-DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+    CMAKE_ARGS "DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
     INSTALL_COMMAND cmake -E echo "Skipping install step.")
     #TODO: Fix the INSTALL operation in the ODBCAbstraction project.
 
@@ -570,7 +584,12 @@ find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 # Add Arrow library build path and ODBCAbstraction library path.
-link_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction-build/flight_sql/ApacheArrow-prefix/src/ApacheArrow-install/lib)
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  set(ARROW_LIB_DIR lib64)
+else()
+  set(ARROW_LIB_DIR lib)
+endif()
+link_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction-build/flight_sql/ApacheArrow-prefix/src/ApacheArrow-install/${ARROW_LIB_DIR})
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction-build/lib)
 link_directories(${BUILD_OUTPUT_ROOT_DIRECTORY})
 list(APPEND WARPDRIVE_LINK_LIBS odbcabstraction)

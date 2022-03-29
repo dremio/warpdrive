@@ -13,6 +13,7 @@
 #include <locale>
 #include <memory>
 #include <string>
+#include <cstring>
 
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 
