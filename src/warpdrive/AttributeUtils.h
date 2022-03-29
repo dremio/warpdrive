@@ -73,4 +73,14 @@ namespace ODBC {
     const char* newValueAsChar = static_cast<const char*>(newValue);
     attributeToWrite.assign(newValueAsChar, inputLength == SQL_NTS ? strlen(newValueAsChar) : inputLength);
   }
+
+  inline void SetAttributeSQLWCHAR(SQLPOINTER newValue, SQLINTEGER inputLengthInBytes, std::string& attributeToWrite) {
+    SqlWString wstr;
+    if (inputLengthInBytes == SQL_NTS) {
+      wstr.assign(reinterpret_cast<SqlWChar*>(newValue));
+    } else {
+      wstr.assign(reinterpret_cast<SqlWChar*>(newValue), inputLengthInBytes / sizeof(SqlWChar));
+    }
+    attributeToWrite = CharToWStrConverter().to_bytes(wstr.c_str());
+  }
 }
