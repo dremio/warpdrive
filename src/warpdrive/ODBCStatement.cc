@@ -6,6 +6,7 @@
 #include "ODBCStatement.h"
 
 #include "wdodbc.h"
+#include "AttributeUtils.h"
 #include "ODBCConnection.h"
 #include "ODBCDescriptor.h"
 #include "sql.h"
@@ -22,7 +23,7 @@ using namespace ODBC;
 using namespace driver::odbcabstraction;
 
 namespace {
-  void DescriptorToHandle(SQLPOINTER output, ODBCDescriptor* descriptor, SQLLEN* lenPtr) {
+  void DescriptorToHandle(SQLPOINTER output, ODBCDescriptor* descriptor, SQLINTEGER* lenPtr) {
     if (output) {
       SQLHANDLE* outputHandle = static_cast<SQLHANDLE*>(output);
       *outputHandle = reinterpret_cast<SQLHANDLE>(descriptor);
@@ -256,8 +257,11 @@ bool ODBCStatement::Fetch(size_t rows) {
   return rowsFetched != 0;
 }
 
-void ODBCStatement::GetAttribute(SQLINTEGER statementAttribute, SQLPOINTER output, SQLLEN bufferSize, SQLLEN* strLenPtr) {
+void ODBCStatement::GetStmtAttr(SQLINTEGER statementAttribute,
+                                SQLPOINTER output, SQLINTEGER bufferSize,
+                                SQLINTEGER *strLenPtr, bool isUnicode) {
   switch (statementAttribute) {
+    // Descriptor accessor attributes
     case SQL_ATTR_APP_PARAM_DESC:
       DescriptorToHandle(output, m_currentApd, strLenPtr);
       break;
@@ -270,41 +274,202 @@ void ODBCStatement::GetAttribute(SQLINTEGER statementAttribute, SQLPOINTER outpu
     case SQL_ATTR_IMP_ROW_DESC:
       DescriptorToHandle(output, m_ird.get(), strLenPtr);
       break;
+
+    // Attributes that are descriptor fields
+    case SQL_ATTR_PARAM_BIND_OFFSET_PTR:
+      m_currentApd->GetHeaderField(SQL_DESC_BIND_OFFSET_PTR, output, bufferSize, strLenPtr);
+      break;
+    case SQL_ATTR_PARAM_BIND_TYPE:
+      m_currentApd->GetHeaderField(SQL_DESC_BIND_TYPE, output, bufferSize, strLenPtr);
+      break;
+    case SQL_ATTR_PARAM_OPERATION_PTR:
+      m_currentApd->GetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, output, bufferSize, strLenPtr);
+      break;
+    case SQL_ATTR_PARAM_STATUS_PTR:
+      m_ipd->GetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, output, bufferSize, strLenPtr);
+      break;
+    case SQL_ATTR_PARAMS_PROCESSED_PTR:
+      m_ipd->GetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, output, bufferSize, strLenPtr);
+      break;
+    case SQL_ATTR_PARAMSET_SIZE:
+      m_currentApd->GetHeaderField(SQL_DESC_ARRAY_SIZE, output, bufferSize, strLenPtr);
+      break;
+    case SQL_ATTR_ROW_ARRAY_SIZE:
+      m_currentArd->GetHeaderField(SQL_DESC_ARRAY_SIZE, output, bufferSize, strLenPtr);
+      break;
+    case SQL_ATTR_ROW_BIND_OFFSET_PTR:
+      m_currentArd->GetHeaderField(SQL_DESC_BIND_OFFSET_PTR, output, bufferSize, strLenPtr);
+      break;
+    case SQL_ATTR_ROW_BIND_TYPE:
+      m_currentArd->GetHeaderField(SQL_DESC_BIND_TYPE, output, bufferSize, strLenPtr);
+      break;
+    case SQL_ATTR_ROW_OPERATION_PTR:
+      m_currentArd->GetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, output, bufferSize, strLenPtr);
+      break;
+    case SQL_ATTR_ROW_STATUS_PTR:
+      m_ird->GetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, output, bufferSize, strLenPtr);
+      break;
+    case SQL_ATTR_ROWS_FETCHED_PTR:
+      m_ird->GetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, output, bufferSize, strLenPtr);
+      break;
+
+    case SQL_ATTR_ASYNC_ENABLE:
+      GetAttribute(static_cast<SQLULEN>(SQL_ASYNC_ENABLE_OFF), output, bufferSize, strLenPtr);
+      break;
+
+#ifdef SQL_ATTR_ASYNC_STMT_EVENT
+    case SQL_ATTR_ASYNC_STMT_EVENT:
+      throw DriverException("Unsupported attribute");
+#endif
+#ifdef SQL_ATTR_ASYNC_STMT_PCALLBACK
+    case SQL_ATTR_ASYNC_STMT_PCALLBACK:
+      throw DriverException("Unsupported attribute");
+#endif
+#ifdef SQL_ATTR_ASYNC_STMT_PCONTEXT
+    case SQL_ATTR_ASYNC_STMT_PCONTEXT:
+      throw DriverException("Unsupported attribute");
+#endif
+    case SQL_ATTR_CURSOR_SCROLLABLE:
+      GetAttribute(static_cast<SQLULEN>(SQL_NONSCROLLABLE), output, bufferSize, strLenPtr);
+      break;
+
+    case SQL_ATTR_CURSOR_SENSITIVITY:
+      GetAttribute(static_cast<SQLULEN>(SQL_UNSPECIFIED), output, bufferSize, strLenPtr);
+      break;
+
+    case SQL_ATTR_CURSOR_TYPE:
+      GetAttribute(static_cast<SQLULEN>(SQL_CURSOR_FORWARD_ONLY), output, bufferSize, strLenPtr);
+      break;
+
+    case SQL_ATTR_ENABLE_AUTO_IPD:
+      GetAttribute(static_cast<SQLULEN>(SQL_FALSE), output, bufferSize, strLenPtr);
+      break;
+
+    case SQL_ATTR_FETCH_BOOKMARK_PTR:
+      GetAttribute(static_cast<SQLPOINTER>(NULL), output, bufferSize, strLenPtr);
+      break;
+
+    case SQL_ATTR_KEYSET_SIZE:
+      GetAttribute(static_cast<SQLULEN>(0), output, bufferSize, strLenPtr);
+      break;
+
+    case SQL_ATTR_ROW_NUMBER:
+    case SQL_ATTR_SIMULATE_CURSOR:
+    case SQL_ATTR_USE_BOOKMARKS:
+
+    case SQL_ATTR_CONCURRENCY:
+    case SQL_ATTR_MAX_LENGTH:
+    case SQL_ATTR_MAX_ROWS:
+    case SQL_ATTR_METADATA_ID:
+    case SQL_ATTR_NOSCAN:
+    case SQL_ATTR_QUERY_TIMEOUT:
+    case SQL_ATTR_RETRIEVE_DATA:
+    default:
+      throw DriverException("Invalid statement attribute");
   }
 }
 
-void ODBCStatement::SetAttribute(SQLINTEGER statementAttribute, SQLPOINTER value, SQLLEN bufferSize) {
+void ODBCStatement::SetStmtAttr(SQLINTEGER statementAttribute, SQLPOINTER value,
+                                SQLINTEGER bufferSize, bool isUnicode) {
   switch (statementAttribute) {
     case SQL_ATTR_APP_PARAM_DESC: {
-        ODBCDescriptor* desc = static_cast<ODBCDescriptor*>(value);
-        if (m_currentApd != desc) {
-          if (m_currentApd != m_builtInApd.get()) {
-            m_currentApd->DetachFromStatement(this, true);
-          }
-          m_currentApd = desc;
-          if (m_currentApd != m_builtInApd.get()) {
-            desc->RegisterToStatement(this, true);
-          }
+      ODBCDescriptor* desc = static_cast<ODBCDescriptor*>(value);
+      if (m_currentApd != desc) {
+        if (m_currentApd != m_builtInApd.get()) {
+          m_currentApd->DetachFromStatement(this, true);
         }
-        break;
+        m_currentApd = desc;
+        if (m_currentApd != m_builtInApd.get()) {
+          desc->RegisterToStatement(this, true);
+        }
       }
+      break;
+    }
     case SQL_ATTR_APP_ROW_DESC: {
-        ODBCDescriptor* desc = static_cast<ODBCDescriptor*>(value);
-        if (m_currentArd != desc) {
-          if (m_currentArd != m_builtInArd.get()) {
-            m_currentArd->DetachFromStatement(this, false);
-          }
-          m_currentArd = desc;
-          if (m_currentArd != m_builtInArd.get()) {
-            desc->RegisterToStatement(this, false);
-          }
+      ODBCDescriptor* desc = static_cast<ODBCDescriptor*>(value);
+      if (m_currentArd != desc) {
+        if (m_currentArd != m_builtInArd.get()) {
+          m_currentArd->DetachFromStatement(this, false);
         }
-        break;
+        m_currentArd = desc;
+        if (m_currentArd != m_builtInArd.get()) {
+          desc->RegisterToStatement(this, false);
+        }
       }
+      break;
+    }
     case SQL_ATTR_IMP_PARAM_DESC:
       throw DriverException("Cannot assign impl descriptor.");
     case SQL_ATTR_IMP_ROW_DESC:
       throw DriverException("Cannot assign impl descriptor.");
+      // Attributes that are descriptor fields
+    case SQL_ATTR_PARAM_BIND_OFFSET_PTR:
+      m_currentApd->SetHeaderField(SQL_DESC_BIND_OFFSET_PTR, value, bufferSize);
+      break;
+    case SQL_ATTR_PARAM_BIND_TYPE:
+      m_currentApd->SetHeaderField(SQL_DESC_BIND_TYPE, value, bufferSize);
+      break;
+    case SQL_ATTR_PARAM_OPERATION_PTR:
+      m_currentApd->SetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, value, bufferSize);
+      break;
+    case SQL_ATTR_PARAM_STATUS_PTR:
+      m_ipd->SetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, value, bufferSize);
+      break;
+    case SQL_ATTR_PARAMS_PROCESSED_PTR:
+      m_ipd->SetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, value, bufferSize);
+      break;
+    case SQL_ATTR_PARAMSET_SIZE:
+      m_currentApd->SetHeaderField(SQL_DESC_ARRAY_SIZE, value, bufferSize);
+      break;
+    case SQL_ATTR_ROW_ARRAY_SIZE:
+      m_currentArd->SetHeaderField(SQL_DESC_ARRAY_SIZE, value, bufferSize);
+      break;
+    case SQL_ATTR_ROW_BIND_OFFSET_PTR:
+      m_currentArd->SetHeaderField(SQL_DESC_BIND_OFFSET_PTR, value, bufferSize);
+      break;
+    case SQL_ATTR_ROW_BIND_TYPE:
+      m_currentArd->SetHeaderField(SQL_DESC_BIND_TYPE, value, bufferSize);
+      break;
+    case SQL_ATTR_ROW_OPERATION_PTR:
+      m_currentArd->SetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, value, bufferSize);
+      break;
+    case SQL_ATTR_ROW_STATUS_PTR:
+      m_ird->SetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, value, bufferSize);
+      break;
+    case SQL_ATTR_ROWS_FETCHED_PTR:
+      m_ird->SetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, value, bufferSize);
+      break;
+
+    case SQL_ATTR_ASYNC_ENABLE:
+#ifdef SQL_ATTR_ASYNC_STMT_EVENT
+    case SQL_ATTR_ASYNC_STMT_EVENT:
+#endif
+#ifdef SQL_ATTR_ASYNC_STMT_PCALLBACK
+    case SQL_ATTR_ASYNC_STMT_PCALLBACK:
+#endif
+#ifdef SQL_ATTR_ASYNC_STMT_PCONTEXT
+    case SQL_ATTR_ASYNC_STMT_PCONTEXT:
+#endif
+    case SQL_ATTR_CONCURRENCY:
+    case SQL_ATTR_CURSOR_SCROLLABLE:
+    case SQL_ATTR_CURSOR_SENSITIVITY:
+    case SQL_ATTR_CURSOR_TYPE:
+    case SQL_ATTR_ENABLE_AUTO_IPD:
+    case SQL_ATTR_FETCH_BOOKMARK_PTR:
+    case SQL_ATTR_KEYSET_SIZE:
+    case SQL_ATTR_ROW_NUMBER:
+    case SQL_ATTR_SIMULATE_CURSOR:
+    case SQL_ATTR_USE_BOOKMARKS:
+
+    case SQL_ATTR_MAX_LENGTH:
+    case SQL_ATTR_MAX_ROWS:
+    case SQL_ATTR_METADATA_ID:
+    case SQL_ATTR_NOSCAN:
+    case SQL_ATTR_QUERY_TIMEOUT:
+    case SQL_ATTR_RETRIEVE_DATA:
+    default:
+      throw DriverException("Invalid statement attribute");
+    }
   }
 }
 
