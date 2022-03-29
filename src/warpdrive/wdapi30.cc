@@ -32,6 +32,7 @@
 #include "dlg_specific.h"
 
 #include "AttributeUtils.h"
+#include "ODBCConnection.h"
 #include "ODBCDescriptor.h"
 #include <odbcabstraction/exceptions.h>
 
@@ -406,84 +407,15 @@ MYLOG(DETAIL_LOG_LEVEL, "rc=" FORMAT_LEN "\n", rc);
 }
 
 /*	SQLGetConnectOption -> SQLGetconnectAttr */
-RETCODE		SQL_API
-WD_GetConnectAttr(HDBC ConnectionHandle,
-					 SQLINTEGER Attribute, PTR Value,
-					 SQLINTEGER BufferLength, SQLINTEGER *StringLength)
-{
-	ConnectionClass *conn = (ConnectionClass *) ConnectionHandle;
-	RETCODE	ret = SQL_SUCCESS;
-	SQLINTEGER	len = 4;
+RETCODE SQL_API WD_GetConnectAttr(HDBC ConnectionHandle, SQLINTEGER Attribute,
+                                  PTR Value, SQLINTEGER BufferLength,
+                                  SQLINTEGER *StringLength, bool isUnicode) {
+  RETCODE ret = SQL_SUCCESS;
 
-	MYLOG(0, "entering " FORMAT_INTEGER "\n", Attribute);
-	switch (Attribute)
-	{
-		case SQL_ATTR_ASYNC_ENABLE:
-			*((SQLINTEGER *) Value) = SQL_ASYNC_ENABLE_OFF;
-			break;
-		case SQL_ATTR_AUTO_IPD:
-			*((SQLINTEGER *) Value) = SQL_FALSE;
-			break;
-		case SQL_ATTR_CONNECTION_DEAD:
-			*((SQLUINTEGER *) Value) = CC_not_connected(conn);
-			break;
-		case SQL_ATTR_CONNECTION_TIMEOUT:
-			*((SQLUINTEGER *) Value) = 0;
-			break;
-		case SQL_ATTR_METADATA_ID:
-			*((SQLUINTEGER *) Value) = conn->stmtOptions.metadata_id;
-			break;
-		case SQL_ATTR_PGOPT_DEBUG:
-			*((SQLINTEGER *) Value) = conn->connInfo.drivers.debug;
-			break;
-		case SQL_ATTR_PGOPT_COMMLOG:
-			*((SQLINTEGER *) Value) = conn->connInfo.drivers.commlog;
-			break;
-		case SQL_ATTR_PGOPT_PARSE:
-			*((SQLINTEGER *) Value) = conn->connInfo.drivers.parse;
-			break;
-		case SQL_ATTR_PGOPT_USE_DECLAREFETCH:
-			*((SQLINTEGER *) Value) = conn->connInfo.drivers.use_declarefetch;
-			break;
-		case SQL_ATTR_PGOPT_SERVER_SIDE_PREPARE:
-			*((SQLINTEGER *) Value) = conn->connInfo.use_server_side_prepare;
-			break;
-		case SQL_ATTR_PGOPT_FETCH:
-			*((SQLINTEGER *) Value) = conn->connInfo.drivers.fetch_max;
-			break;
-		case SQL_ATTR_PGOPT_UNKNOWNSIZES:
-			*((SQLINTEGER *) Value) = conn->connInfo.drivers.unknown_sizes;
-			break;
-		case SQL_ATTR_PGOPT_TEXTASLONGVARCHAR:
-			*((SQLINTEGER *) Value) = conn->connInfo.drivers.text_as_longvarchar;
-			break;
-		case SQL_ATTR_PGOPT_UNKNOWNSASLONGVARCHAR:
-			*((SQLINTEGER *) Value) = conn->connInfo.drivers.unknowns_as_longvarchar;
-			break;
-		case SQL_ATTR_PGOPT_BOOLSASCHAR:
-			*((SQLINTEGER *) Value) = conn->connInfo.drivers.bools_as_char;
-			break;
-		case SQL_ATTR_PGOPT_MAXVARCHARSIZE:
-			*((SQLINTEGER *) Value) = conn->connInfo.drivers.max_varchar_size;
-			break;
-		case SQL_ATTR_PGOPT_MAXLONGVARCHARSIZE:
-			*((SQLINTEGER *) Value) = conn->connInfo.drivers.max_longvarchar_size;
-			break;
-		case SQL_ATTR_PGOPT_MSJET:
-			*((SQLINTEGER *) Value) = conn->ms_jet;
-			break;
-		case SQL_ATTR_PGOPT_BATCHSIZE:
-			*((SQLINTEGER *) Value) = conn->connInfo.batch_size;
-			break;
-		case SQL_ATTR_PGOPT_IGNORETIMEOUT:
-			*((SQLINTEGER *) Value) = conn->connInfo.ignore_timeout;
-			break;
-		default:
-			ret = WD_GetConnectOption(ConnectionHandle, (UWORD) Attribute, Value, &len, BufferLength);
-	}
-	if (StringLength)
-		*StringLength = len;
-	return ret;
+  MYLOG(0, "entering Handle=%p " FORMAT_INTEGER "\n", ConnectionHandle, Attribute);
+  ODBCConnection* conn = reinterpret_cast<ODBCConnection*>(ConnectionHandle);
+  conn->GetConnectAttr(Attribute, Value, BufferLength, StringLength, isUnicode);
+  return ret;
 }
 
 static SQLHDESC
