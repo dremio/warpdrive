@@ -32,6 +32,7 @@
 #include "dlg_specific.h"
 
 #include "AttributeUtils.h"
+#include "ODBCConnection.h"
 #include "ODBCDescriptor.h"
 #include <odbcabstraction/exceptions.h>
 
@@ -406,11 +407,9 @@ MYLOG(DETAIL_LOG_LEVEL, "rc=" FORMAT_LEN "\n", rc);
 }
 
 /*	SQLGetConnectOption -> SQLGetconnectAttr */
-RETCODE		SQL_API
-WD_GetConnectAttr(HDBC ConnectionHandle,
-					 SQLINTEGER Attribute, PTR Value,
-					 SQLINTEGER BufferLength, SQLINTEGER *StringLength)
-{
+RETCODE SQL_API WD_GetConnectAttr(HDBC ConnectionHandle, SQLINTEGER Attribute,
+                                  PTR Value, SQLINTEGER BufferLength,
+                                  SQLINTEGER *StringLength, bool b) {
 	ConnectionClass *conn = (ConnectionClass *) ConnectionHandle;
 	RETCODE	ret = SQL_SUCCESS;
 	SQLINTEGER	len = 4;
@@ -1665,10 +1664,17 @@ WD_GetStmtAttr(HSTMT StatementHandle,
 
 RETCODE		SQL_API
 WD_SetConnectAttr(HDBC ConnectionHandle,
-					 SQLINTEGER Attribute, PTR Value,
-					 SQLINTEGER StringLength)
+                  SQLINTEGER Attribute, PTR Value,
+                  SQLINTEGER StringLength,
+                  bool isUnicode)
 {
-  return SQL_SUCCESS;
+  CSTR	func = "WD_SetConnectAttr";
+  ODBCConnection *conn = reinterpret_cast<ODBCConnection*>(ConnectionHandle);
+  RETCODE	ret = SQL_SUCCESS;
+
+  MYLOG(0, "entering for %p: " FORMAT_INTEGER " %p\n", ConnectionHandle, Attribute, Value);
+  conn->SetConnectAttr(Attribute, Value, StringLength, isUnicode);
+  return ret;
 }
 
 #if 0
