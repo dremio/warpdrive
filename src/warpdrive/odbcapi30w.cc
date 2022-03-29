@@ -266,7 +266,7 @@ SQLColAttributeW(SQLHSTMT	hstmt,
 				 SQLPOINTER	pCharAttr,
 				 SQLSMALLINT	cbCharAttrMax,
 				 SQLSMALLINT	*pcbCharAttr,
-#if defined(_WIN64) || defined(SQLCOLATTRIBUTE_SQLLEN)
+#if defined(WITH_UNIXODBC) || defined(_WIN64) || defined(SQLCOLATTRIBUTE_SQLLEN)
 				 SQLLEN		*pNumAttr
 #else
 				 SQLPOINTER	pNumAttr

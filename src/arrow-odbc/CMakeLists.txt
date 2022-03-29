@@ -37,7 +37,7 @@ if (NOT DEFINED OPENSSL_ROOT_DIR AND DEFINED APPLE)
 endif()
 set(OpenSSL_USE_STATIC_LIBS ON)
 set(OPENSSL_USE_STATIC_LIBS ON)
-find_package(OpenSSL REQUIRED)
+find_package(OpenSSL 1.1 REQUIRED)
 
 # Add gRPC dependencies needed by Arrow Flight. Should be pre-installed.
 find_package(gRPC 1.36 CONFIG REQUIRED)
@@ -49,10 +49,11 @@ set(ARROW_ODBC_THIRDPARTY_LIBS
   arrow_flight
   arrow
   arrow_bundled_dependencies
+  gRPC::grpc++
   ${ZLIB_LIBRARIES}
   ${Protobuf_LIBRARIES}
-  gRPC::grpc++
   ${ODBC_LIBRARIES}
+  ${OPENSSL_LIBRARIES}
 )
 
 # Add symbols file
