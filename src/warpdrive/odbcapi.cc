@@ -99,9 +99,7 @@ SQLCancel(HSTMT StatementHandle)
 	MYLOG(0, "Entering\n");
 	/* Not that neither ENTER_STMT_CS nor StartRollbackState is called */
 	/* SC_clear_error((StatementClass *) StatementHandle); maybe this neither */
-	if (SC_connection_lost_check((StatementClass *) StatementHandle, __FUNCTION__))
-		return SQL_ERROR;
-	return WD_Cancel(StatementHandle);
+	return SQL_SUCCESS;
 }
 
 #ifndef	UNICODE_SUPPORTXX
@@ -863,8 +861,9 @@ SQLExtendedFetch(HSTMT hstmt,
 
   ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
   ODBCDescriptor* ard = stmt->GetARD();
-  ARDFieldTracker tracker(ard, irow, pcrow, rgfRowStatus);
+  ARDFieldTracker tracker(ard, stmt->GetRowsetSize(), pcrow, rgfRowStatus);
   RETCODE result = WD_Fetch(hstmt);
+  return result;
 }
 
 #ifndef	UNICODE_SUPPORTXX

@@ -283,9 +283,9 @@ RETCODE SQL_API WD_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 RETCODE SQL_API WD_GetConnectAttr(HDBC ConnectionHandle, SQLINTEGER Attribute,
                                   PTR Value, SQLINTEGER BufferLength,
                                   SQLINTEGER *StringLength, bool isUnicode);
-RETCODE SQL_API WD_GetStmtAttr(HSTMT StatementHandle,
-		SQLINTEGER Attribute, PTR Value,
-		SQLINTEGER BufferLength, SQLINTEGER *StringLength);
+RETCODE SQL_API WD_GetStmtAttr(HSTMT StatementHandle, SQLINTEGER Attribute,
+                               PTR Value, SQLINTEGER BufferLength,
+                               SQLINTEGER *StringLength, bool isUnicode);
 
 /* Driver-specific connection attributes, for SQLSet/GetConnectAttr() */
 enum {
@@ -309,9 +309,9 @@ enum {
 RETCODE SQL_API WD_SetConnectAttr(HDBC ConnectionHandle,
 			SQLINTEGER Attribute, PTR Value,
 			SQLINTEGER StringLength, bool isUnicode);
-RETCODE SQL_API WD_SetStmtAttr(HSTMT StatementHandle,
-		SQLINTEGER Attribute, PTR Value,
-		SQLINTEGER StringLength);
+RETCODE SQL_API WD_SetStmtAttr(HSTMT StatementHandle, SQLINTEGER Attribute,
+                               PTR Value, SQLINTEGER StringLength,
+                               bool isUnicode);
 RETCODE SQL_API WD_BulkOperations(HSTMT StatementHandle,
 			SQLSMALLINT operation);
 RETCODE SQL_API WD_AllocDesc(HDBC ConnectionHandle,

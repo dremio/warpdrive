@@ -37,6 +37,7 @@ class ODBCStatement {
     
     ~ODBCStatement() = default;
 
+    void CopyAttributesFromConnection(ODBCConnection& connection);
     void Prepare(const std::string& query);
     void ExecutePrepared();
     void ExecuteDirect(const std::string& query);
@@ -47,8 +48,10 @@ class ODBCStatement {
     bool Fetch(size_t rows);
     bool isPrepared() const;
 
-    void GetAttribute(SQLINTEGER statementAttribute, SQLPOINTER output, SQLLEN bufferSize, SQLLEN* strLenPtr);
-    void SetAttribute(SQLINTEGER statementAttribute, SQLPOINTER value, SQLLEN bufferSize);
+    void GetStmtAttr(SQLINTEGER statementAttribute, SQLPOINTER output,
+                     SQLINTEGER bufferSize, SQLINTEGER *strLenPtr, bool isUnicode);
+    void SetStmtAttr(SQLINTEGER statementAttribute, SQLPOINTER value,
+                     SQLINTEGER bufferSize, bool isUnicode);
 
     void RevertAppDescriptor(bool isApd);
 
@@ -58,6 +61,10 @@ class ODBCStatement {
 
     inline ODBCDescriptor* GetARD() {
       return m_currentArd;
+    }
+    
+    inline SQLULEN GetRowsetSize() {
+      return m_rowsetSize;
     }
 
     bool GetData(SQLSMALLINT recordNumber, SQLSMALLINT cType, SQLPOINTER dataPtr, SQLLEN bufferLength, SQLLEN* indicatorPtr);
@@ -88,6 +95,9 @@ class ODBCStatement {
     std::shared_ptr<ODBCDescriptor> m_ird;
     ODBCDescriptor* m_currentArd;
     ODBCDescriptor* m_currentApd;
+    SQLULEN m_rowNumber;
+    SQLULEN m_maxRows;
+    SQLULEN m_rowsetSize; // Used by SQLExtendedFetch instead of the ARD array size.
     bool m_isPrepared;
     bool m_hasReachedEndOfResult;
 };

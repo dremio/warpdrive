@@ -10,7 +10,6 @@
 #include "ODBCEnvironment.h"
 #include "ODBCStatement.h"
 #include "AttributeUtils.h"
-#include "EncodingUtils.h"
 #include "odbcinst.h"
 #include "sql.h"
 #include "sqlext.h"
@@ -20,6 +19,7 @@
 #include <odbcabstraction/exceptions.h>
 #include <odbcabstraction/statement.h>
 #include <boost/algorithm/string.hpp>
+#include <utility>
 #include <boost/xpressive/xpressive.hpp>
 
 using namespace ODBC;
@@ -77,20 +77,13 @@ void loadPropertiesFromDSN(const std::string& dsn, Connection::ConnPropertyMap& 
   }
 }
 
-template <typename T>
-void CheckIfAttributeIsSetToOnlyValidValue(SQLPOINTER value, T allowed_value) {
-  if (static_cast<T>(reinterpret_cast<SQLULEN>(value)) != allowed_value) {
-    throw DriverException("Optional feature not implemented");
-  }
-}
-
 }
 
 // Public =========================================================================================
 ODBCConnection::ODBCConnection(ODBCEnvironment& environment, 
   std::shared_ptr<Connection> spiConnection) :
   m_environment(environment),
-  m_spiConnection(spiConnection),
+  m_spiConnection(std::move(spiConnection)),
   m_is2xConnection(environment.getODBCVersion() == SQL_OV_ODBC2),
   m_isConnected(false)
 {
@@ -112,6 +105,8 @@ void ODBCConnection::connect(std::string dsn, const Connection::ConnPropertyMap 
   m_spiConnection->Connect(properties, missing_properties);
   m_isConnected = true;
   m_dsn = std::move(dsn);
+  std::shared_ptr<Statement> spiStatement = m_spiConnection->CreateStatement();
+  m_attributeTrackingStatement = std::make_shared<ODBCStatement>(*this, spiStatement);
 }
 
 void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLINT bufferLength, SQLSMALLINT* outputLength, bool isUnicode)
@@ -412,9 +407,6 @@ void ODBCConnection::SetConnectAttr(SQLINTEGER attribute, SQLPOINTER value, SQLI
   case SQL_ATTR_ASYNC_DBC_PCONTEXT:
     throw DriverException("Optional feature not supported.");
 #endif
-  case SQL_ATTR_ASYNC_ENABLE:
-    CheckIfAttributeIsSetToOnlyValidValue(value, static_cast<SQLULEN>(SQL_ASYNC_ENABLE_OFF));
-    return;
   case SQL_ATTR_AUTO_IPD:
     throw DriverException("Cannot set read-only attribute");
   case SQL_ATTR_AUTOCOMMIT:
@@ -446,8 +438,7 @@ void ODBCConnection::SetConnectAttr(SQLINTEGER attribute, SQLPOINTER value, SQLI
     throw DriverException("Optional feature not supported.");
 
   // ODBCAbstraction-level attributes
-  case SQL_ATTR_CURRENT_CATALOG:
-  {
+  case SQL_ATTR_CURRENT_CATALOG: {
     std::string catalog;
     if (isUnicode) {
       SetAttributeUTF8(value, stringLength, catalog);
@@ -460,6 +451,26 @@ void ODBCConnection::SetConnectAttr(SQLINTEGER attribute, SQLPOINTER value, SQLI
     return;
   }
 
+  // Statement attributes that can be set through the connection.
+  // Only applies to SQL_ATTR_METADATA_ID, SQL_ATTR_ASYNC_ENABLE, and ODBC 2.x statement attributes.
+  // SQL_ATTR_ROW_NUMBER is excluded because it is read-only.
+  // Note that SQLGetConnectAttr cannot retrieve these attributes.
+  case SQL_ATTR_ASYNC_ENABLE:
+  case SQL_ATTR_METADATA_ID:
+  case SQL_ATTR_CONCURRENCY:
+  case SQL_ATTR_CURSOR_TYPE:
+  case SQL_ATTR_KEYSET_SIZE:
+  case SQL_ATTR_MAX_LENGTH:
+  case SQL_ATTR_MAX_ROWS:
+  case SQL_ATTR_NOSCAN:
+  case SQL_ATTR_QUERY_TIMEOUT:
+  case SQL_ATTR_RETRIEVE_DATA:
+  case SQL_ATTR_ROW_BIND_TYPE:
+  case SQL_ATTR_SIMULATE_CURSOR:
+  case SQL_ATTR_USE_BOOKMARKS:
+    m_attributeTrackingStatement->SetStmtAttr(attribute, value, stringLength, isUnicode);
+    return;
+
   case SQL_ATTR_ACCESS_MODE:
     SetAttribute(value, attributeToWrite);
     successfully_written = m_spiConnection->SetAttribute(Connection::ACCESS_MODE, attributeToWrite);
@@ -471,10 +482,6 @@ void ODBCConnection::SetConnectAttr(SQLINTEGER attribute, SQLPOINTER value, SQLI
   case SQL_ATTR_LOGIN_TIMEOUT:
     SetAttribute(value, attributeToWrite);
     successfully_written = m_spiConnection->SetAttribute(Connection::LOGIN_TIMEOUT, attributeToWrite);
-    break;
-  case SQL_ATTR_METADATA_ID:
-    SetAttribute(value, attributeToWrite);
-    successfully_written = m_spiConnection->SetAttribute(Connection::METADATA_ID, attributeToWrite);
     break;
   case SQL_ATTR_PACKET_SIZE:
     SetAttribute(value, attributeToWrite);
@@ -577,9 +584,6 @@ void ODBCConnection::GetConnectAttr(SQLINTEGER attribute, SQLPOINTER value,
   case SQL_ATTR_LOGIN_TIMEOUT:
     spiAttribute = m_spiConnection->GetAttribute(Connection::LOGIN_TIMEOUT);
     break;
-  case SQL_ATTR_METADATA_ID:
-    spiAttribute = m_spiConnection->GetAttribute(Connection::METADATA_ID);
-    break;
   case SQL_ATTR_PACKET_SIZE:
     spiAttribute = m_spiConnection->GetAttribute(Connection::PACKET_SIZE);
     break;
@@ -610,6 +614,7 @@ std::shared_ptr<ODBCStatement> ODBCConnection::createStatement() {
   std::shared_ptr<Statement> spiStatement = m_spiConnection->CreateStatement();
   std::shared_ptr<ODBCStatement> statement = std::make_shared<ODBCStatement>(*this, spiStatement);
   m_statements.push_back(statement);
+  statement->CopyAttributesFromConnection(*this);
   return statement;
 }
 

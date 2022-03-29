@@ -67,7 +67,7 @@ WD_ExecDirect(HSTMT hstmt,
 				 UWORD flag)
 {
 	ODBCStatement *stmt = reinterpret_cast<ODBCStatement*>(hstmt);
-	RETCODE		result;
+	RETCODE		result = SQL_SUCCESS;
 	CSTR func = "WD_ExecDirect";
 	MYLOG(0, "entering...%x\n", flag);
 
