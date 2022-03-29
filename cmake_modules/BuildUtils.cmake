@@ -387,7 +387,14 @@ function(ADD_WARPDRIVE_LIB LIB_NAME)
           "LINKER:-force_load,${OUTPUT_PATH}lib${FORCED_LOAD_LIB}.a")          
         endforeach(${ARG_FORCE_LOAD_LIB})
       endif()
-    endif()  
+      if (UNIX)
+        foreach(FORCED_LOAD_LIB ${ARG_FORCE_LOAD_LIB})
+          target_link_options(${LIB_NAME}_shared
+                  PUBLIC
+                  -Wl,--whole-archive ${OUTPUT_PATH}lib${FORCED_LOAD_LIB}.a -Wl,--no-whole-archive)
+        endforeach(${ARG_FORCE_LOAD_LIB})
+      endif()
+    endif()
 
     if(WARPDRIVE_RPATH_ORIGIN)
       if(APPLE)
