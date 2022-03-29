@@ -72,10 +72,8 @@ SQLGetConnectAttrW(HDBC hdbc,
 	RETCODE	ret = SQL_SUCCESS;
 
 	MYLOG(0, "Entering\n");
-	ENTER_CONN_CS((ConnectionClass *) hdbc);
-//	ret = WD_GetConnectAttr(hdbc, fAttribute, rgbValue,
-//		cbValueMax, pcbValue);
-	LEAVE_CONN_CS((ConnectionClass *) hdbc);
+	ret = WD_GetConnectAttr(hdbc, fAttribute, rgbValue, cbValueMax,
+                                pcbValue, true);
 	return ret;
 }
 
@@ -86,14 +84,12 @@ SQLSetConnectAttrW(HDBC hdbc,
 				   PTR		rgbValue,
 				   SQLINTEGER	cbValue)
 {
-	RETCODE	ret = SQL_SUCCESS;
+  RETCODE	ret = SQL_SUCCESS;
 
-	MYLOG(0, "Entering\n");
-	ENTER_CONN_CS(conn);
-//	ret = WD_SetConnectAttr(hdbc, fAttribute, rgbValue,
-//		cbValue);
-	LEAVE_CONN_CS(conn);
-	return ret;
+  MYLOG(0, "Entering " FORMAT_INTEGER "\n", fAttribute);
+  ret = WD_SetConnectAttr(hdbc, fAttribute, rgbValue,
+                          cbValue, true);
+  return ret;
 }
 
 /*      new function */

@@ -9,6 +9,7 @@
 #include "ODBCEnvironment.h"
 #include "ODBCStatement.h"
 #include "AttributeUtils.h"
+#include "EncodingUtils.h"
 #include "odbcinst.h"
 #include "sql.h"
 #include "sqlext.h"
@@ -74,6 +75,14 @@ void loadPropertiesFromDSN(const std::string& dsn, Connection::ConnPropertyMap& 
     }
   }
 }
+
+template <typename T>
+void CheckIfAttributeIsSetToOnlyValidValue(SQLPOINTER value, T allowed_value) {
+  if (static_cast<T>(reinterpret_cast<SQLULEN>(value)) != allowed_value) {
+    throw DriverException("Optional feature not implemented");
+  }
+}
+
 }
 
 // Public =========================================================================================
@@ -363,9 +372,220 @@ void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLIN
       break;
     }
 
+    // Special case - SQL_DATABASE_NAME is an alias for SQL_ATTR_CURRENT_CATALOG.
+    case SQL_DATABASE_NAME:
+    {
+      const auto &attr =
+        m_spiConnection->GetAttribute(Connection::CURRENT_CATALOG);
+      if (!attr) {
+        throw DriverException("Optional feature not supported.");
+      }
+      const std::string &infoValue = boost::get<std::string>(*attr);
+      GetStringAttribute(isUnicode, infoValue, value, bufferLength,outputLength);
+      break;
+    }
     default:
       throw DriverException("Unknown SQLGetInfo type: " + std::to_string(infoType));
   }
+}
+
+void ODBCConnection::SetConnectAttr(SQLINTEGER attribute, SQLPOINTER value, SQLINTEGER stringLength, bool isUnicode) {
+  uint32_t attributeToWrite = 0;
+  bool successfully_written = false;
+  switch (attribute) {
+    // Internal connection attributes
+#ifdef SQL_ATR_ASYNC_DBC_EVENT
+  case SQL_ATTR_ASYNC_DBC_EVENT:
+    throw DriverException("Optional feature not supported.");
+#endif
+#ifdef SQL_ATTR_ASYNC_DBC_FUNCTIONS_ENABLE
+  case SQL_ATTR_ASYNC_DBC_FUNCTIONS_ENABLE:
+    throw DriverException("Optional feature not supported.");
+#endif
+#ifdef SQL_ATTR_ASYNC_PCALLBACK
+  case SQL_ATTR_ASYNC_DBC_PCALLBACK:
+    throw DriverException("Optional feature not supported.");
+#endif
+#ifdef SQL_ATTR_ASYNC_DBC_PCONTEXT
+  case SQL_ATTR_ASYNC_DBC_PCONTEXT:
+    throw DriverException("Optional feature not supported.");
+#endif
+  case SQL_ATTR_ASYNC_ENABLE:
+    CheckIfAttributeIsSetToOnlyValidValue(value, static_cast<SQLULEN>(SQL_ASYNC_ENABLE_OFF));
+    return;
+  case SQL_ATTR_AUTO_IPD:
+    throw DriverException("Cannot set read-only attribute");
+  case SQL_ATTR_AUTOCOMMIT:
+    CheckIfAttributeIsSetToOnlyValidValue(value, static_cast<SQLUINTEGER>(SQL_AUTOCOMMIT_OFF));
+    return;
+  case SQL_ATTR_CONNECTION_DEAD:
+    throw DriverException("Cannot set read-only attribute");
+#ifdef SQL_ATTR_DBC_INFO_TOKEN
+  case SQL_ATTR_DBC_INFO_TOKEN:
+    throw DriverException("Optional feature not supported.");
+#endif
+  case SQL_ATTR_ENLIST_IN_DTC:
+    throw DriverException("Optional feature not supported.");
+  case SQL_ATTR_ODBC_CURSORS: // DM-only.
+    throw DriverException("Invalid attribute");
+  case SQL_ATTR_QUIET_MODE:
+    throw DriverException("Cannot set read-only attribute");
+  case SQL_ATTR_TRACE: // DM-only
+    throw DriverException("Cannot set read-only attribute");
+  case SQL_ATTR_TRACEFILE:
+    throw DriverException("Optional feature not supported.");
+  case SQL_ATTR_TRANSLATE_LIB:
+    throw DriverException("Optional feature not supported.");
+  case SQL_ATTR_TRANSLATE_OPTION:
+    throw DriverException("Optional feature not supported.");
+  case SQL_ATTR_TXN_ISOLATION:
+    throw DriverException("Optional feature not supported.");
+
+  // ODBCAbstraction-level attributes
+  case SQL_ATTR_CURRENT_CATALOG:
+  {
+    std::string catalog;
+    if (isUnicode) {
+      SetAttributeUTF8(value, stringLength, catalog);
+    } else {
+      SetAttributeSQLWCHAR(value, stringLength, catalog);
+    }
+    if (!m_spiConnection->SetAttribute(Connection::CURRENT_CATALOG, catalog)) {
+      throw DriverException("Optional value changed.");
+    }
+    return;
+  }
+
+  case SQL_ATTR_ACCESS_MODE:
+    SetAttribute(value, attributeToWrite);
+    successfully_written = m_spiConnection->SetAttribute(Connection::ACCESS_MODE, attributeToWrite);
+    break;
+  case SQL_ATTR_CONNECTION_TIMEOUT:
+    SetAttribute(value, attributeToWrite);
+    successfully_written = m_spiConnection->SetAttribute(Connection::CONNECTION_TIMEOUT, attributeToWrite);
+    break;
+  case SQL_ATTR_LOGIN_TIMEOUT:
+    SetAttribute(value, attributeToWrite);
+    successfully_written = m_spiConnection->SetAttribute(Connection::LOGIN_TIMEOUT, attributeToWrite);
+    break;
+  case SQL_ATTR_METADATA_ID:
+    SetAttribute(value, attributeToWrite);
+    successfully_written = m_spiConnection->SetAttribute(Connection::METADATA_ID, attributeToWrite);
+    break;
+  case SQL_ATTR_PACKET_SIZE:
+    SetAttribute(value, attributeToWrite);
+    successfully_written = m_spiConnection->SetAttribute(Connection::PACKET_SIZE, attributeToWrite);
+    break;
+  default:
+    throw DriverException("Invalid attribute");
+  }
+
+  if (!successfully_written) {
+    throw DriverException("Optional value changed.");
+  }
+}
+
+void ODBCConnection::GetConnectAttr(SQLINTEGER attribute, SQLPOINTER value,
+                                    SQLINTEGER bufferLength,
+                                    SQLINTEGER *outputLength, bool isUnicode) {
+  using driver::odbcabstraction::Connection;
+  boost::optional<Connection::Attribute> spiAttribute;
+
+  switch (attribute) {
+    // Internal connection attributes
+#ifdef SQL_ATR_ASYNC_DBC_EVENT
+  case SQL_ATTR_ASYNC_DBC_EVENT:
+    GetAttribute(static_cast<SQLPOINTER>(NULL), value, bufferLength, outputLength);
+    return;
+#endif
+#ifdef SQL_ATTR_ASYNC_DBC_FUNCTIONS_ENABLE
+  case SQL_ATTR_ASYNC_DBC_FUNCTIONS_ENABLE:
+    GetAttribute(static_cast<SQLUINTEGER>(SQL_ASYNC_DBC_ENABLE_OFF), value, bufferLength, outputLength);
+    return;
+#endif
+#ifdef SQL_ATTR_ASYNC_PCALLBACK
+  case SQL_ATTR_ASYNC_DBC_PCALLBACK:
+    GetAttribute(static_cast<SQLPOINTER>(NULL), value, bufferLength, outputLength);
+    return;
+#endif
+#ifdef SQL_ATTR_ASYNC_DBC_PCONTEXT
+  case SQL_ATTR_ASYNC_DBC_PCONTEXT:
+    GetAttribute(static_cast<SQLPOINTER>(NULL), value, bufferLength, outputLength);
+    return;
+#endif
+  case SQL_ATTR_ASYNC_ENABLE:
+    GetAttribute(static_cast<SQLULEN>(SQL_ASYNC_ENABLE_OFF), value, bufferLength, outputLength);
+    return;
+  case SQL_ATTR_AUTO_IPD:
+    GetAttribute(static_cast<SQLUINTEGER>(SQL_FALSE), value, bufferLength, outputLength);
+    return;
+  case SQL_ATTR_AUTOCOMMIT:
+    GetAttribute(static_cast<SQLULEN>(SQL_AUTOCOMMIT_ON), value, bufferLength, outputLength);
+    return;
+#ifdef SQL_ATTR_DBC_INFO_TOKEN
+  case SQL_ATTR_DBC_INFO_TOKEN:
+    throw DriverException("Cannot read set-only attribute");
+#endif
+  case SQL_ATTR_ENLIST_IN_DTC:
+    GetAttribute(static_cast<SQLPOINTER>(NULL), value, bufferLength, outputLength);
+    return;
+  case SQL_ATTR_ODBC_CURSORS: // DM-only.
+    throw DriverException("Invalid attribute");
+  case SQL_ATTR_QUIET_MODE:
+    GetAttribute(static_cast<SQLPOINTER>(NULL), value, bufferLength, outputLength);
+    return;
+  case SQL_ATTR_TRACE: // DM-only
+    throw DriverException("Invalid attribute");
+  case SQL_ATTR_TRACEFILE:
+    throw DriverException("Optional feature not supported.");
+  case SQL_ATTR_TRANSLATE_LIB:
+    throw DriverException("Optional feature not supported.");
+  case SQL_ATTR_TRANSLATE_OPTION:
+    throw DriverException("Optional feature not supported.");
+  case SQL_ATTR_TXN_ISOLATION:
+    throw DriverException("Optional feature not supported.");
+
+  // ODBCAbstraction-level connection attributes.
+  case SQL_ATTR_CURRENT_CATALOG:
+  {
+    const auto &catalog =
+        m_spiConnection->GetAttribute(Connection::CURRENT_CATALOG);
+    if (!catalog) {
+      throw DriverException("Optional feature not supported.");
+    }
+    const std::string &infoValue = boost::get<std::string>(*catalog);
+    GetStringAttribute(isUnicode, infoValue, value, bufferLength,outputLength);
+    return;
+  }
+
+  // These all are uint32_t attributes.
+  case SQL_ATTR_ACCESS_MODE:
+    spiAttribute = m_spiConnection->GetAttribute(Connection::ACCESS_MODE);
+    break;
+  case SQL_ATTR_CONNECTION_DEAD:
+    spiAttribute = m_spiConnection->GetAttribute(Connection::CONNECTION_DEAD);
+    break;
+  case SQL_ATTR_CONNECTION_TIMEOUT:
+    spiAttribute = m_spiConnection->GetAttribute(Connection::CONNECTION_TIMEOUT);
+    break;
+  case SQL_ATTR_LOGIN_TIMEOUT:
+    spiAttribute = m_spiConnection->GetAttribute(Connection::LOGIN_TIMEOUT);
+    break;
+  case SQL_ATTR_METADATA_ID:
+    spiAttribute = m_spiConnection->GetAttribute(Connection::METADATA_ID);
+    break;
+  case SQL_ATTR_PACKET_SIZE:
+    spiAttribute = m_spiConnection->GetAttribute(Connection::PACKET_SIZE);
+    break;
+  default:
+    throw DriverException("Invalid attribute");
+  }
+
+  if (!spiAttribute) {
+    throw DriverException("Invalid attribute");
+  }
+
+  GetAttribute(static_cast<SQLUINTEGER>(boost::get<uint32_t>(*spiAttribute)), value, bufferLength, outputLength);
 }
 
 void ODBCConnection::disconnect() {

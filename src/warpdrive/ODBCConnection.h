@@ -36,7 +36,9 @@ class ODBCConnection {
                        std::vector<std::string> &missing_properties);
 
     void GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLINT bufferLength, SQLSMALLINT* outputLength, bool isUnicode);
-    
+    void SetConnectAttr(SQLINTEGER attribute, SQLPOINTER value, SQLINTEGER stringLength, bool isUnicode);
+    void GetConnectAttr(SQLINTEGER attribute, SQLPOINTER value, SQLINTEGER bufferLength, SQLINTEGER* outputLength, bool isUnicode);
+
     ~ODBCConnection() = default;
 
     void disconnect();
