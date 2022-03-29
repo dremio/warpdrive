@@ -385,13 +385,10 @@ SQLGetStmtAttr(HSTMT StatementHandle,
 			   SQLINTEGER BufferLength, SQLINTEGER *StringLength)
 {
 	RETCODE	ret;
-	StatementClass	*stmt = (StatementClass *) StatementHandle;
 
 	MYLOG(0, "Entering Handle=%p " FORMAT_INTEGER "\n", StatementHandle, Attribute);
-	ENTER_STMT_CS(stmt);
-//	ret = WD_GetStmtAttr(StatementHandle, Attribute, Value,
-//			BufferLength, StringLength);
-	LEAVE_STMT_CS(stmt);
+	ret = WD_GetStmtAttr(StatementHandle, Attribute, Value, BufferLength,
+                             StringLength, false);
 	return ret;
 }
 
@@ -503,13 +500,11 @@ SQLSetStmtAttr(HSTMT StatementHandle,
 			   SQLINTEGER Attribute, PTR Value,
 			   SQLINTEGER StringLength)
 {
-	StatementClass *stmt = (StatementClass *) StatementHandle;
 	RETCODE	ret = SQL_SUCCESS;
 
 	MYLOG(0, "Entering Handle=%p " FORMAT_INTEGER "," FORMAT_ULEN "\n", StatementHandle, Attribute, (SQLULEN) Value);
-	ENTER_STMT_CS(stmt);
-//	ret = WD_SetStmtAttr(StatementHandle, Attribute, Value, StringLength);
-	LEAVE_STMT_CS(stmt);
+	ret = WD_SetStmtAttr(StatementHandle, Attribute, Value, StringLength,
+                             false);
 	return ret;
 }
 #endif /* UNICODE_SUPPORTXX */

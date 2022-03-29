@@ -42,6 +42,10 @@ class ODBCConnection {
 
     ~ODBCConnection() = default;
 
+    inline ODBCStatement& GetTrackingStatement() {
+      return *m_attributeTrackingStatement;
+    }
+
     void disconnect();
 
     void releaseConnection();
@@ -63,6 +67,10 @@ class ODBCConnection {
   private:
     ODBCEnvironment& m_environment;
     std::shared_ptr<driver::odbcabstraction::Connection> m_spiConnection;
+    // Extra ODBC statement that's used to track and validate when statement attributes are
+    // set through the connection handle. These attributes get copied to new ODBC statements
+    // when they are allocated.
+    std::shared_ptr<ODBCStatement> m_attributeTrackingStatement;
     std::vector<std::shared_ptr<ODBCStatement> > m_statements;
     std::vector<std::shared_ptr<ODBCDescriptor> > m_descriptors;
     std::string m_dsn;
