@@ -372,10 +372,8 @@ SQLGetConnectAttr(HDBC ConnectionHandle,
 	RETCODE	ret = SQL_SUCCESS;
 
 	MYLOG(0, "Entering " FORMAT_UINTEGER "\n", Attribute);
-	ENTER_CONN_CS((ConnectionClass *) ConnectionHandle);
-//	ret = WD_GetConnectAttr(ConnectionHandle, Attribute,Value,
-//			BufferLength, StringLength);
-	LEAVE_CONN_CS((ConnectionClass *) ConnectionHandle);
+	ret = WD_GetConnectAttr(ConnectionHandle, Attribute, Value,
+			BufferLength, StringLength, false);
 	return ret;
 }
 
@@ -405,13 +403,10 @@ SQLSetConnectAttr(HDBC ConnectionHandle,
 				  SQLINTEGER StringLength)
 {
 	RETCODE	ret = SQL_SUCCESS;
-	ConnectionClass *conn = (ConnectionClass *) ConnectionHandle;
 
 	MYLOG(0, "Entering " FORMAT_INTEGER "\n", Attribute);
-	ENTER_CONN_CS(conn);
-//	ret = WD_SetConnectAttr(ConnectionHandle, Attribute, Value,
-//				  StringLength);
-	LEAVE_CONN_CS(conn);
+	ret = WD_SetConnectAttr(ConnectionHandle, Attribute, Value,
+				  StringLength, false);
 	return ret;
 }
 

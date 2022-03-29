@@ -280,9 +280,9 @@ RETCODE SQL_API WD_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 		SQLSMALLINT RecNumber, SQLSMALLINT DiagIdentifier,
 		PTR DiagInfoPtr, SQLSMALLINT BufferLength,
 		SQLSMALLINT *StringLengthPtr);
-RETCODE SQL_API WD_GetConnectAttr(HDBC ConnectionHandle,
-			SQLINTEGER Attribute, PTR Value,
-			SQLINTEGER BufferLength, SQLINTEGER *StringLength);
+RETCODE SQL_API WD_GetConnectAttr(HDBC ConnectionHandle, SQLINTEGER Attribute,
+                                  PTR Value, SQLINTEGER BufferLength,
+                                  SQLINTEGER *StringLength, bool isUnicode);
 RETCODE SQL_API WD_GetStmtAttr(HSTMT StatementHandle,
 		SQLINTEGER Attribute, PTR Value,
 		SQLINTEGER BufferLength, SQLINTEGER *StringLength);
@@ -308,7 +308,7 @@ enum {
 };
 RETCODE SQL_API WD_SetConnectAttr(HDBC ConnectionHandle,
 			SQLINTEGER Attribute, PTR Value,
-			SQLINTEGER StringLength);
+			SQLINTEGER StringLength, bool isUnicode);
 RETCODE SQL_API WD_SetStmtAttr(HSTMT StatementHandle,
 		SQLINTEGER Attribute, PTR Value,
 		SQLINTEGER StringLength);
