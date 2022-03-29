@@ -57,8 +57,10 @@
 using namespace ODBC;
 using namespace driver::odbcabstraction;
 
-static SQLRETURN CC_lookup_lo(ConnectionClass *self);
-static int  CC_close_eof_cursors(ConnectionClass *self);
+extern "C" {
+  static SQLRETURN CC_lookup_lo(ConnectionClass *self);
+  static int CC_close_eof_cursors(ConnectionClass *self);
+}
 
 static void LIBPQ_update_transaction_status(ConnectionClass *self);
 
