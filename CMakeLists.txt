@@ -544,6 +544,9 @@ if(APPLE)
   add_compile_definitions(HAVE_LONG_LONG SQLCOLATTRIBUTE_SQLLEN WITH_IODBC)
 else()
   find_package(ODBC REQUIRED)
+  if(UNIX)
+    add_compile_definitions(WITH_UNIXODBC)
+  endif()
 endif()
 
 # Add dependency on the ODBC Abstraction, which also gets and builds Arrow.

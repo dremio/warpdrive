@@ -10,6 +10,7 @@
 #include <sqlext.h>
 #include <algorithm>
 #include <memory>
+#include <cstring>
 
 #include "EncodingUtils.h"
 
