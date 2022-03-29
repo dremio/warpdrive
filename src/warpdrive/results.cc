@@ -3709,9 +3709,13 @@ MYLOG(0, "i=%d bidx=" FORMAT_LEN " cached=" FORMAT_ULEN "\n", i, bidx, res->num_
 		goto cleanup;
 	apdf = SC_get_APDF((StatementClass *) hstmt);
 	apdf->paramset_size = size_of_rowset;
-	if (!SQL_SUCCEEDED(WD_GetStmtAttr(stmt, SQL_ATTR_APP_ROW_DESC, (SQLPOINTER) &hdesc, SQL_IS_POINTER, NULL)))
+	if (!SQL_SUCCEEDED(WD_GetStmtAttr(stmt, SQL_ATTR_APP_ROW_DESC,
+                                          (SQLPOINTER)&hdesc, SQL_IS_POINTER,
+                                          NULL, false)))
 		goto cleanup;
-	if (!SQL_SUCCEEDED(WD_SetStmtAttr(hstmt, SQL_ATTR_APP_ROW_DESC, (SQLPOINTER) hdesc, SQL_IS_POINTER)))
+	if (!SQL_SUCCEEDED(WD_SetStmtAttr(hstmt, SQL_ATTR_APP_ROW_DESC,
+                                          (SQLPOINTER)hdesc, SQL_IS_POINTER,
+                                          false)))
 		goto cleanup;
 
 	lodlen = strlen(stmt->load_statement) + 15;
@@ -3760,7 +3764,8 @@ MYLOG(0, "i=%d bidx=" FORMAT_LEN " cached=" FORMAT_ULEN "\n", i, bidx, res->num_
 cleanup:
 	if (NULL != hstmt)
 	{
-		WD_SetStmtAttr(hstmt, SQL_ATTR_APP_ROW_DESC, (SQLPOINTER) NULL, SQL_IS_POINTER);
+          WD_SetStmtAttr(hstmt, SQL_ATTR_APP_ROW_DESC, (SQLPOINTER)NULL,
+                         SQL_IS_POINTER, false);
 		WD_FreeStmt(hstmt, SQL_DROP);
 	}
 	opts->bookmark = bookmark_orig;

@@ -33,6 +33,7 @@
 
 #include "AttributeUtils.h"
 #include "ODBCConnection.h"
+#include "ODBCStatement.h"
 #include "ODBCDescriptor.h"
 #include <odbcabstraction/exceptions.h>
 
@@ -1494,105 +1495,15 @@ MYLOG(DETAIL_LOG_LEVEL, "RecN=%d allocated=%d\n", RecNumber, ipdopts->allocated)
 }
 
 /*	SQLGetStmtOption -> SQLGetStmtAttr */
-RETCODE		SQL_API
-WD_GetStmtAttr(HSTMT StatementHandle,
-				  SQLINTEGER Attribute, PTR Value,
-				  SQLINTEGER BufferLength, SQLINTEGER *StringLength)
-{
-	CSTR func = "WD_GetStmtAttr";
-	StatementClass *stmt = (StatementClass *) StatementHandle;
-	RETCODE		ret = SQL_SUCCESS;
-	SQLINTEGER	len = 0;
+RETCODE SQL_API WD_GetStmtAttr(HSTMT StatementHandle, SQLINTEGER Attribute,
+                               PTR Value, SQLINTEGER BufferLength,
+                               SQLINTEGER *StringLength, bool isUnicode) {
+    RETCODE ret = SQL_SUCCESS;
 
-	MYLOG(0, "entering Handle=%p " FORMAT_INTEGER "\n", StatementHandle, Attribute);
-	switch (Attribute)
-	{
-		case SQL_ATTR_FETCH_BOOKMARK_PTR:	/* 16 */
-			*((void **) Value) = stmt->options.bookmark_ptr;
-			len = sizeof(SQLPOINTER);
-			break;
-		case SQL_ATTR_PARAM_BIND_OFFSET_PTR:	/* 17 */
-			*((SQLULEN **) Value) = SC_get_APDF(stmt)->param_offset_ptr;
-			len = sizeof(SQLPOINTER);
-			break;
-		case SQL_ATTR_PARAM_BIND_TYPE:	/* 18 */
-			*((SQLUINTEGER *) Value) = SC_get_APDF(stmt)->param_bind_type;
-			len = sizeof(SQLUINTEGER);
-			break;
-		case SQL_ATTR_PARAM_OPERATION_PTR:		/* 19 */
-			*((SQLUSMALLINT **) Value) = SC_get_APDF(stmt)->param_operation_ptr;
-			len = sizeof(SQLPOINTER);
-			break;
-		case SQL_ATTR_PARAM_STATUS_PTR: /* 20 */
-			*((SQLUSMALLINT **) Value) = SC_get_IPDF(stmt)->param_status_ptr;
-			len = sizeof(SQLPOINTER);
-			break;
-		case SQL_ATTR_PARAMS_PROCESSED_PTR:		/* 21 */
-			*((SQLULEN **) Value) = SC_get_IPDF(stmt)->param_processed_ptr;
-			len = sizeof(SQLPOINTER);
-			break;
-		case SQL_ATTR_PARAMSET_SIZE:	/* 22 */
-			*((SQLULEN *) Value) = SC_get_APDF(stmt)->paramset_size;
-			len = sizeof(SQLUINTEGER);
-			break;
-		case SQL_ATTR_ROW_BIND_OFFSET_PTR:		/* 23 */
-			*((SQLULEN **) Value) = SC_get_ARDF(stmt)->row_offset_ptr;
-			len = 4;
-			break;
-		case SQL_ATTR_ROW_OPERATION_PTR:		/* 24 */
-			*((SQLUSMALLINT **) Value) = SC_get_ARDF(stmt)->row_operation_ptr;
-			len = 4;
-			break;
-		case SQL_ATTR_ROW_STATUS_PTR:	/* 25 */
-			*((SQLUSMALLINT **) Value) = SC_get_IRDF(stmt)->rowStatusArray;
-			len = 4;
-			break;
-		case SQL_ATTR_ROWS_FETCHED_PTR: /* 26 */
-			*((SQLULEN **) Value) = SC_get_IRDF(stmt)->rowsFetched;
-			len = 4;
-			break;
-		case SQL_ATTR_ROW_ARRAY_SIZE:	/* 27 */
-			*((SQLULEN *) Value) = SC_get_ARDF(stmt)->size_of_rowset;
-			len = 4;
-			break;
-		case SQL_ATTR_APP_ROW_DESC:		/* 10010 */
-		case SQL_ATTR_APP_PARAM_DESC:	/* 10011 */
-		case SQL_ATTR_IMP_ROW_DESC:		/* 10012 */
-		case SQL_ATTR_IMP_PARAM_DESC:	/* 10013 */
-			len = 4;
-			*((HSTMT *) Value) = descHandleFromStatementHandle(StatementHandle, Attribute);
-			break;
-
-		case SQL_ATTR_CURSOR_SCROLLABLE:		/* -1 */
-			len = 4;
-			if (SQL_CURSOR_FORWARD_ONLY == stmt->options.cursor_type)
-				*((SQLUINTEGER *) Value) = SQL_NONSCROLLABLE;
-			else
-				*((SQLUINTEGER *) Value) = SQL_SCROLLABLE;
-			break;
-		case SQL_ATTR_CURSOR_SENSITIVITY:		/* -2 */
-			len = 4;
-			if (SQL_CONCUR_READ_ONLY == stmt->options.scroll_concurrency)
-				*((SQLUINTEGER *) Value) = SQL_INSENSITIVE;
-			else
-				*((SQLUINTEGER *) Value) = SQL_UNSPECIFIED;
-			break;
-		case SQL_ATTR_METADATA_ID:		/* 10014 */
-			*((SQLUINTEGER *) Value) = stmt->options.metadata_id;
-			break;
-		case SQL_ATTR_ENABLE_AUTO_IPD:	/* 15 */
-			*((SQLUINTEGER *) Value) = SQL_FALSE;
-			break;
-		case SQL_ATTR_AUTO_IPD:	/* 10001 */
-			/* case SQL_ATTR_ROW_BIND_TYPE: ** == SQL_BIND_TYPE(ODBC2.0) */
-			SC_set_error(stmt, DESC_INVALID_OPTION_IDENTIFIER, "Unsupported statement option (Get)", func);
-			return SQL_ERROR;
-		default:
-			ret = WD_GetStmtOption(StatementHandle, (SQLSMALLINT) Attribute, Value, &len, BufferLength);
-	}
-	if (ret == SQL_SUCCESS && StringLength)
-		*StringLength = len;
-	return ret;
+    MYLOG(0, "entering Handle=%p " FORMAT_INTEGER "\n", StatementHandle, Attribute);
+    ODBCStatement* statement = reinterpret_cast<ODBCStatement*>(StatementHandle);
+    statement->GetStmtAttr(Attribute, Value, BufferLength, StringLength, isUnicode);
+    return ret;
 }
 
 RETCODE		SQL_API
@@ -1710,101 +1621,15 @@ RETCODE SQL_API WD_SetDescRec(SQLHDESC DescriptorHandle,
 }
 			  
 /*	SQLSet(Param/Scroll/Stmt)Option -> SQLSetStmtAttr */
-RETCODE		SQL_API
-WD_SetStmtAttr(HSTMT StatementHandle,
-				  SQLINTEGER Attribute, PTR Value,
-				  SQLINTEGER StringLength)
-{
-	RETCODE	ret = SQL_SUCCESS;
-	CSTR func = "WD_SetStmtAttr";
-	StatementClass *stmt = (StatementClass *) StatementHandle;
+RETCODE SQL_API WD_SetStmtAttr(HSTMT StatementHandle, SQLINTEGER Attribute,
+                               PTR Value, SQLINTEGER StringLength,
+                               bool isUnicode) {
+  RETCODE ret = SQL_SUCCESS;
 
-	MYLOG(0, "entering Handle=%p " FORMAT_INTEGER "," FORMAT_ULEN "(%p)\n", StatementHandle, Attribute, (SQLULEN) Value, Value);
-	switch (Attribute)
-	{
-		case SQL_ATTR_ENABLE_AUTO_IPD:	/* 15 */
-			if (SQL_FALSE == Value)
-				break;
-		case SQL_ATTR_CURSOR_SCROLLABLE:		/* -1 */
-		case SQL_ATTR_CURSOR_SENSITIVITY:		/* -2 */
-		case SQL_ATTR_AUTO_IPD:	/* 10001 */
-			SC_set_error(stmt, DESC_OPTION_NOT_FOR_THE_DRIVER, "Unsupported statement option (Set)", func);
-			return SQL_ERROR;
-		/* case SQL_ATTR_ROW_BIND_TYPE: ** == SQL_BIND_TYPE(ODBC2.0) */
-		case SQL_ATTR_IMP_ROW_DESC:	/* 10012 (read-only) */
-		case SQL_ATTR_IMP_PARAM_DESC:	/* 10013 (read-only) */
-
-			/*
-			 * case SQL_ATTR_PREDICATE_PTR: case
-			 * SQL_ATTR_PREDICATE_OCTET_LENGTH_PTR:
-			 */
-			SC_set_error(stmt, DESC_INVALID_OPTION_IDENTIFIER, "Unsupported statement option (Set)", func);
-			return SQL_ERROR;
-
-		case SQL_ATTR_METADATA_ID:		/* 10014 */
-			stmt->options.metadata_id = CAST_UPTR(SQLUINTEGER, Value);
-			break;
-		case SQL_ATTR_APP_ROW_DESC:		/* 10010 */
-			if (SQL_NULL_HDESC == Value)
-			{
-				stmt->ard = &(stmt->ardi);
-			}
-			else
-			{
-				stmt->ard = (DescriptorClass *) Value;
-MYLOG(DETAIL_LOG_LEVEL, "set ard=%p\n", stmt->ard);
-			}
-			break;
-		case SQL_ATTR_APP_PARAM_DESC:	/* 10011 */
-			if (SQL_NULL_HDESC == Value)
-			{
-				stmt->apd = &(stmt->apdi);
-			}
-			else
-			{
-				stmt->apd = (DescriptorClass *) Value;
-			}
-			break;
-		case SQL_ATTR_FETCH_BOOKMARK_PTR:		/* 16 */
-			stmt->options.bookmark_ptr = Value;
-			break;
-		case SQL_ATTR_PARAM_BIND_OFFSET_PTR:	/* 17 */
-			SC_get_APDF(stmt)->param_offset_ptr = (SQLULEN *) Value;
-			break;
-		case SQL_ATTR_PARAM_BIND_TYPE:	/* 18 */
-			SC_get_APDF(stmt)->param_bind_type = CAST_UPTR(SQLUINTEGER, Value);
-			break;
-		case SQL_ATTR_PARAM_OPERATION_PTR:		/* 19 */
-			SC_get_APDF(stmt)->param_operation_ptr = static_cast<SQLUSMALLINT*>(Value);
-			break;
-		case SQL_ATTR_PARAM_STATUS_PTR:			/* 20 */
-			SC_get_IPDF(stmt)->param_status_ptr = (SQLUSMALLINT *) Value;
-			break;
-		case SQL_ATTR_PARAMS_PROCESSED_PTR:		/* 21 */
-			SC_get_IPDF(stmt)->param_processed_ptr = (SQLULEN *) Value;
-			break;
-		case SQL_ATTR_PARAMSET_SIZE:	/* 22 */
-			SC_get_APDF(stmt)->paramset_size = CAST_UPTR(SQLULEN, Value);
-			break;
-		case SQL_ATTR_ROW_BIND_OFFSET_PTR:		/* 23 */
-			SC_get_ARDF(stmt)->row_offset_ptr = (SQLULEN *) Value;
-			break;
-		case SQL_ATTR_ROW_OPERATION_PTR:		/* 24 */
-			SC_get_ARDF(stmt)->row_operation_ptr = static_cast<SQLUSMALLINT*>(Value);
-			break;
-		case SQL_ATTR_ROW_STATUS_PTR:	/* 25 */
-			SC_get_IRDF(stmt)->rowStatusArray = (SQLUSMALLINT *) Value;
-			break;
-		case SQL_ATTR_ROWS_FETCHED_PTR: /* 26 */
-			SC_get_IRDF(stmt)->rowsFetched = (SQLULEN *) Value;
-			break;
-		case SQL_ATTR_ROW_ARRAY_SIZE:	/* 27 */
-			SC_get_ARDF(stmt)->size_of_rowset = CAST_UPTR(SQLULEN, Value);
-			break;
-		default:
-			return WD_SetStmtOption(StatementHandle, (SQLUSMALLINT) Attribute, (SQLULEN) Value);
-	}
-	return ret;
+  MYLOG(0, "entering Handle=%p " FORMAT_INTEGER "\n", StatementHandle, Attribute);
+  ODBCStatement* statement = reinterpret_cast<ODBCStatement*>(StatementHandle);
+  statement->SetStmtAttr(Attribute, Value, StringLength, isUnicode);
+  return ret;
 }
 
 /*	SQL_NEED_DATA callback for WD_BulkOperations */
