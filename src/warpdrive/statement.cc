@@ -30,7 +30,6 @@
 #include "qresult.h"
 #include "convert.h"
 #include "environ.h"
-#include "loadlib.h"
 
 #include <stdio.h>
 #include <string.h>
