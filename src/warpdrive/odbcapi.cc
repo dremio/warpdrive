@@ -48,6 +48,8 @@ using namespace driver::odbcabstraction;
 
 BOOL	SC_connection_lost_check(StatementClass *stmt, const char *funcname)
 {
+  return FALSE;
+#if 0
 	ConnectionClass	*conn = SC_get_conn(stmt);
 	char	message[64];
 
@@ -57,6 +59,7 @@ BOOL	SC_connection_lost_check(StatementClass *stmt, const char *funcname)
 	SPRINTF_FIXED(message, "%s unable due to the connection lost", funcname);
 	SC_set_error(stmt, STMT_COMMUNICATION_ERROR, message, funcname);
 	return TRUE;
+#endif
 }
 
 static BOOL theResultIsEmpty(const StatementClass *stmt)

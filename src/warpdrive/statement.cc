@@ -1129,30 +1129,7 @@ SC_unbind_cols(StatementClass *self)
 void
 SC_clear_error(StatementClass *self)
 {
-	QResultClass	*res;
 
-	self->__error_number = 0;
-	if (self->__error_message)
-	{
-		free(self->__error_message);
-		self->__error_message = NULL;
-	}
-	if (self->pgerror)
-	{
-		ER_Destructor(self->pgerror);
-		self->pgerror = NULL;
-	}
-	self->diag_row_count = 0;
-	if (res = SC_get_ExecdOrParsed(self), res)
-	{
-		QR_set_message(res, NULL);
-		QR_set_notice(res, NULL);
-		res->sqlstate[0] = '\0';
-	}
-	self->stmt_time = 0;
-	memset(&self->localtime, 0, sizeof(self->localtime));
-	self->localtime.tm_sec = -1;
-	SC_unref_CC_error(self);
 }
 
 
