@@ -427,7 +427,9 @@ void ODBCConnection::SetConnectAttr(SQLINTEGER attribute, SQLPOINTER value, SQLI
   case SQL_ATTR_ENLIST_IN_DTC:
     throw DriverException("Optional feature not supported.");
   case SQL_ATTR_ODBC_CURSORS: // DM-only.
-    throw DriverException("Invalid attribute");
+ //   throw DriverException("Invalid attribute");
+ // Commented out because iodbc allows setting this on the driver, and we can't report the error
+ // properly yet.
   case SQL_ATTR_QUIET_MODE:
     throw DriverException("Cannot set read-only attribute");
   case SQL_ATTR_TRACE: // DM-only
@@ -477,11 +479,13 @@ void ODBCConnection::SetConnectAttr(SQLINTEGER attribute, SQLPOINTER value, SQLI
     successfully_written = m_spiConnection->SetAttribute(Connection::PACKET_SIZE, attributeToWrite);
     break;
   default:
-    throw DriverException("Invalid attribute");
+    ;
+  //  throw DriverException("Invalid attribute: " + std::to_string(attribute));
   }
 
   if (!successfully_written) {
-    throw DriverException("Optional value changed.");
+  //  throw DriverException("Optional value changed.");
+  // Commented out until we can properly report this error.
   }
 }
 
@@ -530,7 +534,7 @@ void ODBCConnection::GetConnectAttr(SQLINTEGER attribute, SQLPOINTER value,
     GetAttribute(static_cast<SQLPOINTER>(NULL), value, bufferLength, outputLength);
     return;
   case SQL_ATTR_ODBC_CURSORS: // DM-only.
-    throw DriverException("Invalid attribute");
+     throw DriverException("Invalid attribute");
   case SQL_ATTR_QUIET_MODE:
     GetAttribute(static_cast<SQLPOINTER>(NULL), value, bufferLength, outputLength);
     return;
