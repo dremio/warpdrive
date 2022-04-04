@@ -22,6 +22,30 @@
       },
       "revId": "b4b7b7e3ecdfea355bfce4a2f0c0eafb650b9105",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3525b535_ab62bac0",
+        "filename": "src/warpdrive/statement.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1155,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-04-04T15:08:29Z",
+      "side": 0,
+      "message": "StatementClass is no longer used. It\u0027s an old PostgreSQL structure and has been replaced by ODBCStatement. Every dereference of StatementClass is thus illegal.",
+      "parentUuid": "e5d8cf08_3be5193f",
+      "range": {
+        "startLine": 1132,
+        "startChar": 1,
+        "endLine": 1155,
+        "endChar": 25
+      },
+      "revId": "b4b7b7e3ecdfea355bfce4a2f0c0eafb650b9105",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
