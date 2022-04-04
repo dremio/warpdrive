@@ -46,6 +46,30 @@
       },
       "revId": "b4b7b7e3ecdfea355bfce4a2f0c0eafb650b9105",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7111a330_54552bb0",
+        "filename": "src/warpdrive/statement.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1155,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-04-04T15:11:39Z",
+      "side": 0,
+      "message": "Is there a reason to keep the function around?",
+      "parentUuid": "3525b535_ab62bac0",
+      "range": {
+        "startLine": 1132,
+        "startChar": 1,
+        "endLine": 1155,
+        "endChar": 25
+      },
+      "revId": "b4b7b7e3ecdfea355bfce4a2f0c0eafb650b9105",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
