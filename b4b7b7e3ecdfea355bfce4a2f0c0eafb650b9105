@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e5d8cf08_3be5193f",
+        "filename": "src/warpdrive/statement.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 1155,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-04-04T14:16:31Z",
+      "side": 0,
+      "message": "Are all of these invalid ptrs?",
+      "range": {
+        "startLine": 1132,
+        "startChar": 1,
+        "endLine": 1155,
+        "endChar": 25
+      },
+      "revId": "b4b7b7e3ecdfea355bfce4a2f0c0eafb650b9105",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
