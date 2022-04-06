@@ -15,35 +15,23 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM ubuntu:focal
+FROM centos:centos7
 
-ENV DEBIAN_FRONTEND=noninteractive
+RUN yum groupinstall -y "Development Tools" && \
+     yum update -y && \
+     yum install -y epel-release && \
+     yum install -y boost boost-thread boost-devel && \
+     yum install -y zlib-devel && \
+     yum install -y *protobuf* && \
+     yum install -y openssl* && \
+     yum install -y centos-release-scl && \
+     yum install -y devtoolset-9-gcc* && \
+     yum install -y unixODBC-devel && \
+     yum install -y cmake3 && \
+     ln -s /usr/bin/cmake3 /usr/bin/cmake
 
-# TODO: Join steps to avoid multiple layers
-RUN apt-get update -y -q && \
-    apt-get install -y -q --no-install-recommends \
-        build-essential pkg-config cmake autoconf libtool \
-        libboost-filesystem-dev libboost-regex-dev libboost-system-dev \
-        libbrotli-dev \
-        libbz2-dev \
-        libgflags-dev \
-        liblz4-dev \
-        libprotobuf-dev libprotoc-dev protobuf-compiler \
-        libre2-dev \
-        libsnappy-dev \
-        libthrift-dev \
-        libutf8proc-dev \
-        libzstd-dev \
-        rapidjson-dev \
-        zlib1g-dev \
-        unixodbc unixodbc-dev \
-        git \
-        libssl-dev \
-        ca-certificates && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists*
+SHELL [ "/usr/bin/scl", "enable", "devtoolset-9" ]
 
-# Build gRPC
 RUN cd /tmp && \
     git clone -b v1.36.4 https://github.com/grpc/grpc && \
     cd grpc && \
@@ -52,9 +40,18 @@ RUN cd /tmp && \
     cmake .. && make && make install && \
     rm -rf /tmp/grpc
 
-COPY . /opt/warpdrive
-WORKDIR /opt/warpdrive
+RUN rm /usr/local/lib/libssl.a /usr/local/lib/libcrypto.a && \
+    ln -s /usr/lib64/libssl.a /usr/local/lib/libssl.a && \
+    ln -s /usr/lib64/libcrypto.a /usr/local/lib/libcrypto.a
 
-ARG github_access_token
-RUN mkdir build && cd build && \
-    cmake -DGITHUB_ACCESS_TOKEN=$github_access_token .. && make
+RUN echo $'[FlightSQL] \n\
+Description=FlightSQL Driver \n\
+Driver=/opt/warpdrive/_build/release/libarrow-odbc.so \n\
+FileUsage=1 \n\
+UsageCount=1 \n\
+' > /etc/odbcinst.ini
+
+# Enabled gcc 9 as default on bash
+RUN echo 'source scl_source enable devtoolset-9' >> ~/.bashrc
+
+WORKDIR /opt/warpdrive
