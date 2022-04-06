@@ -1,1 +1,4 @@
 cmake-build-*
+Dockerfile
+Brewfile
+winbuild
