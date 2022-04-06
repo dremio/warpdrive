@@ -562,20 +562,34 @@ set(OpenSSL_USE_STATIC_LIBS ON)
 set(OPENSSL_USE_STATIC_LIBS ON)
 find_package(OpenSSL REQUIRED)
 
-# Add dependency on the ODBC Abstraction, which also gets and builds Arrow.
-define_option(GITHUB_ACCESS_TOKEN "Github access token" "")
-if (GITHUB_ACCESS_TOKEN)
-  set(ODBCABSTRACTION_REPO https://${GITHUB_ACCESS_TOKEN}@github.com/jcralmeida/flightsql-odbc.git)
-else()
-  set(ODBCABSTRACTION_REPO https://github.com/jcralmeida/flightsql-odbc.git)
+define_option(ODBCABSTRACTION_REPO "Flight SQL ODBC repo" "")
+if (NOT ODBCABSTRACTION_REPO)
+  # Add dependency on the ODBC Abstraction, which also gets and builds Arrow.
+  define_option(GITHUB_ACCESS_TOKEN "Github access token" "")
+  if (GITHUB_ACCESS_TOKEN)
+    set(ODBCABSTRACTION_REPO https://${GITHUB_ACCESS_TOKEN}@github.com/jcralmeida/flightsql-odbc.git)
+  else()
+    set(ODBCABSTRACTION_REPO https://github.com/jcralmeida/flightsql-odbc.git)
+  endif()
 endif()
 
 define_option(ODBCABSTRACTION_GIT_TAG, "Tag for the ODBC Abstraction project" "master")
 
+define_option(ARROW_GIT_REPOSITORY "Arrow repo" "")
+if (NOT ARROW_GIT_REPOSITORY)
+  set(ARROW_GIT_REPOSITORY "$ENV{ARROW_GIT_REPOSITORY}")
+endif()
+define_option(ARROW_GIT_TAG "Tag for the Arrow repository" "")
+if (NOT ARROW_GIT_TAG)
+  set(ARROW_GIT_TAG "$ENV{ARROW_GIT_TAG}")
+endif()
+
+set(ODBCABSTRACTION_CMAKE_ARGS "-DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DARROW_GIT_REPOSITORY=${ARROW_GIT_REPOSITORY} -DARROW_GIT_TAG=${ARROW_GIT_TAG}")
+
 ExternalProject_Add(ODBCAbstraction
     GIT_REPOSITORY ${ODBCABSTRACTION_REPO}
     GIT_TAG ${ODBCABSTRACTION_GIT_TAG}
-    CMAKE_ARGS "-DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+    CMAKE_ARGS ${ODBCABSTRACTION_CMAKE_ARGS}
     INSTALL_COMMAND cmake -E echo "Skipping install step.")
     #TODO: Fix the INSTALL operation in the ODBCAbstraction project.
 
