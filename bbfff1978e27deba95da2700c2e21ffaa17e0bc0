@@ -79,6 +79,23 @@
       },
       "revId": "bbfff1978e27deba95da2700c2e21ffaa17e0bc0",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0bc1d5f2_fe9ecda3",
+        "filename": "build.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-04-07T18:41:26Z",
+      "side": 1,
+      "message": "Please add a license header, and indicate that this is for building on Linux.",
+      "revId": "bbfff1978e27deba95da2700c2e21ffaa17e0bc0",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
