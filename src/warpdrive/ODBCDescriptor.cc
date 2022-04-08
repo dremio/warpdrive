@@ -5,6 +5,7 @@
  */
 #include "ODBCDescriptor.h"
 
+#include "wdodbc.h"
 #include "AttributeUtils.h"
 #include "ODBCConnection.h"
 #include "ODBCStatement.h"

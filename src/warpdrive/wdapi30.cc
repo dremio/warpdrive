@@ -14,8 +14,8 @@
  *-------
  */
 
-#include "sqltypes.h"
 #include "wdodbc.h"
+#include "sqltypes.h"
 #include "misc.h"
 
 #include <stdio.h>

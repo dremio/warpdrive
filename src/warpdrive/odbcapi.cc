@@ -26,8 +26,8 @@
  *-------
  */
 
-#include "sqlext.h"
 #include "wdodbc.h"
+#include "sqlext.h"
 #include <stdio.h>
 #include <string.h>
 
