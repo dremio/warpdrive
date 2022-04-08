@@ -57,8 +57,65 @@
 using namespace ODBC;
 using namespace driver::odbcabstraction;
 
-static SQLRETURN CC_lookup_lo(ConnectionClass *self);
-static int  CC_close_eof_cursors(ConnectionClass *self);
+static SQLRETURN CC_lookup_lo(ConnectionClass *self)
+{
+	SQLRETURN	ret = SQL_SUCCESS;
+	QResultClass* res;
+
+	MYLOG(0, "entering...\n");
+
+	res = CC_send_query(self, "select oid, typbasetype from WD_type where typname = '"  WD_TYPE_LO_NAME "'",
+		NULL, READ_ONLY_QUERY, NULL);
+
+	if (!QR_command_maybe_successful(res))
+		ret = SQL_ERROR;
+	else if (QR_command_maybe_successful(res) && QR_get_num_cached_tuples(res) > 0)
+	{
+		OID	basetype;
+
+		//		self->lobj_type = QR_get_value_backend_int(res, 0, 0, NULL);
+		basetype = QR_get_value_backend_int(res, 0, 1, NULL);
+		if (WD_TYPE_OID == basetype)
+			self->lo_is_domain = 1;
+		else if (0 != basetype)
+			self->lobj_type = 0;
+	}
+	QR_Destructor(res);
+	MYLOG(0, "Got the large object oid: %d\n", self->lobj_type);
+	return ret;
+}
+
+
+static int  CC_close_eof_cursors(ConnectionClass *self)
+{
+	int	i, ccount = 0;
+	StatementClass* stmt;
+	QResultClass* res;
+
+	if (!self->ncursors)
+		return ccount;
+	CONNLOCK_ACQUIRE(self);
+	for (i = 0; i < self->num_stmts; i++)
+	{
+		if (stmt = self->stmts[i], NULL == stmt)
+			continue;
+		if (res = SC_get_Result(stmt), NULL == res)
+			continue;
+		if (NULL != QR_get_cursor(res) &&
+			QR_is_withhold(res) &&
+			QR_once_reached_eof(res))
+		{
+			if (QR_get_num_cached_tuples(res) >= QR_get_num_total_tuples(res) ||
+				SQL_CURSOR_FORWARD_ONLY == stmt->options.cursor_type)
+			{
+				QR_close(res);
+				ccount++;
+			}
+		}
+	}
+	CONNLOCK_RELEASE(self);
+	return ccount;
+}
 
 static void LIBPQ_update_transaction_status(ConnectionClass *self);
 
@@ -1454,37 +1511,6 @@ CC_get_error(ConnectionClass *self, int *number, char **message)
 }
 
 
-static int CC_close_eof_cursors(ConnectionClass *self)
-{
-	int	i, ccount = 0;
-	StatementClass	*stmt;
-	QResultClass	*res;
-
-	if (!self->ncursors)
-		return ccount;
-	CONNLOCK_ACQUIRE(self);
-	for (i = 0; i < self->num_stmts; i++)
-	{
-		if (stmt = self->stmts[i], NULL == stmt)
-			continue;
-		if (res = SC_get_Result(stmt), NULL == res)
-			continue;
-		if (NULL != QR_get_cursor(res) &&
-		    QR_is_withhold(res) &&
-		    QR_once_reached_eof(res))
-		{
-			if (QR_get_num_cached_tuples(res) >= QR_get_num_total_tuples(res) ||
-				SQL_CURSOR_FORWARD_ONLY == stmt->options.cursor_type)
-			{
-				QR_close(res);
-				ccount++;
-			}
-		}
-	}
-	CONNLOCK_RELEASE(self);
-	return ccount;
-}
-
 static void CC_clear_cursors(ConnectionClass *self, BOOL on_abort)
 {
 	int	i;
@@ -2594,42 +2620,6 @@ CC_send_settings(ConnectionClass *self, const char *set_query)
 
 	return status;
 }
-
-
-/*
- *	This function is just a hack to get the oid of our Large Object oid type.
- *	If a real Large Object oid type is made part of Postgres, this function
- *	will go away and the define 'WD_TYPE_LO' will be updated.
- */
-static SQLRETURN
-CC_lookup_lo(ConnectionClass *self)
-{
-	SQLRETURN	ret = SQL_SUCCESS;
-	QResultClass	*res;
-
-	MYLOG(0, "entering...\n");
-
-	res = CC_send_query(self, "select oid, typbasetype from WD_type where typname = '"  WD_TYPE_LO_NAME "'",
-		NULL, READ_ONLY_QUERY, NULL);
-
-	if (!QR_command_maybe_successful(res))
-		ret = SQL_ERROR;
-	else if (QR_command_maybe_successful(res) && QR_get_num_cached_tuples(res) > 0)
-	{
-		OID	basetype;
-
-//		self->lobj_type = QR_get_value_backend_int(res, 0, 0, NULL);
-		basetype = QR_get_value_backend_int(res, 0, 1, NULL);
-		if (WD_TYPE_OID == basetype)
-			self->lo_is_domain = 1;
-		else if (0 != basetype)
-			self->lobj_type = 0;
-	}
-	QR_Destructor(res);
-	MYLOG(0, "Got the large object oid: %d\n", self->lobj_type);
-	return ret;
-}
-
 
 /*
  *	This function initializes the version of PostgreSQL from

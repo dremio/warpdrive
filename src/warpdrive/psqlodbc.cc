@@ -109,6 +109,7 @@ static void finalize_global_cs(void)
 #ifdef WIN32
 HINSTANCE s_hModule;		/* Saved module handle. */
 /*	This is where the Driver Manager attaches to this Driver */
+#if 0
 BOOL		WINAPI
 DllMain(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 {
@@ -117,7 +118,7 @@ DllMain(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 	switch (ul_reason_for_call)
 	{
 		case DLL_PROCESS_ATTACH:
-			s_hModule = hInst;	/* Save for dialog boxes */
+			s_hModule = reinterpret_cast<HINSTANCE>(hInst);	/* Save for dialog boxes */
 
 
 			if (stricmp(exename, "msaccess") == 0)
@@ -151,7 +152,7 @@ DllMain(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 
 	UNREFERENCED_PARAMETER(lpReserved);
 }
-
+#endif
 #else							/* not WIN32 */
 
 #if defined(__GNUC__) || defined(__SUNPRO_C)

@@ -5,6 +5,7 @@
  */
 #include "ODBCEnvironment.h"
 
+#include "wdodbc.h"
 #include <algorithm>
 #include "sqlext.h"
 #include <odbcabstraction/driver.h>

@@ -320,7 +320,8 @@ mylog_misc(unsigned int option, const char *fmt, va_list args)
 	ENTER_MYLOG_CS;
 #ifdef	LOGGING_PROCESS_TIME
 	if (!start_time)
-		start_time = timeGetTime();
+		start_time = 1;
+//		start_time = timeGetTime();
 #endif /* LOGGING_PROCESS_TIME */
 	// va_start(args, fmt);
 
@@ -406,6 +407,7 @@ static FILE *QLOGFP = NULL;
 static int
 qlog_misc(unsigned int option, const char *fmt, va_list args)
 {
+#if 0
 	char		filebuf[80];
 	int		gerrno;
 
@@ -415,7 +417,8 @@ qlog_misc(unsigned int option, const char *fmt, va_list args)
 	ENTER_QLOG_CS;
 #ifdef	LOGGING_PROCESS_TIME
 	if (!start_time)
-		start_time = timeGetTime();
+		start_time = 1;
+//		start_time = timeGetTime();
 #endif /* LOGGING_PROCESS_TIME */
 
 	if (!QLOGFP)
@@ -446,7 +449,7 @@ qlog_misc(unsigned int option, const char *fmt, va_list args)
 
 	LEAVE_QLOG_CS;
 	GENERAL_ERRNO_SET(gerrno);
-
+#endif
 	return 1;
 }
 int

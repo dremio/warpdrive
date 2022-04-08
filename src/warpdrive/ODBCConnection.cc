@@ -5,6 +5,7 @@
  */
 #include "ODBCConnection.h"
 
+#include "wdodbc.h"
 #include "ODBCDescriptor.h"
 #include "ODBCEnvironment.h"
 #include "ODBCStatement.h"
@@ -42,7 +43,7 @@ void loadPropertiesFromDSN(const std::string& dsn, Connection::ConnPropertyMap& 
   std::vector<char> outputBuffer;
   outputBuffer.resize(BUFFER_SIZE, '\0');
   SQLSetConfigMode(ODBC_BOTH_DSN);
-  SQLGetPrivateProfileString(dsn.c_str(), NULL, "", &outputBuffer[0], BUFFER_SIZE, NULL);
+  SQLGetPrivateProfileString(dsn.c_str(), NULL, "", &outputBuffer[0], BUFFER_SIZE, "odbc.ini");
 
   // The output buffer holds the list of keys in a series of NUL-terminated strings.
   // The series is terminated with an empty string (eg a NUL-terminator terminating the last
@@ -67,7 +68,7 @@ void loadPropertiesFromDSN(const std::string& dsn, Connection::ConnPropertyMap& 
   for (auto& key : keys) {
     outputBuffer.clear();
     outputBuffer.resize(BUFFER_SIZE, '\0');
-    SQLGetPrivateProfileString(dsn.c_str(), key.c_str(), "", &outputBuffer[0], BUFFER_SIZE, NULL);
+    SQLGetPrivateProfileString(dsn.c_str(), key.c_str(), "", &outputBuffer[0], BUFFER_SIZE, "odbc.ini");
     std::string value = std::string(&outputBuffer[0]);
     auto propIter = properties.find(key);
     if (propIter == properties.end()) {
@@ -107,6 +108,7 @@ void ODBCConnection::connect(std::string dsn, const Connection::ConnPropertyMap 
   if (m_isConnected) {
     throw DriverException("Already connected.");
   }
+
   m_spiConnection->Connect(properties, missing_properties);
   m_isConnected = true;
   m_dsn = std::move(dsn);
@@ -121,7 +123,7 @@ void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLIN
       break;
     #ifdef SQL_ASYNC_DBC_FUNCTIONS
     case SQL_ASYNC_DBC_FUNCTIONS:
-      GetAttribute(static_cast<SQLUINTEGER>(SQL_ASYNC_DBC_NOT_CAPABLE, value, bufferLength, outputLength);
+      GetAttribute(static_cast<SQLUINTEGER>(SQL_ASYNC_DBC_NOT_CAPABLE), value, bufferLength, outputLength);
       break;
     #endif
     case SQL_ASYNC_MODE:
@@ -136,7 +138,7 @@ void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLIN
       GetStringAttribute(isUnicode, m_dsn, value, bufferLength, outputLength);
       break;
     case SQL_DRIVER_ODBC_VER:
-      GetStringAttribute(isUnicode, "3.81", value, bufferLength, outputLength);
+      GetStringAttribute(isUnicode, "03.80", value, bufferLength, outputLength);
       break;
     case SQL_DYNAMIC_CURSOR_ATTRIBUTES1:
       GetAttribute(static_cast<SQLUINTEGER>(0), value, bufferLength, outputLength);
