@@ -5,8 +5,10 @@
  */
 #pragma once
 
+#include "wdodbc.h"
 #include <sql.h>
 #include <memory>
+#include <string>
 
 namespace driver {
 namespace odbcabstraction {

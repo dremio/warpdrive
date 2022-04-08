@@ -5,12 +5,12 @@
  */
 #include "ODBCStatement.h"
 
+#include "wdodbc.h"
 #include "ODBCConnection.h"
 #include "ODBCDescriptor.h"
 #include "sql.h"
 #include "sqlext.h"
 #include "sqltypes.h"
-#include "wdodbc.h"
 #include <odbcabstraction/statement.h>
 #include <odbcabstraction/exceptions.h>
 #include <odbcabstraction/result_set.h>

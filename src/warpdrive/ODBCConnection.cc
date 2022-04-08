@@ -5,6 +5,7 @@
  */
 #include "ODBCConnection.h"
 
+#include "wdodbc.h"
 #include "ODBCDescriptor.h"
 #include "ODBCEnvironment.h"
 #include "ODBCStatement.h"
@@ -121,7 +122,7 @@ void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLIN
       break;
     #ifdef SQL_ASYNC_DBC_FUNCTIONS
     case SQL_ASYNC_DBC_FUNCTIONS:
-      GetAttribute(static_cast<SQLUINTEGER>(SQL_ASYNC_DBC_NOT_CAPABLE, value, bufferLength, outputLength);
+      GetAttribute(static_cast<SQLUINTEGER>(SQL_ASYNC_DBC_NOT_CAPABLE), value, bufferLength, outputLength);
       break;
     #endif
     case SQL_ASYNC_MODE:

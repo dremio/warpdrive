@@ -5,9 +5,10 @@
  */
 #pragma once
 
-#include "sqlext.h"
-#include "sqltypes.h"
+#include "wdodbc.h"
 #include <sql.h>
+#include <sqlext.h>
+#include <sqltypes.h>
 #include <memory>
 #include <vector>
 #include <string>

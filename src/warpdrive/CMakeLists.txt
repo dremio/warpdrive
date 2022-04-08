@@ -160,10 +160,6 @@ include_directories(warpdrive
   ${Boost_INCLUDE_DIRS}
 )
 
-if(WARPDRIVE_BUILD_STATIC AND WIN32)
-  target_compile_definitions(arrow_static PUBLIC WARPDRIVE_STATIC)
-endif()
-
 foreach(LIB_TARGET ${WARPDRIVE_LIBRARIES})
   target_compile_definitions(${LIB_TARGET} PRIVATE WARPDRIVE_EXPORTING)
 endforeach()
