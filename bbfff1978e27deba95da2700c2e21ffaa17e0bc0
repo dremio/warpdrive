@@ -20,6 +20,24 @@
     {
       "unresolved": false,
       "key": {
+        "uuid": "9f6c613b_9c8d445a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-04-08T19:05:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1be23c8f_6ebb6f01",
+      "revId": "bbfff1978e27deba95da2700c2e21ffaa17e0bc0",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
         "uuid": "445dedf5_d6c70234",
         "filename": "/PATCHSET_LEVEL",
         "patchSetId": 2
@@ -48,6 +66,24 @@
       "writtenOn": "2022-04-07T22:49:27Z",
       "side": 1,
       "message": "Indentation.",
+      "revId": "bbfff1978e27deba95da2700c2e21ffaa17e0bc0",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "4f4c241d_5c59679f",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-04-08T19:05:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "73433eb9_26ed06e9",
       "revId": "bbfff1978e27deba95da2700c2e21ffaa17e0bc0",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
@@ -98,6 +134,30 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "0d23b14c_e9f6ca6c",
+        "filename": "Dockerfile",
+        "patchSetId": 2
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-04-08T19:05:43Z",
+      "side": 1,
+      "message": "It\u0027s not a good practice to have so many commands, because every command creates another layer and it keeps adding to the total image size.",
+      "parentUuid": "4b92fc4f_75b2cafc",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 20
+      },
+      "revId": "bbfff1978e27deba95da2700c2e21ffaa17e0bc0",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "0bc1d5f2_fe9ecda3",
@@ -111,6 +171,24 @@
       "writtenOn": "2022-04-07T18:41:26Z",
       "side": 1,
       "message": "Please add a license header, and indicate that this is for building on Linux.",
+      "revId": "bbfff1978e27deba95da2700c2e21ffaa17e0bc0",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "0da9aa26_ad1f7b26",
+        "filename": "build.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-04-08T19:05:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0bc1d5f2_fe9ecda3",
       "revId": "bbfff1978e27deba95da2700c2e21ffaa17e0bc0",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
