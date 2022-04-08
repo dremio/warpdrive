@@ -92,7 +92,9 @@ void		debug_memory_check(void);
 #include <delayimp.h>
 #endif /* WIN32 */
 /* Must come before sql.h */
+#ifndef _WIN32
 #define ODBCVER					0x0351
+#endif
 
 /*
  * Default NAMEDATALEN value in the server. The server can be compiled with

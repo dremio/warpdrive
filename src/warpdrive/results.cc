@@ -15,9 +15,9 @@
  *-------
  */
 
+#include "wdodbc.h"
 #include "sql.h"
 #include "sqlext.h"
-#include "wdodbc.h"
 
 #include <string.h>
 #include "misc.h"
