@@ -392,7 +392,7 @@ dconn_FDriverConnectProc(
 {
 	ConnInfo   *ci;
 	char	strbuf[64];
-
+#if 0
 	switch (wMsg)
 	{
 		case WM_INITDIALOG:
@@ -470,7 +470,7 @@ dconn_FDriverConnectProc(
 			}
 			break;
 	}
-
+#endif
 	return FALSE;
 }
 #endif   /* WIN32 */
