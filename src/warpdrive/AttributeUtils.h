@@ -30,7 +30,7 @@ namespace ODBC {
   template <typename O>
   inline void GetAttributeUTF8(const std::string& attributeValue, SQLPOINTER output, O outputSize, O* outputLenPtr) {
     if (output) {
-      size_t outputLen = std::min(static_cast<O>(attributeValue.size()), outputSize);
+      size_t outputLen = WD_MIN(static_cast<O>(attributeValue.size()), outputSize);
       memcpy(output, attributeValue.c_str(), outputLen);
       reinterpret_cast<char*>(output)[outputLen] = '\0';
     }

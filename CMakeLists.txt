@@ -584,14 +584,40 @@ if (NOT ARROW_GIT_TAG)
   set(ARROW_GIT_TAG "$ENV{ARROW_GIT_TAG}")
 endif()
 
-set(ODBCABSTRACTION_CMAKE_ARGS "-DCMAKE_POSITION_INDEPENDENT_CODE=ON -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DARROW_GIT_REPOSITORY=${ARROW_GIT_REPOSITORY} -DARROW_GIT_TAG=${ARROW_GIT_TAG}")
+if (MSVC)
+  set(ODBCABSTRACTION_CMAKE_ARGS
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+    -DARROW_GIT_REPOSITORY=${ARROW_GIT_REPOSITORY}
+    -DARROW_GIT_TAG=${ARROW_GIT_TAG}
+    -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+    -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
+    -DVCPKG_MANIFEST_MODE=${VCPKG_MANIFEST_MODE}
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+  )
 
-ExternalProject_Add(ODBCAbstraction
+  ExternalProject_Add(ODBCAbstraction
+    GIT_REPOSITORY ${ODBCABSTRACTION_REPO}
+    GIT_TAG ${ODBCABSTRACTION_GIT_TAG}
+    CMAKE_ARGS ${ODBCABSTRACTION_CMAKE_ARGS}
+    CMAKE_GENERATOR "Visual Studio 17 2022"
+    CMAKE_GENERATOR_PLATFORM ${CMAKE_VS_PLATFORM_NAME}
+    INSTALL_COMMAND cmake -E echo "Skipping install step.")
+    #TODO: Fix the INSTALL operation in the ODBCAbstraction project.
+else()
+  set(ODBCABSTRACTION_CMAKE_ARGS
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+    -DARROW_GIT_REPOSITORY=${ARROW_GIT_REPOSITORY}
+    -DARROW_GIT_TAG=${ARROW_GIT_TAG}
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+  )
+
+  ExternalProject_Add(ODBCAbstraction
     GIT_REPOSITORY ${ODBCABSTRACTION_REPO}
     GIT_TAG ${ODBCABSTRACTION_GIT_TAG}
     CMAKE_ARGS ${ODBCABSTRACTION_CMAKE_ARGS}
     INSTALL_COMMAND cmake -E echo "Skipping install step.")
     #TODO: Fix the INSTALL operation in the ODBCAbstraction project.
+endif()  
 
 find_package(Threads REQUIRED)
 
@@ -607,6 +633,10 @@ else()
 endif()
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction-build/flight_sql/ApacheArrow-prefix/src/ApacheArrow-install/${ARROW_LIB_DIR})
 link_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction-build/lib)
+if (MSVC)
+  link_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction-build)
+  link_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction-build/$(Configuration)/lib)
+endif()
 link_directories(${BUILD_OUTPUT_ROOT_DIRECTORY})
 list(APPEND WARPDRIVE_LINK_LIBS odbcabstraction)
 list(APPEND WARPDRIVE_STATIC_LINK_LIBS odbcabstraction)

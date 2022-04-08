@@ -212,6 +212,8 @@ SQLGetDiagRecW(SQLSMALLINT fHandleType,
 			   SQLSMALLINT	cbErrorMsgMax,
 			   SQLSMALLINT	*pcbErrorMsg)
 {
+	return SQL_NO_DATA_FOUND;
+#if 0
 	RETCODE	ret;
         SQLSMALLINT	buflen, tlen;
         char    qstr_ansi[8], *mtxt = NULL;
@@ -252,6 +254,7 @@ SQLGetDiagRecW(SQLSMALLINT fHandleType,
 	if (mtxt)
 		free(mtxt);
 	return ret;
+#endif
 }
 
 WD_EXPORT_SYMBOL

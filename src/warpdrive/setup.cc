@@ -15,7 +15,6 @@
 
 #include  "wdodbc.h"
 #ifdef _WIN32
-#include  "pgenlist.h"
 #include  "loadlib.h"
 #include  "misc.h" // strncpy_null
 
@@ -24,7 +23,6 @@
 #include  <string.h>
 #include  <stdlib.h>
 #include  "resource.h"
-#include  "pgapifunc.h"
 #include  "dlg_specific.h"
 #include  "win_setup.h"
 
@@ -498,13 +496,15 @@ MYLOG(0, "conn_string=%s\n", out_conn);
 	}
 	if (!SQL_SUCCEEDED(ret = SQLALLOCHANDLEFUNC(SQL_HANDLE_DBC, env, &conn)))
 	{
-		SQLGETDIAGRECFUNC(SQL_HANDLE_ENV, env, 1, NULL, &errnum, szMsg, _countof(szMsg), &str_len);
+		SQLINTEGER err = errnum;
+		SQLGETDIAGRECFUNC(SQL_HANDLE_ENV, env, 1, NULL, &err, szMsg, _countof(szMsg), &str_len);
 		ermsg = szMsg;
 		goto cleanup;
 	}
-	if (!SQL_SUCCEEDED(ret = SQLDRIVERCONNECTFUNC(conn, hwnd, conn_str, SQL_NTS, NULL, MAX_CONNECT_STRING_LEN, &str_len, SQL_DRIVER_NOPROMPT)))
+	if (!SQL_SUCCEEDED(ret = SQLDRIVERCONNECTFUNC(conn, reinterpret_cast<HWND>(hwnd), conn_str, SQL_NTS, NULL, MAX_CONNECT_STRING_LEN, &str_len, SQL_DRIVER_NOPROMPT)))
 	{
-		SQLGETDIAGRECFUNC(SQL_HANDLE_DBC, conn, 1, NULL, &errnum, szMsg, _countof(szMsg), &str_len);
+		SQLINTEGER err = errnum;
+		SQLGETDIAGRECFUNC(SQL_HANDLE_DBC, conn, 1, NULL, &err, szMsg, _countof(szMsg), &str_len);
 		ermsg = szMsg;
 		goto cleanup;
 	}
@@ -556,7 +556,7 @@ MYLOG(0, "conn_string=%s\n", out_conn);
 cleanup:
 	if (NULL != ermsg && NULL != hwnd)
 	{
-		MESSAGEBOXFUNC(hwnd, ermsg, _T("Connection Test"), MB_ICONEXCLAMATION | MB_OK);
+		MESSAGEBOXFUNC(reinterpret_cast<HWND>(hwnd), ermsg, _T("Connection Test"), MB_ICONEXCLAMATION | MB_OK);
 	}
 
 #undef _T

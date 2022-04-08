@@ -61,7 +61,7 @@ CSTR	psqlodbc = "psqlodbc35w";
 CSTR	psqlodbc = "psqlodbc30a";
 #endif
 
-
+#if 0
 BOOL		WINAPI
 DllMain(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 {
@@ -70,7 +70,7 @@ DllMain(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 	switch (ul_reason_for_call)
 	{
 		case DLL_PROCESS_ATTACH:
-			s_hModule = hInst;	/* Save for dialog boxes */
+			s_hModule = reinterpret_cast<HINSTANCE>(hInst);	/* Save for dialog boxes */
 			initialize_global_cs();
 #ifdef	WD_BIN
 			if (s_hLModule = LoadLibraryEx(WD_BIN "\\libpq.dll", NULL, LOAD_WITH_ALTERED_SEARCH_PATH), s_hLModule == NULL)
@@ -90,7 +90,7 @@ DllMain(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 					if (s_hLModule = LoadLibraryEx(dllPath, NULL, LOAD_WITH_ALTERED_SEARCH_PATH), s_hLModule == NULL)
 					{
 						MYLOG(0, "libpq in the folder %s%s couldn't be loaded\n", drive, dir);
-						SPRINTF_FIXED(message, "libpq in neither %s nor %s%s could be loaded", WD_BIN, drive, dir);
+					//	SPRINTF_FIXED(message, "libpq in neither %s nor %s%s could be loaded", WD_BIN, drive, dir);
 					}
 				}
 #ifdef	WD_BIN
@@ -139,4 +139,5 @@ DllMain(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 
 	UNREFERENCED_PARAMETER(lpReserved);
 }
+#endif
 #endif
