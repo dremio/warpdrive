@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "5d86c3c3_97d6d659",
+        "filename": "src/warpdrive/ODBCConnection.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-04-14T20:24:50Z",
+      "side": 1,
+      "message": "May this endup dereferencing nullptr?",
+      "revId": "c56f4ed1a514ebc5dd4f999f2e229a8ac2c4bb89",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "53f522ea_93733640",
+        "filename": "src/warpdrive/ODBCDescriptor.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-04-14T20:24:50Z",
+      "side": 1,
+      "message": "Specify the invalid descriptor field in the message",
+      "revId": "c56f4ed1a514ebc5dd4f999f2e229a8ac2c4bb89",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6e57939a_e5f36496",
+        "filename": "src/warpdrive/ODBCDescriptor.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-04-14T20:24:50Z",
+      "side": 1,
+      "message": "Specify the invalid descriptor field in the message",
+      "revId": "c56f4ed1a514ebc5dd4f999f2e229a8ac2c4bb89",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "92d7b5cd_b3e98cc5",
+        "filename": "src/warpdrive/ODBCDescriptor.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-04-14T20:24:50Z",
+      "side": 1,
+      "message": "Specify the invalid descriptor field in the message",
+      "revId": "c56f4ed1a514ebc5dd4f999f2e229a8ac2c4bb89",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "17500f27_fd83fded",
+        "filename": "src/warpdrive/ODBCDescriptor.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-04-14T20:24:50Z",
+      "side": 1,
+      "message": "Specify the invalid descriptor field in the message",
+      "revId": "c56f4ed1a514ebc5dd4f999f2e229a8ac2c4bb89",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a3b92cee_e993e9cf",
+        "filename": "src/warpdrive/ODBCStatement.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-04-14T20:24:50Z",
+      "side": 1,
+      "message": "Should it actually throw and specify the invalid attribute in the message?",
+      "revId": "c56f4ed1a514ebc5dd4f999f2e229a8ac2c4bb89",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9a9a9b0d_5706d86e",
+        "filename": "src/warpdrive/ODBCStatement.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 451,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-04-14T20:24:50Z",
+      "side": 1,
+      "message": "Should it actually throw and specify the invalid attribute in the message?",
+      "revId": "c56f4ed1a514ebc5dd4f999f2e229a8ac2c4bb89",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7685d33a_c1989e5c",
+        "filename": "src/warpdrive/ODBCStatement.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-04-14T20:24:50Z",
+      "side": 1,
+      "message": "Dangling ;",
+      "revId": "c56f4ed1a514ebc5dd4f999f2e229a8ac2c4bb89",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
