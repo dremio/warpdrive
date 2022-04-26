@@ -46,6 +46,8 @@ find_package(OpenSSL REQUIRED)
 # Add gRPC dependencies needed by Arrow Flight. Should be pre-installed.
 find_package(gRPC 1.36 CONFIG REQUIRED)
 
+find_package(RapidJSON CONFIG REQUIRED)
+
 if (MSVC)
   # the following definitions stop arrow from using __declspec when staticly linking and will break on windows without them
   add_compile_definitions(ARROW_STATIC ARROW_FLIGHT_STATIC)
@@ -77,6 +79,7 @@ set(ARROW_ODBC_THIRDPARTY_LIBS
   ${Protobuf_LIBRARIES}
   ${ODBC_LIBRARIES}
   ${OPENSSL_LIBRARIES}
+  ${RapidJSON_LIBRARIES}
 )
 
 if (MSVC)

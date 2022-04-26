@@ -64,3 +64,7 @@ password        = dremio123 \n\
 RUN echo 'source scl_source enable devtoolset-9' >> ~/.bashrc
 
 WORKDIR /opt/warpdrive
+
+# TODO: Move this with the rest of installs
+RUN yum -y install ninja-build
+RUN yum -y install rapidjson-devel
