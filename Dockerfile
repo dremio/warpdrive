@@ -27,6 +27,8 @@ RUN yum groupinstall -y "Development Tools" && \
      yum install -y centos-release-scl && \
      yum install -y devtoolset-9-gcc* && \
      yum install -y unixODBC-devel && \
+     yum install -y ninja-build && \
+     yum install -y rapidjson-devel && \
      yum install -y cmake3 && \
      ln -s /usr/bin/cmake3 /usr/bin/cmake
 
