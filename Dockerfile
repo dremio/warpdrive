@@ -20,7 +20,6 @@ FROM centos:centos7
 RUN yum groupinstall -y "Development Tools" && \
      yum update -y && \
      yum install -y epel-release && \
-     yum install -y boost boost-thread boost-devel && \
      yum install -y zlib-devel && \
      yum install -y *protobuf* && \
      yum install -y openssl* && \
@@ -45,6 +44,13 @@ RUN cd /tmp && \
 RUN rm /usr/local/lib/libssl.a /usr/local/lib/libcrypto.a && \
     ln -s /usr/lib64/libssl.a /usr/local/lib/libssl.a && \
     ln -s /usr/lib64/libcrypto.a /usr/local/lib/libcrypto.a
+
+RUN yum install -y wget && \
+    wget https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.gz && \
+    tar -xzf boost_1_76_0.tar.gz && \
+    cd boost_1_76_0 && \
+    ./bootstrap.sh --prefix=/opt/boost && \
+    ./b2 install --prefix=/opt/boost --with=all || true
 
 RUN echo $'[FlightSQL] \n\
 Description=FlightSQL Driver \n\
