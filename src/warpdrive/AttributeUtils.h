@@ -12,6 +12,7 @@
 #include <memory>
 #include <cstring>
 #include <odbcabstraction/exceptions.h>
+#include <odbcabstraction/diagnostics.h>
 
 #include "EncodingUtils.h"
 
@@ -30,7 +31,7 @@ inline void GetAttribute(T attributeValue, SQLPOINTER output, O outputSize,
 }
 
 template <typename O>
-inline void GetAttributeUTF8(const std::string &attributeValue,
+inline SQLRETURN GetAttributeUTF8(const std::string &attributeValue,
                              SQLPOINTER output, O outputSize, O *outputLenPtr) {
   if (output) {
     size_t outputLen =
@@ -42,11 +43,25 @@ inline void GetAttributeUTF8(const std::string &attributeValue,
   if (outputLenPtr) {
     *outputLenPtr = static_cast<O>(attributeValue.size());
   }
-  // TODO: Warn if outputSize is too short.
+
+  if (outputSize < attributeValue.size() + 1) {
+    return SQL_SUCCESS_WITH_INFO;
+  }
+  return SQL_SUCCESS;
 }
 
 template <typename O>
-inline void GetAttributeSQLWCHAR(const std::string &attributeValue,
+inline SQLRETURN GetAttributeUTF8(const std::string &attributeValue,
+                                  SQLPOINTER output, O outputSize, O *outputLenPtr, driver::odbcabstraction::Diagnostics& diagnostics) {
+  SQLRETURN result = GetAttributeUTF8(attributeValue, output, outputSize, outputLenPtr);
+  if (SQL_SUCCESS_WITH_INFO == result) {
+    diagnostics.AddTruncationWarning();
+  }
+  return result;
+}
+
+template <typename O>
+inline SQLRETURN GetAttributeSQLWCHAR(const std::string &attributeValue,
                                  SQLPOINTER output, O outputSize,
                                  O *outputLenPtr) {
   size_t result = ConvertToSqlWChar(
@@ -55,17 +70,39 @@ inline void GetAttributeSQLWCHAR(const std::string &attributeValue,
   if (outputLenPtr) {
     *outputLenPtr = static_cast<O>(result);
   }
+
+  if (outputSize < result + sizeof(SQLWCHAR)) {
+    return SQL_SUCCESS_WITH_INFO;
+  }
+  return SQL_SUCCESS;
 }
 
 template <typename O>
-inline void
-GetStringAttribute(bool isUnicode, const std::string &attributeValue,
-                   SQLPOINTER output, O outputSize, O *outputLenPtr) {
-  if (isUnicode) {
-    GetAttributeSQLWCHAR(attributeValue, output, outputSize, outputLenPtr);
-  } else {
-    GetAttributeUTF8(attributeValue, output, outputSize, outputLenPtr);
+inline SQLRETURN GetAttributeSQLWCHAR(const std::string &attributeValue,
+                                      SQLPOINTER output, O outputSize,
+                                      O *outputLenPtr, driver::odbcabstraction::Diagnostics& diagnostics) {
+  SQLRETURN result = GetAttributeSQLWCHAR(attributeValue, output, outputSize, outputLenPtr);
+  if (SQL_SUCCESS_WITH_INFO == result) {
+    diagnostics.AddTruncationWarning();
   }
+  return result;
+}
+
+template <typename O>
+inline SQLRETURN
+GetStringAttribute(bool isUnicode, const std::string &attributeValue,
+                   SQLPOINTER output, O outputSize, O *outputLenPtr, driver::odbcabstraction::Diagnostics& diagnostics) {
+  SQLRETURN result = SQL_SUCCESS;
+  if (isUnicode) {
+    result = GetAttributeSQLWCHAR(attributeValue, output, outputSize, outputLenPtr);
+  } else {
+    result = GetAttributeUTF8(attributeValue, output, outputSize, outputLenPtr);
+  }
+
+  if (SQL_SUCCESS_WITH_INFO == result) {
+    diagnostics.AddTruncationWarning();
+  }
+  return result;
 }
 
 template <typename T>
@@ -103,7 +140,7 @@ inline void SetAttributeSQLWCHAR(SQLPOINTER newValue,
 template <typename T>
 void CheckIfAttributeIsSetToOnlyValidValue(SQLPOINTER value, T allowed_value) {
   if (static_cast<T>(reinterpret_cast<SQLULEN>(value)) != allowed_value) {
-    throw driver::odbcabstraction::DriverException("Optional feature not implemented");
+    throw driver::odbcabstraction::DriverException("Optional feature not implemented", "HYC00");
   }
 }
 }

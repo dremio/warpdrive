@@ -617,8 +617,8 @@ else()
   )
 
   ExternalProject_Add(ODBCAbstraction
-    GIT_REPOSITORY ${ODBCABSTRACTION_REPO}
-    GIT_TAG ${ODBCABSTRACTION_GIT_TAG}
+    GIT_REPOSITORY /Users/jamesd/github/flightsql-odbc
+    GIT_TAG master
     CMAKE_ARGS ${ODBCABSTRACTION_CMAKE_ARGS}
     INSTALL_COMMAND cmake -E echo "Skipping install step.")
     #TODO: Fix the INSTALL operation in the ODBCAbstraction project.

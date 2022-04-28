@@ -41,6 +41,7 @@
 
 #include <odbcabstraction/exceptions.h>
 #include "ODBCDescriptor.h"
+#include "ODBCConnection.h"
 #include "ODBCStatement.h"
 
 using namespace ODBC;
@@ -78,28 +79,26 @@ SQLBindCol(HSTMT StatementHandle,
 		   PTR TargetValue, SQLLEN BufferLength,
 		   SQLLEN *StrLen_or_Ind)
 {
-	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
-
-	MYLOG(0, "Entering\n");
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	ret = WD_BindCol(StatementHandle, ColumnNumber,
-				   TargetType, TargetValue, BufferLength, StrLen_or_Ind);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+  SQLRETURN rc = SQL_SUCCESS;
+        return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+          MYLOG(0, "Entering\n");
+          return WD_BindCol(StatementHandle, ColumnNumber, TargetType, TargetValue,
+                           BufferLength, StrLen_or_Ind);
+              });
 }
 
 WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLCancel(HSTMT StatementHandle)
 {
-	MYLOG(0, "Entering\n");
-	/* Not that neither ENTER_STMT_CS nor StartRollbackState is called */
-	/* SC_clear_error((StatementClass *) StatementHandle); maybe this neither */
-	return SQL_SUCCESS;
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+    MYLOG(0, "Entering\n");
+    /* Not that neither ENTER_STMT_CS nor StartRollbackState is called */
+    /* SC_clear_error((StatementClass *) StatementHandle); maybe this neither */
+    return SQL_SUCCESS; // Do nothing until this is implemented instead of throwing an error.
+//    return WD_Cancel(StatementHandle);
+        });
 }
 
 #ifndef	UNICODE_SUPPORTXX
@@ -111,14 +110,16 @@ SQLColumns(HSTMT StatementHandle,
 		   SQLCHAR *TableName, SQLSMALLINT NameLength3,
 		   SQLCHAR *ColumnName, SQLSMALLINT NameLength4)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLColumns";
-	RETCODE	ret;
-	SQLCHAR	*ctName = CatalogName, *scName = SchemaName,
-		*tbName = TableName, *clName = ColumnName;
-	ret = WD_Columns(StatementHandle, ctName, NameLength1,
-		scName, NameLength2, tbName, NameLength3,
-		clName, NameLength4);
-	return ret;
+        return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+          RETCODE ret;
+          SQLCHAR *ctName = CatalogName, *scName = SchemaName, *tbName = TableName,
+                  *clName = ColumnName;
+          ret = WD_Columns(StatementHandle, ctName, NameLength1, scName, NameLength2,
+                           tbName, NameLength3, clName, NameLength4);
+          return ret;
+              });
 }
 
 WD_EXPORT_SYMBOL
@@ -128,17 +129,12 @@ SQLConnect(HDBC ConnectionHandle,
 		   SQLCHAR *UserName, SQLSMALLINT NameLength2,
 		   SQLCHAR *Authentication, SQLSMALLINT NameLength3)
 {
-	RETCODE	ret;
-	ConnectionClass *conn = (ConnectionClass *) ConnectionHandle;
-
-	MYLOG(0, "Entering\n");
-	CC_examine_global_transaction(conn);
-	ENTER_CONN_CS(conn);
-	CC_clear_error(conn);
-	ret = WD_Connect(ConnectionHandle, ServerName, NameLength1,
-					 UserName, NameLength2, Authentication, NameLength3);
-	LEAVE_CONN_CS(conn);
-	return ret;
+  SQLRETURN rc = SQL_SUCCESS;
+        return ODBCConnection::ExecuteWithDiagnostics(ConnectionHandle, rc, [&]() -> SQLRETURN {
+          MYLOG(0, "Entering\n");
+          return WD_Connect(ConnectionHandle, ServerName, NameLength1, UserName,
+                           NameLength2, Authentication, NameLength3);
+              });
 }
 
 WD_EXPORT_SYMBOL
@@ -152,17 +148,13 @@ SQLDriverConnect(HDBC hdbc,
 				 SQLSMALLINT * pcbConnStrOut,
 				 SQLUSMALLINT fDriverCompletion)
 {
-	RETCODE	ret;
-	ConnectionClass *conn = (ConnectionClass *) hdbc;
+  SQLRETURN rc = SQL_SUCCESS;
+        return ODBCConnection::ExecuteWithDiagnostics(hdbc, rc, [&]() -> SQLRETURN {
 
-	MYLOG(0, "Entering\n");
-	CC_examine_global_transaction(conn);
-	ENTER_CONN_CS(conn);
-	CC_clear_error(conn);
-	ret = WD_DriverConnect(hdbc, hwnd, szConnStrIn, cbConnStrIn,
-		szConnStrOut, cbConnStrOutMax, pcbConnStrOut, fDriverCompletion);
-	LEAVE_CONN_CS(conn);
-	return ret;
+          MYLOG(0, "Entering\n");
+          return WD_DriverConnect(hdbc, hwnd, szConnStrIn, cbConnStrIn, szConnStrOut,
+                                 cbConnStrOutMax, pcbConnStrOut, fDriverCompletion);
+              });
 }
 
 WD_EXPORT_SYMBOL
@@ -174,17 +166,13 @@ SQLBrowseConnect(HDBC hdbc,
 				 SQLSMALLINT cbConnStrOutMax,
 				 SQLSMALLINT *pcbConnStrOut)
 {
-	RETCODE	ret;
-	ConnectionClass *conn = (ConnectionClass *) hdbc;
+  SQLRETURN rc = SQL_SUCCESS;
 
 	MYLOG(0, "Entering\n");
-	CC_examine_global_transaction(conn);
-	ENTER_CONN_CS(conn);
-	CC_clear_error(conn);
-	ret = WD_BrowseConnect(hdbc, szConnStrIn, cbConnStrIn,
-						   szConnStrOut, cbConnStrOutMax, pcbConnStrOut);
-	LEAVE_CONN_CS(conn);
-	return ret;
+        return ODBCConnection::ExecuteWithDiagnostics(hdbc, rc, [&]() -> SQLRETURN {
+          return WD_BrowseConnect(hdbc, szConnStrIn, cbConnStrIn, szConnStrOut,
+                                 cbConnStrOutMax, pcbConnStrOut);
+              });
 }
 
 WD_EXPORT_SYMBOL
@@ -213,14 +201,13 @@ SQLDescribeCol(HSTMT StatementHandle,
 			   SQLSMALLINT *DataType, SQLULEN *ColumnSize,
 			   SQLSMALLINT *DecimalDigits, SQLSMALLINT *Nullable)
 {
-	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
-
+  SQLRETURN rc = SQL_SUCCESS;
 	MYLOG(0, "Entering\n");
-	ret = WD_DescribeCol(StatementHandle, ColumnNumber,
-							 ColumnName, BufferLength, NameLength,
-						  DataType, ColumnSize, DecimalDigits, Nullable);
-	return ret;
+        return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+          return WD_DescribeCol(StatementHandle, ColumnNumber, ColumnName,
+                               BufferLength, NameLength, DataType, ColumnSize,
+                               DecimalDigits, Nullable);
+              });
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -228,18 +215,11 @@ WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLDisconnect(HDBC ConnectionHandle)
 {
-	RETCODE	ret;
-	ConnectionClass *conn = (ConnectionClass *) ConnectionHandle;
-
-	MYLOG(0, "Entering for %p\n", ConnectionHandle);
-#ifdef	_HANDLE_ENLIST_IN_DTC_
-	if (CC_is_in_global_trans(conn))
-		CALL_DtcOnDisconnect(conn);
-#endif /* _HANDLE_ENLIST_IN_DTC_ */
-	ENTER_CONN_CS(conn);
-	ret = WD_Disconnect(ConnectionHandle);
-	LEAVE_CONN_CS(conn);
-	return ret;
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCConnection::ExecuteWithDiagnostics(ConnectionHandle, rc, [&]() -> SQLRETURN {
+    MYLOG(0, "Entering for %p\n", ConnectionHandle);
+    return WD_Disconnect(ConnectionHandle);
+        });
 }
 
 #ifndef	UNICODE_SUPPORTXX
@@ -248,28 +228,14 @@ RETCODE		SQL_API
 SQLExecDirect(HSTMT StatementHandle,
 			  SQLCHAR *StatementText, SQLINTEGER TextLength)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLExecDirect";
-	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
-	UWORD	flag = 0;
+        return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+          UWORD flag = 0;
 
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	flag |= PODBC_WITH_HOLD;
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
-	else
-	{
-		StartRollbackState(stmt);
-		ret = WD_ExecDirect(StatementHandle, StatementText, TextLength, flag);
-		ret = DiscardStatementSvp(stmt, ret, FALSE);
-	}
-	LEAVE_STMT_CS(stmt);
-	return ret;
+          MYLOG(0, "Entering\n");
+          return WD_ExecDirect(StatementHandle, StatementText, TextLength, flag);
+              });
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -277,25 +243,26 @@ WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLExecute(HSTMT StatementHandle)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLExecute";
-	RETCODE	ret;
-	UWORD	flag = 0;
+        return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+          RETCODE ret;
+          UWORD flag = 0;
 
-	MYLOG(0, "Entering\n");
-
-	ENTER_STMT_CS(stmt);
-	flag |= (PODBC_RECYCLE_STATEMENT | PODBC_WITH_HOLD);
-	//// SC_set_Result(StatementHandle, NULL);
-	ret = WD_Execute(StatementHandle, flag);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+          MYLOG(0, "Entering\n");
+          ret = WD_Execute(StatementHandle, flag);
+          return ret;
+              });
 }
 
 WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLFetch(HSTMT StatementHandle)
 {
-  return WD_Fetch(StatementHandle);
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+    return WD_Fetch(StatementHandle);
+  });
 }
 
 
@@ -304,13 +271,12 @@ RETCODE		SQL_API
 SQLFreeStmt(HSTMT StatementHandle,
 			SQLUSMALLINT Option)
 {
-	RETCODE	ret;
-	ConnectionClass *conn = NULL;
-
+  SQLRETURN rc = SQL_SUCCESS;
 	MYLOG(0, "Entering\n");
 
-	ret = WD_FreeStmt(StatementHandle, Option);
-	return ret;
+        return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+          return WD_FreeStmt(StatementHandle, Option);
+              });
 }
 
 
@@ -321,18 +287,12 @@ SQLGetCursorName(HSTMT StatementHandle,
 				 SQLCHAR *CursorName, SQLSMALLINT BufferLength,
 				 SQLSMALLINT *NameLength)
 {
-	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
-
-	MYLOG(0, "Entering\n");
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	ret = WD_GetCursorName(StatementHandle, CursorName, BufferLength,
-							   NameLength);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+  SQLRETURN rc = SQL_SUCCESS;
+        return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+          MYLOG(0, "Entering\n");
+          return
+              WD_GetCursorName(StatementHandle, CursorName, BufferLength, NameLength);
+              });
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -343,12 +303,13 @@ SQLGetData(HSTMT StatementHandle,
 		   PTR TargetValue, SQLLEN BufferLength,
 		   SQLLEN *StrLen_or_Ind)
 {
-	RETCODE	ret;
+  SQLRETURN rc = SQL_SUCCESS;
 
-	MYLOG(0, "Entering\n");
-	ret = WD_GetData(StatementHandle, ColumnNumber, TargetType,
-						 TargetValue, BufferLength, StrLen_or_Ind);
-	return ret;
+        return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+          MYLOG(0, "Entering\n");
+          return WD_GetData(StatementHandle, ColumnNumber, TargetType, TargetValue,
+                           BufferLength, StrLen_or_Ind);
+              });
 }
 
 WD_EXPORT_SYMBOL
@@ -356,20 +317,16 @@ RETCODE		SQL_API
 SQLGetFunctions(HDBC ConnectionHandle,
 				SQLUSMALLINT FunctionId, SQLUSMALLINT *Supported)
 {
-	RETCODE	ret;
-	ConnectionClass *conn = (ConnectionClass *) ConnectionHandle;
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCConnection::ExecuteWithDiagnostics(ConnectionHandle, rc, [&]() -> SQLRETURN {
+    RETCODE ret;
 
-	MYLOG(0, "Entering\n");
-	CC_examine_global_transaction(conn);
-	ENTER_CONN_CS(conn);
-	CC_clear_error(conn);
-	if (FunctionId == SQL_API_ODBC3_ALL_FUNCTIONS)
-		ret = WD_GetFunctions30(ConnectionHandle, FunctionId, Supported);
-	else
-		ret = WD_GetFunctions(ConnectionHandle, FunctionId, Supported);
-
-	LEAVE_CONN_CS(conn);
-	return ret;
+    MYLOG(0, "Entering\n");
+    if (FunctionId == SQL_API_ODBC3_ALL_FUNCTIONS)
+      return WD_GetFunctions30(ConnectionHandle, FunctionId, Supported);
+    else
+      return WD_GetFunctions(ConnectionHandle, FunctionId, Supported);
+        });
 }
 
 #ifndef	UNICODE_SUPPORTXX
@@ -379,10 +336,12 @@ SQLGetInfo(HDBC ConnectionHandle,
 		   SQLUSMALLINT InfoType, PTR InfoValue,
 		   SQLSMALLINT BufferLength, SQLSMALLINT *StringLength)
 {
-	RETCODE		ret;
-	MYLOG(0, "Entering\n");
-	ret = WD_GetInfo(ConnectionHandle, InfoType, InfoValue, BufferLength, StringLength, FALSE);
-	return ret;
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCConnection::ExecuteWithDiagnostics(ConnectionHandle, rc, [&]() -> SQLRETURN {
+    MYLOG(0, "Entering\n");
+    return WD_GetInfo(ConnectionHandle, InfoType, InfoValue, BufferLength,
+                     StringLength, FALSE);
+        });
 }
 
 
@@ -391,10 +350,11 @@ RETCODE		SQL_API
 SQLGetTypeInfo(HSTMT StatementHandle,
 			   SQLSMALLINT DataType)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLGetTypeInfo";
-	RETCODE	ret;
-	ret = WD_GetTypeInfo(StatementHandle, DataType);
-	return ret;
+        return ODBCConnection::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+          return WD_GetTypeInfo(StatementHandle, DataType);
+              });
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -403,13 +363,11 @@ RETCODE		SQL_API
 SQLNumResultCols(HSTMT StatementHandle,
 				 SQLSMALLINT *ColumnCount)
 {
-
-	RETCODE	ret;
-
-	MYLOG(0, "Entering\n");
-
-	ret = WD_NumResultCols(StatementHandle, ColumnCount);
-	return ret;
+  SQLRETURN rc = SQL_SUCCESS;
+        return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+          MYLOG(0, "Entering\n");
+          return WD_NumResultCols(StatementHandle, ColumnCount);
+              });
 }
 
 WD_EXPORT_SYMBOL
@@ -417,19 +375,14 @@ RETCODE		SQL_API
 SQLParamData(HSTMT StatementHandle,
 			 PTR *Value)
 {
-	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+    RETCODE ret;
 
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	ret = WD_ParamData(StatementHandle, Value);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+    MYLOG(0, "Entering\n");
+    ret = WD_ParamData(StatementHandle, Value);
+    return ret;
+        });
 }
 
 #ifndef	UNICODE_SUPPORTXX
@@ -438,26 +391,16 @@ RETCODE		SQL_API
 SQLPrepare(HSTMT StatementHandle,
 		   SQLCHAR *StatementText, SQLINTEGER TextLength)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLPrepare";
-	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
+        return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+          RETCODE ret;
+          StatementClass *stmt = (StatementClass *)StatementHandle;
 
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
-	else
-	{
-		StartRollbackState(stmt);
-		ret = WD_Prepare(StatementHandle, StatementText, TextLength);
-		ret = DiscardStatementSvp(stmt, ret, FALSE);
-	}
-	LEAVE_STMT_CS(stmt);
-	return ret;
+          MYLOG(0, "Entering\n");
+          ret = WD_Prepare(StatementHandle, StatementText, TextLength);
+          return ret;
+              });
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -466,19 +409,13 @@ RETCODE		SQL_API
 SQLPutData(HSTMT StatementHandle,
 		   PTR Data, SQLLEN StrLen_or_Ind)
 {
-	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
-
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	ret = WD_PutData(StatementHandle, Data, StrLen_or_Ind);
-	ret = DiscardStatementSvp(stmt, ret, TRUE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+    RETCODE ret;
+    MYLOG(0, "Entering\n");
+    ret = WD_PutData(StatementHandle, Data, StrLen_or_Ind);
+    return ret;
+        });
 }
 
 WD_EXPORT_SYMBOL
@@ -486,11 +423,14 @@ RETCODE		SQL_API
 SQLRowCount(HSTMT StatementHandle,
 			SQLLEN *RowCount)
 {
-	RETCODE	ret = SQL_SUCCESS;
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+    RETCODE ret = SQL_SUCCESS;
 
-	MYLOG(0, "Entering\n");
-	ret = WD_RowCount(StatementHandle, RowCount);
-	return ret;
+    MYLOG(0, "Entering\n");
+    ret = WD_RowCount(StatementHandle, RowCount);
+    return ret;
+        });
 }
 
 
@@ -500,17 +440,14 @@ RETCODE		SQL_API
 SQLSetCursorName(HSTMT StatementHandle,
 				 SQLCHAR *CursorName, SQLSMALLINT NameLength)
 {
-	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+    RETCODE ret;
 
-	MYLOG(0, "Entering\n");
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	ret = WD_SetCursorName(StatementHandle, CursorName, NameLength);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+    MYLOG(0, "Entering\n");
+    ret = WD_SetCursorName(StatementHandle, CursorName, NameLength);
+    return ret;
+        });
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -523,7 +460,6 @@ SQLSetParam(HSTMT StatementHandle,
 			SQLLEN *StrLen_or_Ind)
 {
 	MYLOG(0, "Entering\n");
-	SC_clear_error((StatementClass *) StatementHandle);
 
 	/*
 	 * return WD_SetParam(StatementHandle, ParameterNumber, ValueType,
@@ -544,31 +480,26 @@ SQLSpecialColumns(HSTMT StatementHandle,
 				  SQLSMALLINT NameLength3, SQLUSMALLINT Scope,
 				  SQLUSMALLINT Nullable)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLSpecialColumns";
 	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
-	SQLCHAR *ctName = CatalogName, *scName = SchemaName, *tbName = TableName;
-
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
+        ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+          throw DriverException("Unsupported function", "HYC00");
+                });
+}
+/*
+SQLCHAR *ctName = CatalogName, *scName = SchemaName, *tbName = TableName;
 	/*else
 		ret = WD_SpecialColumns(StatementHandle, IdentifierType, ctName,
 			NameLength1, scName, NameLength2, tbName, NameLength3,
-							Scope, Nullable);*/
+							Scope, Nullable);
 	if (SQL_SUCCESS == ret && theResultIsEmpty(stmt))
 	{
 		BOOL	ifallupper = TRUE, reexec = FALSE;
 		SQLCHAR *newCt =NULL, *newSc = NULL, *newTb = NULL;
 		ConnectionClass *conn = SC_get_conn(stmt);
 
-		if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier */
+		if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier
 			ifallupper = FALSE;
 		if (newCt = make_lstring_ifneeded(conn, CatalogName, NameLength1, ifallupper), NULL != newCt)
 		{
@@ -589,7 +520,7 @@ SQLSpecialColumns(HSTMT StatementHandle,
 		{
 	/*		ret = WD_SpecialColumns(StatementHandle, IdentifierType, ctName,
 			NameLength1, scName, NameLength2, tbName, NameLength3,
-							Scope, Nullable);*/
+							Scope, Nullable);
 			if (newCt)
 				free(newCt);
 			if (newSc)
@@ -600,7 +531,7 @@ SQLSpecialColumns(HSTMT StatementHandle,
 	}
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS(stmt);
-	return ret;
+	return ret;*/
 }
 
 WD_EXPORT_SYMBOL
@@ -611,9 +542,12 @@ SQLStatistics(HSTMT StatementHandle,
 			  SQLCHAR *TableName, SQLSMALLINT NameLength3,
 			  SQLUSMALLINT Unique, SQLUSMALLINT Reserved)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLStatistics";
+        return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+          throw driver::odbcabstraction::DriverException("Unsupported function", "HYC00");
 	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) StatementHandle;
+/*	StatementClass *stmt = (StatementClass *) StatementHandle;
 	SQLCHAR *ctName = CatalogName, *scName = SchemaName, *tbName = TableName;
 
 	MYLOG(0, "Entering\n");
@@ -635,7 +569,7 @@ SQLStatistics(HSTMT StatementHandle,
 		SQLCHAR *newCt =NULL, *newSc = NULL, *newTb = NULL;
 		ConnectionClass *conn = SC_get_conn(stmt);
 
-		if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier */
+		if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier
 			ifallupper = FALSE;
 		if (newCt = make_lstring_ifneeded(conn, CatalogName, NameLength1, ifallupper), NULL != newCt)
 		{
@@ -668,6 +602,7 @@ SQLStatistics(HSTMT StatementHandle,
 	ret = DiscardStatementSvp(stmt, ret, FALSE);
 	LEAVE_STMT_CS(stmt);
 	return ret;
+ */});
 }
 
 WD_EXPORT_SYMBOL
@@ -678,16 +613,18 @@ SQLTables(HSTMT StatementHandle,
 		  SQLCHAR *TableName, SQLSMALLINT NameLength3,
 		  SQLCHAR *TableType, SQLSMALLINT NameLength4)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLTables";
-	RETCODE	ret;
-	SQLCHAR *ctName = CatalogName, *scName = SchemaName, *tbName = TableName;
-	UWORD	flag = 0;
+        return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+          RETCODE ret;
+          SQLCHAR *ctName = CatalogName, *scName = SchemaName, *tbName = TableName;
+          UWORD flag = 0;
 
-	MYLOG(0, "Entering\n");
-	ret = WD_Tables(StatementHandle, ctName, NameLength1,
-			scName, NameLength2, tbName, NameLength3,
-				TableType, NameLength4);
-	return ret;
+          MYLOG(0, "Entering\n");
+          ret = WD_Tables(StatementHandle, ctName, NameLength1, scName, NameLength2,
+                          tbName, NameLength3, TableType, NameLength4);
+          return ret;
+              });
 }
 
 WD_EXPORT_SYMBOL
@@ -702,74 +639,76 @@ SQLColumnPrivileges(HSTMT hstmt,
 					SQLCHAR *szColumnName,
 					SQLSMALLINT cbColumnName)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLColumnPrivileges";
-	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) hstmt;
-	SQLCHAR	*ctName = szCatalogName, *scName = szSchemaName,
-		*tbName = szTableName, *clName = szColumnName;
-	UWORD	flag = 0;
+        return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+          throw driver::odbcabstraction::DriverException("Unsupported function.", "HYC00");
 
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
+          /*	RETCODE	ret;
+                  StatementClass *stmt = (StatementClass *) hstmt;
+                  SQLCHAR	*ctName = szCatalogName, *scName = szSchemaName,
+                          *tbName = szTableName, *clName = szColumnName;
+                  UWORD	flag = 0;
 
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	if (stmt->options.metadata_id)
-		flag |= PODBC_NOT_SEARCH_PATTERN;
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
-	else
-		ret = WD_ColumnPrivileges(hstmt, ctName, cbCatalogName,
-				scName, cbSchemaName, tbName, cbTableName,
-						clName, cbColumnName, flag);
-	if (SQL_SUCCESS == ret && theResultIsEmpty(stmt))
-	{
-		BOOL	ifallupper = TRUE, reexec = FALSE;
-		SQLCHAR *newCt = NULL, *newSc = NULL, *newTb = NULL, *newCl = NULL;
-		ConnectionClass *conn = SC_get_conn(stmt);
+                  MYLOG(0, "Entering\n");
+                  if (SC_connection_lost_check(stmt, __FUNCTION__))
+                          return SQL_ERROR;
 
-		if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier */
-			ifallupper = FALSE;
-		if (newCt = make_lstring_ifneeded(conn, szCatalogName, cbCatalogName, ifallupper), NULL != newCt)
-		{
-			ctName = newCt;
-			reexec = TRUE;
-		}
-		if (newSc = make_lstring_ifneeded(conn, szSchemaName, cbSchemaName, ifallupper), NULL != newSc)
-		{
-			scName = newSc;
-			reexec = TRUE;
-		}
-		if (newTb = make_lstring_ifneeded(conn, szTableName, cbTableName, ifallupper), NULL != newTb)
-		{
-			tbName = newTb;
-			reexec = TRUE;
-		}
-		if (newCl = make_lstring_ifneeded(conn, szColumnName, cbColumnName, ifallupper), NULL != newCl)
-		{
-			clName = newCl;
-			reexec = TRUE;
-		}
-		if (reexec)
-		{
-			ret = WD_ColumnPrivileges(hstmt, ctName, cbCatalogName,
-				scName, cbSchemaName, tbName, cbTableName,
-						clName, cbColumnName, flag);
-			if (newCt)
-				free(newCt);
-			if (newSc)
-				free(newSc);
-			if (newTb)
-				free(newTb);
-			if (newCl)
-				free(newCl);
-		}
-	}
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+                  ENTER_STMT_CS(stmt);
+                  SC_clear_error(stmt);
+                  StartRollbackState(stmt);
+                  if (stmt->options.metadata_id)
+                          flag |= PODBC_NOT_SEARCH_PATTERN;
+                  if (SC_opencheck(stmt, func))
+                          ret = SQL_ERROR;
+                  else
+                          ret = WD_ColumnPrivileges(hstmt, ctName, cbCatalogName,
+                                          scName, cbSchemaName, tbName, cbTableName,
+                                                          clName, cbColumnName, flag);
+                  if (SQL_SUCCESS == ret && theResultIsEmpty(stmt))
+                  {
+                          BOOL	ifallupper = TRUE, reexec = FALSE;
+                          SQLCHAR *newCt = NULL, *newSc = NULL, *newTb = NULL, *newCl
+             = NULL; ConnectionClass *conn = SC_get_conn(stmt);
+
+                          if (SC_is_lower_case(stmt, conn)) /* case-insensitive
+             identifier ifallupper = FALSE; if (newCt = make_lstring_ifneeded(conn,
+             szCatalogName, cbCatalogName, ifallupper), NULL != newCt)
+                          {
+                                  ctName = newCt;
+                                  reexec = TRUE;
+                          }
+                          if (newSc = make_lstring_ifneeded(conn, szSchemaName,
+             cbSchemaName, ifallupper), NULL != newSc)
+                          {
+                                  scName = newSc;
+                                  reexec = TRUE;
+                          }
+                          if (newTb = make_lstring_ifneeded(conn, szTableName,
+             cbTableName, ifallupper), NULL != newTb)
+                          {
+                                  tbName = newTb;
+                                  reexec = TRUE;
+                          }
+                          if (newCl = make_lstring_ifneeded(conn, szColumnName,
+             cbColumnName, ifallupper), NULL != newCl)
+                          {
+                                  clName = newCl;
+                                  reexec = TRUE;
+                          }
+                          if (reexec)
+                          {
+                                  ret = WD_ColumnPrivileges(hstmt, ctName,
+             cbCatalogName, scName, cbSchemaName, tbName, cbTableName, clName,
+             cbColumnName, flag); if (newCt) free(newCt); if (newSc) free(newSc); if
+             (newTb) free(newTb); if (newCl) free(newCl);
+                          }
+                  }
+                  ret = DiscardStatementSvp(stmt, ret, FALSE);
+                  LEAVE_STMT_CS(stmt);
+                  return ret;*/
+          return SQL_ERROR;
+              });
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -782,21 +721,13 @@ SQLDescribeParam(HSTMT hstmt,
 				 SQLSMALLINT *pibScale,
 				 SQLSMALLINT *pfNullable)
 {
-	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) hstmt;
-
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	ret = WD_DescribeParam(hstmt, ipar, pfSqlType, pcbParamDef,
-							   pibScale, pfNullable);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+    RETCODE ret;
+    ret = WD_DescribeParam(hstmt, ipar, pfSqlType, pcbParamDef, pibScale,
+                           pfNullable);
+    return ret;
+        });
 }
 
 WD_EXPORT_SYMBOL
@@ -807,63 +738,70 @@ SQLExtendedFetch(HSTMT hstmt,
 				 SQLULEN *pcrow,
 				 SQLUSMALLINT *rgfRowStatus)
 {
+  SQLRETURN rc = SQL_SUCCESS;
   MYLOG(0, "Entering\n");
-  if (fFetchType != SQL_FETCH_NEXT) {
-    throw DriverException("HY016 Fetch type unsupported");
-  }
-
-  struct ARDFieldTracker {
-    ARDFieldTracker(ODBCDescriptor* ard, SQLLEN newSize, SQLPOINTER newRowsFetched, SQLPOINTER newRowStatus) :
-	  m_ard(ard),
-	  m_newRowsFetched(newRowsFetched),
-	  m_oldRowsFetched(nullptr),
-	  m_newRowStatus(newRowStatus),
-	  m_oldRowStatus(nullptr),
-	  m_newSize(newSize),
-	  m_oldSize(ard->GetArraySize()) {
-      ard->GetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, &m_oldRowsFetched, 0, nullptr);
-      ard->GetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, &m_oldRowStatus, 0, nullptr);
-      if (m_newSize != m_oldSize) {
-        m_ard->SetHeaderField(SQL_DESC_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(m_newSize), 0);
-      }
-
-      if (m_newRowsFetched != m_oldRowsFetched) {
-        m_ard->SetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, m_newRowsFetched, 0);
-      }
-
-      if (m_newRowStatus != m_oldRowStatus) {
-        m_ard->SetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, m_newRowStatus, 0);
-      }
+  return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+    if (fFetchType != SQL_FETCH_NEXT) {
+      throw DriverException("Fetch type unsupported", "HY016");
     }
 
-    ~ARDFieldTracker() {
-      if (m_newSize != m_oldSize) {
-        m_ard->SetHeaderField(SQL_DESC_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(m_oldSize), 0);
+    struct ARDFieldTracker {
+      ARDFieldTracker(ODBCDescriptor *ard, SQLLEN newSize,
+                      SQLPOINTER newRowsFetched, SQLPOINTER newRowStatus)
+          : m_ard(ard), m_newRowsFetched(newRowsFetched),
+            m_oldRowsFetched(nullptr), m_newRowStatus(newRowStatus),
+            m_oldRowStatus(nullptr), m_newSize(newSize),
+            m_oldSize(ard->GetArraySize()) {
+        ard->GetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, &m_oldRowsFetched, 0,
+                            nullptr);
+        ard->GetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, &m_oldRowStatus, 0,
+                            nullptr);
+        if (m_newSize != m_oldSize) {
+          m_ard->SetHeaderField(SQL_DESC_ARRAY_SIZE,
+                                reinterpret_cast<SQLPOINTER>(m_newSize), 0);
+        }
+
+        if (m_newRowsFetched != m_oldRowsFetched) {
+          m_ard->SetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, m_newRowsFetched,
+                                0);
+        }
+
+        if (m_newRowStatus != m_oldRowStatus) {
+          m_ard->SetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, m_newRowStatus, 0);
+        }
       }
 
-      if (m_newRowsFetched != m_oldRowsFetched) {
-        m_ard->SetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, m_oldRowsFetched, 0);
-      }
-  
-      if (m_newRowStatus != m_oldRowStatus) {
-        m_ard->SetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, m_oldRowStatus, 0);
-      }
-    }
+      ~ARDFieldTracker() {
+        if (m_newSize != m_oldSize) {
+          m_ard->SetHeaderField(SQL_DESC_ARRAY_SIZE,
+                                reinterpret_cast<SQLPOINTER>(m_oldSize), 0);
+        }
 
-    ODBCDescriptor* m_ard;
-    SQLPOINTER m_newRowsFetched;
-    SQLPOINTER m_oldRowsFetched;
-    SQLPOINTER m_newRowStatus;
-    SQLPOINTER m_oldRowStatus;
-    SQLLEN m_newSize;
-    SQLLEN m_oldSize;
-  };
+        if (m_newRowsFetched != m_oldRowsFetched) {
+          m_ard->SetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, m_oldRowsFetched,
+                                0);
+        }
 
-  ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
-  ODBCDescriptor* ard = stmt->GetARD();
-  ARDFieldTracker tracker(ard, stmt->GetRowsetSize(), pcrow, rgfRowStatus);
-  RETCODE result = WD_Fetch(hstmt);
-  return result;
+        if (m_newRowStatus != m_oldRowStatus) {
+          m_ard->SetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, m_oldRowStatus, 0);
+        }
+      }
+
+      ODBCDescriptor *m_ard;
+      SQLPOINTER m_newRowsFetched;
+      SQLPOINTER m_oldRowsFetched;
+      SQLPOINTER m_newRowStatus;
+      SQLPOINTER m_oldRowStatus;
+      SQLLEN m_newSize;
+      SQLLEN m_oldSize;
+    };
+
+    ODBCStatement *stmt = ODBCStatement::of(hstmt);
+    ODBCDescriptor *ard = stmt->GetARD();
+    ARDFieldTracker tracker(ard,stmt->GetRowsetSize(), pcrow, rgfRowStatus);
+    RETCODE result = WD_Fetch(hstmt);
+    return result;
+  });
 }
 
 #ifndef	UNICODE_SUPPORTXX
@@ -883,89 +821,97 @@ SQLForeignKeys(HSTMT hstmt,
 			   SQLCHAR *szFkTableName,
 			   SQLSMALLINT cbFkTableName)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLForeignKeys";
-	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) hstmt;
-	SQLCHAR *pkctName = szPkCatalogName, *pkscName = szPkSchemaName,
-		*pktbName = szPkTableName, *fkctName = szFkCatalogName,
-		*fkscName = szFkSchemaName, *fktbName = szFkTableName;
+        return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+          throw DriverException("Unsupported function", "HYC00");
+          RETCODE ret;
+          StatementClass *stmt = (StatementClass *)hstmt;
+          SQLCHAR *pkctName = szPkCatalogName, *pkscName = szPkSchemaName,
+                  *pktbName = szPkTableName, *fkctName = szFkCatalogName,
+                  *fkscName = szFkSchemaName, *fktbName = szFkTableName;
 
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
+          MYLOG(0, "Entering\n");
+          if (SC_connection_lost_check(stmt, __FUNCTION__))
+            return SQL_ERROR;
 
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
-/*	else
-		ret = WD_ForeignKeys(hstmt, pkctName, cbPkCatalogName,
-			pkscName, cbPkSchemaName, pktbName, cbPkTableName,
-			fkctName, cbFkCatalogName, fkscName, cbFkSchemaName,
-			fktbName, cbFkTableName);*/
-	if (SQL_SUCCESS == ret && theResultIsEmpty(stmt))
-	{
-		BOOL	ifallupper = TRUE, reexec = FALSE;
-		SQLCHAR *newPkct = NULL, *newPksc = NULL, *newPktb = NULL,
-			*newFkct = NULL, *newFksc = NULL, *newFktb = NULL;
-		ConnectionClass *conn = SC_get_conn(stmt);
+          ENTER_STMT_CS(stmt);
+          SC_clear_error(stmt);
+          StartRollbackState(stmt);
+          if (SC_opencheck(stmt, func))
+            ret = SQL_ERROR;
+          /*	else
+                          ret = WD_ForeignKeys(hstmt, pkctName, cbPkCatalogName,
+                                  pkscName, cbPkSchemaName, pktbName, cbPkTableName,
+                                  fkctName, cbFkCatalogName, fkscName, cbFkSchemaName,
+                                  fktbName, cbFkTableName);*/
+          if (SQL_SUCCESS == ret && theResultIsEmpty(stmt)) {
+            BOOL ifallupper = TRUE, reexec = FALSE;
+            SQLCHAR *newPkct = NULL, *newPksc = NULL, *newPktb = NULL,
+                    *newFkct = NULL, *newFksc = NULL, *newFktb = NULL;
+            ConnectionClass *conn = SC_get_conn(stmt);
 
-		if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier */
-			ifallupper = FALSE;
-		if (newPkct = make_lstring_ifneeded(conn, szPkCatalogName, cbPkCatalogName, ifallupper), NULL != newPkct)
-		{
-			pkctName = newPkct;
-			reexec = TRUE;
-		}
-		if (newPksc = make_lstring_ifneeded(conn, szPkSchemaName, cbPkSchemaName, ifallupper), NULL != newPksc)
-		{
-			pkscName = newPksc;
-			reexec = TRUE;
-		}
-		if (newPktb = make_lstring_ifneeded(conn, szPkTableName, cbPkTableName, ifallupper), NULL != newPktb)
-		{
-			pktbName = newPktb;
-			reexec = TRUE;
-		}
-		if (newFkct = make_lstring_ifneeded(conn, szFkCatalogName, cbFkCatalogName, ifallupper), NULL != newFkct)
-		{
-			fkctName = newFkct;
-			reexec = TRUE;
-		}
-		if (newFksc = make_lstring_ifneeded(conn, szFkSchemaName, cbFkSchemaName, ifallupper), NULL != newFksc)
-		{
-			fkscName = newFksc;
-			reexec = TRUE;
-		}
-		if (newFktb = make_lstring_ifneeded(conn, szFkTableName, cbFkTableName, ifallupper), NULL != newFktb)
-		{
-			fktbName = newFktb;
-			reexec = TRUE;
-		}
-		if (reexec)
-		{
-		/*	ret = WD_ForeignKeys(hstmt, pkctName, cbPkCatalogName,
-			pkscName, cbPkSchemaName, pktbName, cbPkTableName,
-			fkctName, cbFkCatalogName, fkscName, cbFkSchemaName,
-			fktbName, cbFkTableName);*/
-			if (newPkct)
-				free(newPkct);
-			if (newPksc)
-				free(newPksc);
-			if (newPktb)
-				free(newPktb);
-			if (newFkct)
-				free(newFkct);
-			if (newFksc)
-				free(newFksc);
-			if (newFktb)
-				free(newFktb);
-		}
-	}
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+            if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier */
+              ifallupper = FALSE;
+            if (newPkct = make_lstring_ifneeded(conn, szPkCatalogName,
+                                                cbPkCatalogName, ifallupper),
+                NULL != newPkct) {
+              pkctName = newPkct;
+              reexec = TRUE;
+            }
+            if (newPksc = make_lstring_ifneeded(conn, szPkSchemaName, cbPkSchemaName,
+                                                ifallupper),
+                NULL != newPksc) {
+              pkscName = newPksc;
+              reexec = TRUE;
+            }
+            if (newPktb = make_lstring_ifneeded(conn, szPkTableName, cbPkTableName,
+                                                ifallupper),
+                NULL != newPktb) {
+              pktbName = newPktb;
+              reexec = TRUE;
+            }
+            if (newFkct = make_lstring_ifneeded(conn, szFkCatalogName,
+                                                cbFkCatalogName, ifallupper),
+                NULL != newFkct) {
+              fkctName = newFkct;
+              reexec = TRUE;
+            }
+            if (newFksc = make_lstring_ifneeded(conn, szFkSchemaName, cbFkSchemaName,
+                                                ifallupper),
+                NULL != newFksc) {
+              fkscName = newFksc;
+              reexec = TRUE;
+            }
+            if (newFktb = make_lstring_ifneeded(conn, szFkTableName, cbFkTableName,
+                                                ifallupper),
+                NULL != newFktb) {
+              fktbName = newFktb;
+              reexec = TRUE;
+            }
+            if (reexec) {
+              /*	ret = WD_ForeignKeys(hstmt, pkctName, cbPkCatalogName,
+                      pkscName, cbPkSchemaName, pktbName, cbPkTableName,
+                      fkctName, cbFkCatalogName, fkscName, cbFkSchemaName,
+                      fktbName, cbFkTableName);*/
+              if (newPkct)
+                free(newPkct);
+              if (newPksc)
+                free(newPksc);
+              if (newPktb)
+                free(newPktb);
+              if (newFkct)
+                free(newFkct);
+              if (newFksc)
+                free(newFksc);
+              if (newFktb)
+                free(newFktb);
+            }
+          }
+          ret = DiscardStatementSvp(stmt, ret, FALSE);
+          LEAVE_STMT_CS(stmt);
+          return SQL_ERROR;
+              });
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -974,19 +920,8 @@ RETCODE		SQL_API
 SQLMoreResults(HSTMT hstmt)
 {
 	RETCODE	ret = SQL_NO_DATA;
-	StatementClass *stmt = (StatementClass *) hstmt;
 
 	MYLOG(0, "Entering\n");
-/*	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	ret = WD_MoreResults(hstmt);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	*/
 	return ret;
 }
 
@@ -1000,17 +935,15 @@ SQLNativeSql(HDBC hdbc,
 			 SQLINTEGER cbSqlStrMax,
 			 SQLINTEGER *pcbSqlStr)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	RETCODE	ret;
-	ConnectionClass *conn = (ConnectionClass *) hdbc;
 
-	MYLOG(0, "Entering\n");
-	CC_examine_global_transaction(conn);
-	ENTER_CONN_CS(conn);
-	CC_clear_error(conn);
-	ret = WD_NativeSql(hdbc, szSqlStrIn, cbSqlStrIn, szSqlStr,
-						   cbSqlStrMax, pcbSqlStr);
-	LEAVE_CONN_CS(conn);
-	return ret;
+        return ODBCConnection::ExecuteWithDiagnostics(hdbc, rc, [&]() -> SQLRETURN {
+          MYLOG(0, "Entering\n");
+          ret = WD_NativeSql(hdbc, szSqlStrIn, cbSqlStrIn, szSqlStr, cbSqlStrMax,
+                             pcbSqlStr);
+          return ret;
+              });
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -1019,20 +952,13 @@ RETCODE		SQL_API
 SQLNumParams(HSTMT hstmt,
 			 SQLSMALLINT *pcpar)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) hstmt;
-
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
-
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	ret = WD_NumParams(hstmt, pcpar);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+        return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+          MYLOG(0, "Entering\n");
+          ret = WD_NumParams(hstmt, pcpar);
+          return ret;
+              });
 }
 
 #ifndef	UNICODE_SUPPORTXX
@@ -1046,63 +972,68 @@ SQLPrimaryKeys(HSTMT hstmt,
 			   SQLCHAR *szTableName,
 			   SQLSMALLINT cbTableName)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLPrimaryKeys";
-	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) hstmt;
-	SQLCHAR	*ctName = szCatalogName, *scName = szSchemaName,
-		*tbName = szTableName;
+        return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+          RETCODE ret;
+          throw DriverException("Unsupported function.", "HYC00");
+          StatementClass *stmt = (StatementClass *)hstmt;
+          SQLCHAR *ctName = szCatalogName, *scName = szSchemaName,
+                  *tbName = szTableName;
 
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
+          MYLOG(0, "Entering\n");
+          if (SC_connection_lost_check(stmt, __FUNCTION__))
+            return SQL_ERROR;
 
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
-	/*else
-		ret = WD_PrimaryKeys(hstmt, ctName, cbCatalogName,
-			scName, cbSchemaName, tbName, cbTableName, 0);*/
-			;
-	if (SQL_SUCCESS == ret && theResultIsEmpty(stmt))
-	{
-		BOOL	ifallupper = TRUE, reexec = FALSE;
-		SQLCHAR *newCt = NULL, *newSc = NULL, *newTb = NULL;
-		ConnectionClass *conn = SC_get_conn(stmt);
+          ENTER_STMT_CS(stmt);
+          SC_clear_error(stmt);
+          StartRollbackState(stmt);
+          if (SC_opencheck(stmt, func))
+            ret = SQL_ERROR;
+          /*else
+                  ret = WD_PrimaryKeys(hstmt, ctName, cbCatalogName,
+                          scName, cbSchemaName, tbName, cbTableName, 0);*/
+          ;
+          if (SQL_SUCCESS == ret && theResultIsEmpty(stmt)) {
+            BOOL ifallupper = TRUE, reexec = FALSE;
+            SQLCHAR *newCt = NULL, *newSc = NULL, *newTb = NULL;
+            ConnectionClass *conn = SC_get_conn(stmt);
 
-		if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier */
-			ifallupper = FALSE;
-		if (newCt = make_lstring_ifneeded(conn, szCatalogName, cbCatalogName, ifallupper), NULL != newCt)
-		{
-			ctName = newCt;
-			reexec = TRUE;
-		}
-		if (newSc = make_lstring_ifneeded(conn, szSchemaName, cbSchemaName, ifallupper), NULL != newSc)
-		{
-			scName = newSc;
-			reexec = TRUE;
-		}
-		if (newTb = make_lstring_ifneeded(conn, szTableName, cbTableName, ifallupper), NULL != newTb)
-		{
-			tbName = newTb;
-			reexec = TRUE;
-		}
-		if (reexec)
-		{
-		/*	ret = WD_PrimaryKeys(hstmt, ctName, cbCatalogName,
-			scName, cbSchemaName, tbName, cbTableName, 0);*/
-			if (newCt)
-				free(newCt);
-			if (newSc)
-				free(newSc);
-			if (newTb)
-				free(newTb);
-		}
-	}
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+            if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier */
+              ifallupper = FALSE;
+            if (newCt = make_lstring_ifneeded(conn, szCatalogName, cbCatalogName,
+                                              ifallupper),
+                NULL != newCt) {
+              ctName = newCt;
+              reexec = TRUE;
+            }
+            if (newSc = make_lstring_ifneeded(conn, szSchemaName, cbSchemaName,
+                                              ifallupper),
+                NULL != newSc) {
+              scName = newSc;
+              reexec = TRUE;
+            }
+            if (newTb =
+                    make_lstring_ifneeded(conn, szTableName, cbTableName, ifallupper),
+                NULL != newTb) {
+              tbName = newTb;
+              reexec = TRUE;
+            }
+            if (reexec) {
+              /*	ret = WD_PrimaryKeys(hstmt, ctName, cbCatalogName,
+                      scName, cbSchemaName, tbName, cbTableName, 0);*/
+              if (newCt)
+                free(newCt);
+              if (newSc)
+                free(newSc);
+              if (newTb)
+                free(newTb);
+            }
+          }
+          ret = DiscardStatementSvp(stmt, ret, FALSE);
+          LEAVE_STMT_CS(stmt);
+          return SQL_ERROR;
+              });
 }
 
 WD_EXPORT_SYMBOL
@@ -1117,74 +1048,80 @@ SQLProcedureColumns(HSTMT hstmt,
 					SQLCHAR *szColumnName,
 					SQLSMALLINT cbColumnName)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLProcedureColumns";
-	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) hstmt;
-	SQLCHAR	*ctName = szCatalogName, *scName = szSchemaName,
-		*prName = szProcName, *clName = szColumnName;
-	UWORD	flag = 0;
+        return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+          throw DriverException("Unsupported function.", "HYC00");
+          RETCODE ret;
+          StatementClass *stmt = (StatementClass *)hstmt;
+          SQLCHAR *ctName = szCatalogName, *scName = szSchemaName,
+                  *prName = szProcName, *clName = szColumnName;
+          UWORD flag = 0;
 
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
+          MYLOG(0, "Entering\n");
+          if (SC_connection_lost_check(stmt, __FUNCTION__))
+            return SQL_ERROR;
 
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	if (stmt->options.metadata_id)
-		flag |= PODBC_NOT_SEARCH_PATTERN;
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
-/*	else
-		ret = WD_ProcedureColumns(hstmt, ctName, cbCatalogName,
-				scName, cbSchemaName, prName, cbProcName,
-					clName, cbColumnName, flag);*/
-	if (SQL_SUCCESS == ret && theResultIsEmpty(stmt))
-	{
-		BOOL	ifallupper = TRUE, reexec = FALSE;
-		SQLCHAR *newCt = NULL, *newSc = NULL, *newPr = NULL, *newCl = NULL;
-		ConnectionClass *conn = SC_get_conn(stmt);
+          ENTER_STMT_CS(stmt);
+          SC_clear_error(stmt);
+          StartRollbackState(stmt);
+          if (stmt->options.metadata_id)
+            flag |= PODBC_NOT_SEARCH_PATTERN;
+          if (SC_opencheck(stmt, func))
+            ret = SQL_ERROR;
+          /*	else
+                          ret = WD_ProcedureColumns(hstmt, ctName, cbCatalogName,
+                                          scName, cbSchemaName, prName, cbProcName,
+                                                  clName, cbColumnName, flag);*/
+          if (SQL_SUCCESS == ret && theResultIsEmpty(stmt)) {
+            BOOL ifallupper = TRUE, reexec = FALSE;
+            SQLCHAR *newCt = NULL, *newSc = NULL, *newPr = NULL, *newCl = NULL;
+            ConnectionClass *conn = SC_get_conn(stmt);
 
-		if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier */
-			ifallupper = FALSE;
-		if (newCt = make_lstring_ifneeded(conn, szCatalogName, cbCatalogName, ifallupper), NULL != newCt)
-		{
-			ctName = newCt;
-			reexec = TRUE;
-		}
-		if (newSc = make_lstring_ifneeded(conn, szSchemaName, cbSchemaName, ifallupper), NULL != newSc)
-		{
-			scName = newSc;
-			reexec = TRUE;
-		}
-		if (newPr = make_lstring_ifneeded(conn, szProcName, cbProcName, ifallupper), NULL != newPr)
-		{
-			prName = newPr;
-			reexec = TRUE;
-		}
-		if (newCl = make_lstring_ifneeded(conn, szColumnName, cbColumnName, ifallupper), NULL != newCl)
-		{
-			clName = newCl;
-			reexec = TRUE;
-		}
-		if (reexec)
-		{
-		/*	ret = WD_ProcedureColumns(hstmt, ctName, cbCatalogName,
-				scName, cbSchemaName, prName, cbProcName,
-					clName, cbColumnName, flag);*/
-			if (newCt)
-				free(newCt);
-			if (newSc)
-				free(newSc);
-			if (newPr)
-				free(newPr);
-			if (newCl)
-				free(newCl);
-		}
-	}
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+            if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier */
+              ifallupper = FALSE;
+            if (newCt = make_lstring_ifneeded(conn, szCatalogName, cbCatalogName,
+                                              ifallupper),
+                NULL != newCt) {
+              ctName = newCt;
+              reexec = TRUE;
+            }
+            if (newSc = make_lstring_ifneeded(conn, szSchemaName, cbSchemaName,
+                                              ifallupper),
+                NULL != newSc) {
+              scName = newSc;
+              reexec = TRUE;
+            }
+            if (newPr =
+                    make_lstring_ifneeded(conn, szProcName, cbProcName, ifallupper),
+                NULL != newPr) {
+              prName = newPr;
+              reexec = TRUE;
+            }
+            if (newCl = make_lstring_ifneeded(conn, szColumnName, cbColumnName,
+                                              ifallupper),
+                NULL != newCl) {
+              clName = newCl;
+              reexec = TRUE;
+            }
+            if (reexec) {
+              /*	ret = WD_ProcedureColumns(hstmt, ctName, cbCatalogName,
+                              scName, cbSchemaName, prName, cbProcName,
+                                      clName, cbColumnName, flag);*/
+              if (newCt)
+                free(newCt);
+              if (newSc)
+                free(newSc);
+              if (newPr)
+                free(newPr);
+              if (newCl)
+                free(newCl);
+            }
+          }
+          ret = DiscardStatementSvp(stmt, ret, FALSE);
+          LEAVE_STMT_CS(stmt);
+          return SQL_ERROR;
+              });
 }
 
 WD_EXPORT_SYMBOL
@@ -1197,66 +1134,72 @@ SQLProcedures(HSTMT hstmt,
 			  SQLCHAR *szProcName,
 			  SQLSMALLINT cbProcName)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLProcedures";
-	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) hstmt;
-	SQLCHAR	*ctName = szCatalogName, *scName = szSchemaName,
-		*prName = szProcName;
-	UWORD	flag = 0;
+        return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+          throw DriverException("Unsupported function.", "HYC00");
+          RETCODE ret;
+          StatementClass *stmt = (StatementClass *)hstmt;
+          SQLCHAR *ctName = szCatalogName, *scName = szSchemaName,
+                  *prName = szProcName;
+          UWORD flag = 0;
 
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
+          MYLOG(0, "Entering\n");
+          if (SC_connection_lost_check(stmt, __FUNCTION__))
+            return SQL_ERROR;
 
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	if (stmt->options.metadata_id)
-		flag |= PODBC_NOT_SEARCH_PATTERN;
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
-/*	else
-		ret = WD_Procedures(hstmt, ctName, cbCatalogName,
-					 scName, cbSchemaName, prName,
-					 cbProcName, flag);*/
-	if (SQL_SUCCESS == ret && theResultIsEmpty(stmt))
-	{
-		BOOL	ifallupper = TRUE, reexec = FALSE;
-		SQLCHAR *newCt = NULL, *newSc = NULL, *newPr = NULL;
-		ConnectionClass *conn = SC_get_conn(stmt);
+          ENTER_STMT_CS(stmt);
+          SC_clear_error(stmt);
+          StartRollbackState(stmt);
+          if (stmt->options.metadata_id)
+            flag |= PODBC_NOT_SEARCH_PATTERN;
+          if (SC_opencheck(stmt, func))
+            ret = SQL_ERROR;
+          /*	else
+                          ret = WD_Procedures(hstmt, ctName, cbCatalogName,
+                                                   scName, cbSchemaName, prName,
+                                                   cbProcName, flag);*/
+          if (SQL_SUCCESS == ret && theResultIsEmpty(stmt)) {
+            BOOL ifallupper = TRUE, reexec = FALSE;
+            SQLCHAR *newCt = NULL, *newSc = NULL, *newPr = NULL;
+            ConnectionClass *conn = SC_get_conn(stmt);
 
-		if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier */
-			ifallupper = FALSE;
-		if (newCt = make_lstring_ifneeded(conn, szCatalogName, cbCatalogName, ifallupper), NULL != newCt)
-		{
-			ctName = newCt;
-			reexec = TRUE;
-		}
-		if (newSc = make_lstring_ifneeded(conn, szSchemaName, cbSchemaName, ifallupper), NULL != newSc)
-		{
-			scName = newSc;
-			reexec = TRUE;
-		}
-		if (newPr = make_lstring_ifneeded(conn, szProcName, cbProcName, ifallupper), NULL != newPr)
-		{
-			prName = newPr;
-			reexec = TRUE;
-		}
-		if (reexec)
-		{
-	/*		ret = WD_Procedures(hstmt, ctName, cbCatalogName,
-					 scName, cbSchemaName, prName, cbProcName, flag);*/
-			if (newCt)
-				free(newCt);
-			if (newSc)
-				free(newSc);
-			if (newPr)
-				free(newPr);
-		}
-	}
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+            if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier */
+              ifallupper = FALSE;
+            if (newCt = make_lstring_ifneeded(conn, szCatalogName, cbCatalogName,
+                                              ifallupper),
+                NULL != newCt) {
+              ctName = newCt;
+              reexec = TRUE;
+            }
+            if (newSc = make_lstring_ifneeded(conn, szSchemaName, cbSchemaName,
+                                              ifallupper),
+                NULL != newSc) {
+              scName = newSc;
+              reexec = TRUE;
+            }
+            if (newPr =
+                    make_lstring_ifneeded(conn, szProcName, cbProcName, ifallupper),
+                NULL != newPr) {
+              prName = newPr;
+              reexec = TRUE;
+            }
+            if (reexec) {
+              /*		ret = WD_Procedures(hstmt, ctName, cbCatalogName,
+                                               scName, cbSchemaName, prName,
+                 cbProcName, flag);*/
+              if (newCt)
+                free(newCt);
+              if (newSc)
+                free(newSc);
+              if (newPr)
+                free(newPr);
+            }
+          }
+          ret = DiscardStatementSvp(stmt, ret, FALSE);
+          LEAVE_STMT_CS(stmt);
+          return SQL_ERROR;
+              });
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -1267,20 +1210,24 @@ SQLSetPos(HSTMT hstmt,
 		  SQLUSMALLINT fOption,
 		  SQLUSMALLINT fLock)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) hstmt;
+        return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+          throw DriverException("Unsupported exception");
+          StatementClass *stmt = (StatementClass *)hstmt;
 
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
+          MYLOG(0, "Entering\n");
+          if (SC_connection_lost_check(stmt, __FUNCTION__))
+            return SQL_ERROR;
 
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	ret = WD_SetPos(hstmt, irow, fOption, fLock);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+          ENTER_STMT_CS(stmt);
+          SC_clear_error(stmt);
+          StartRollbackState(stmt);
+          ret = WD_SetPos(hstmt, irow, fOption, fLock);
+          ret = DiscardStatementSvp(stmt, ret, FALSE);
+          LEAVE_STMT_CS(stmt);
+          return SQL_ERROR;
+              });
 }
 
 #ifndef	UNICODE_SUPPORTXX
@@ -1294,65 +1241,70 @@ SQLTablePrivileges(HSTMT hstmt,
 				   SQLCHAR *szTableName,
 				   SQLSMALLINT cbTableName)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLTablePrivileges";
-	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) hstmt;
-	SQLCHAR	*ctName = szCatalogName, *scName = szSchemaName,
-		*tbName = szTableName;
-	UWORD	flag = 0;
+        return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+          throw DriverException("Unsupported function.", "HYC00");
+          RETCODE ret;
+          StatementClass *stmt = (StatementClass *)hstmt;
+          SQLCHAR *ctName = szCatalogName, *scName = szSchemaName,
+                  *tbName = szTableName;
+          UWORD flag = 0;
 
-	MYLOG(0, "Entering\n");
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
+          MYLOG(0, "Entering\n");
+          if (SC_connection_lost_check(stmt, __FUNCTION__))
+            return SQL_ERROR;
 
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	if (stmt->options.metadata_id)
-		flag |= PODBC_NOT_SEARCH_PATTERN;
-	if (SC_opencheck(stmt, func))
-		ret = SQL_ERROR;
-/*	else
-		ret = WD_TablePrivileges(hstmt, ctName, cbCatalogName,
-			scName, cbSchemaName, tbName, cbTableName, flag);*/
-	if (SQL_SUCCESS == ret && theResultIsEmpty(stmt))
-	{
-		BOOL	ifallupper = TRUE, reexec = FALSE;
-		SQLCHAR *newCt = NULL, *newSc = NULL, *newTb = NULL;
-		ConnectionClass *conn = SC_get_conn(stmt);
+          ENTER_STMT_CS(stmt);
+          SC_clear_error(stmt);
+          StartRollbackState(stmt);
+          if (stmt->options.metadata_id)
+            flag |= PODBC_NOT_SEARCH_PATTERN;
+          if (SC_opencheck(stmt, func))
+            ret = SQL_ERROR;
+          /*	else
+                          ret = WD_TablePrivileges(hstmt, ctName, cbCatalogName,
+                                  scName, cbSchemaName, tbName, cbTableName, flag);*/
+          if (SQL_SUCCESS == ret && theResultIsEmpty(stmt)) {
+            BOOL ifallupper = TRUE, reexec = FALSE;
+            SQLCHAR *newCt = NULL, *newSc = NULL, *newTb = NULL;
+            ConnectionClass *conn = SC_get_conn(stmt);
 
-		if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier */
-			ifallupper = FALSE;
-		if (newCt = make_lstring_ifneeded(conn, szCatalogName, cbCatalogName, ifallupper), NULL != newCt)
-		{
-			ctName = newCt;
-			reexec = TRUE;
-		}
-		if (newSc = make_lstring_ifneeded(conn, szSchemaName, cbSchemaName, ifallupper), NULL != newSc)
-		{
-			scName = newSc;
-			reexec = TRUE;
-		}
-		if (newTb = make_lstring_ifneeded(conn, szTableName, cbTableName, ifallupper), NULL != newTb)
-		{
-			tbName = newTb;
-			reexec = TRUE;
-		}
-		if (reexec)
-		{
-		/*	ret = WD_TablePrivileges(hstmt, ctName, cbCatalogName,
-			scName, cbSchemaName, tbName, cbTableName, 0);*/
-			if (newCt)
-				free(newCt);
-			if (newSc)
-				free(newSc);
-			if (newTb)
-				free(newTb);
-		}
-	}
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+            if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier */
+              ifallupper = FALSE;
+            if (newCt = make_lstring_ifneeded(conn, szCatalogName, cbCatalogName,
+                                              ifallupper),
+                NULL != newCt) {
+              ctName = newCt;
+              reexec = TRUE;
+            }
+            if (newSc = make_lstring_ifneeded(conn, szSchemaName, cbSchemaName,
+                                              ifallupper),
+                NULL != newSc) {
+              scName = newSc;
+              reexec = TRUE;
+            }
+            if (newTb =
+                    make_lstring_ifneeded(conn, szTableName, cbTableName, ifallupper),
+                NULL != newTb) {
+              tbName = newTb;
+              reexec = TRUE;
+            }
+            if (reexec) {
+              /*	ret = WD_TablePrivileges(hstmt, ctName, cbCatalogName,
+                      scName, cbSchemaName, tbName, cbTableName, 0);*/
+              if (newCt)
+                free(newCt);
+              if (newSc)
+                free(newSc);
+              if (newTb)
+                free(newTb);
+            }
+          }
+          ret = DiscardStatementSvp(stmt, ret, FALSE);
+          LEAVE_STMT_CS(stmt);
+          return SQL_ERROR;
+              });
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -1369,19 +1321,20 @@ SQLBindParameter(HSTMT hstmt,
 				 SQLLEN cbValueMax,
 				 SQLLEN *pcbValue)
 {
+  SQLRETURN rc = SQL_SUCCESS;
 	RETCODE	ret;
-	StatementClass *stmt = (StatementClass *) hstmt;
+        return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+          throw DriverException("Unsupported function.", "HYC00");
+          StatementClass *stmt = (StatementClass *)hstmt;
 
-	MYLOG(0, "Entering\n");
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	ret = WD_BindParameter(hstmt, ipar, fParamType, fCType,
-					   fSqlType, cbColDef, ibScale, rgbValue, cbValueMax,
-							   pcbValue);
-	ret = DiscardStatementSvp(stmt, ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
-}
-
+          MYLOG(0, "Entering\n");
+          ENTER_STMT_CS(stmt);
+          SC_clear_error(stmt);
+          StartRollbackState(stmt);
+          ret = WD_BindParameter(hstmt, ipar, fParamType, fCType, fSqlType, cbColDef,
+                                 ibScale, rgbValue, cbValueMax, pcbValue);
+          ret = DiscardStatementSvp(stmt, ret, FALSE);
+          LEAVE_STMT_CS(stmt);
+          return ret;
+              });
 }

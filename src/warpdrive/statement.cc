@@ -200,15 +200,8 @@ WD_AllocStmt(HDBC hdbc,
 		return SQL_INVALID_HANDLE;
 	}
 
-    std::shared_ptr<ODBCStatement> stmt;
-	try {
-		stmt = conn->createStatement();
-	} catch (std::bad_alloc&) {
-//		throw DriverException("No more memory to allocate a further SQL-statement");
-		*phstmt = SQL_NULL_HSTMT;
-		return SQL_ERROR;
-	}
-	MYLOG(0, "**** : hdbc = %p, stmt = %p\n", hdbc, stmt.get());
+    std::shared_ptr<ODBCStatement> stmt = conn->createStatement();
+ 	MYLOG(0, "**** : hdbc = %p, stmt = %p\n", hdbc, stmt.get());
 
     *phstmt = stmt.get();
 	return SQL_SUCCESS;
@@ -224,13 +217,6 @@ WD_FreeStmt(HSTMT hstmt,
 
 	MYLOG(0, "entering...hstmt=%p, fOption=%hi\n", hstmt, fOption);
 
-	if (!stmt)
-	{
-		SC_log_error(func, "", NULL);
-		return SQL_INVALID_HANDLE;
-	}
-//	SC_clear_error(stmt);
-
 	if (fOption == SQL_DROP) {
  		stmt->releaseStatement();
 	}
@@ -239,15 +225,24 @@ WD_FreeStmt(HSTMT hstmt,
 	}
 	else if (fOption == SQL_CLOSE)
 	{
-		stmt->closeCursor(true);
+          try {
+            stmt->closeCursor(true);
+          } catch (const std::exception& ex) {
+            // Supress errors as SQLFreeStmt(SQL_CLOSE) should not report errors. SQLCloseCursor can instead.
+            MYLOG(0, "Error during SQLFreeStmt(SQL_CLOSE): %s on hstmt=%p\n", ex.what(), hstmt);
+          } catch (...) {
+            // Supress errors as SQLFreeStmt(SQL_CLOSE) should not report errors. SQLCloseCursor can instead.
+            MYLOG(0, "Unknown error during SQLFreeStmt(SQL_CLOSE): hstmt=%p]n", hstmt);
+          }
+          // Discard any errors that might have already been tracked.
+          stmt->GetDiagnostics().Clear();
 	}
 	else if (fOption == SQL_RESET_PARAMS) {
 		// Do nothing, since parameters are unsupported.
 	}
 	else
 	{
-		// throw DriverException("Invalid parameter")
-		return SQL_ERROR;
+          throw driver::odbcabstraction::DriverException("Invalid parameter");
 	}
 
 	return SQL_SUCCESS;
