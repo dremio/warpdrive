@@ -31,6 +31,7 @@
 #include "wdapifunc.h"
 
 #include <odbcabstraction/exceptions.h>
+#include "ODBCConnection.h"
 #include "ODBCDescriptor.h"
 #include "ODBCEnvironment.h"
 #include "ODBCStatement.h"
@@ -47,36 +48,39 @@ RETCODE		SQL_API
 SQLAllocHandle(SQLSMALLINT HandleType,
 			   SQLHANDLE InputHandle, SQLHANDLE * OutputHandle)
 {
-	RETCODE		ret;
-	ConnectionClass	*conn;
-
 	MYLOG(0, "Entering\n");
 	switch (HandleType)
 	{
 		case SQL_HANDLE_ENV:
-			ret = WD_AllocEnv(OutputHandle);
-			break;
+                    // Note: nowhere to write errors to.
+                    try {
+                       return WD_AllocEnv(OutputHandle);
+                    } catch (const std::exception& e) {
+                      MYLOG(0, "Error occurred allocating environment handle: %s", e.what());
+                      return SQL_ERROR;
+                    } catch (...) {
+                      MYLOG(0, "Unknown error occurred allocating environment handle.");
+                      return SQL_ERROR;
+                    }
 		case SQL_HANDLE_DBC:
-			ENTER_ENV_CS((EnvironmentClass *) InputHandle);
-			ret = WD_AllocConnect(InputHandle, OutputHandle);
-			LEAVE_ENV_CS((EnvironmentClass *) InputHandle);
-			break;
+                {
+                  return ODBCEnvironment::ExecuteWithDiagnostics(InputHandle, [&] {
+                    return WD_AllocConnect(InputHandle, OutputHandle);
+                                  });
+}
 		case SQL_HANDLE_STMT:
-			ENTER_CONN_CS(conn);
-			ret = WD_AllocStmt(InputHandle, OutputHandle, PODBC_EXTERNAL_STATEMENT | PODBC_INHERIT_CONNECT_OPTIONS);
-			LEAVE_CONN_CS(conn);
-			break;
+                  return ODBCConnection::ExecuteWithDiagnostics(InputHandle, [&] {
+                    return WD_AllocStmt(InputHandle, OutputHandle,
+                                        PODBC_EXTERNAL_STATEMENT |
+                                            PODBC_INHERIT_CONNECT_OPTIONS);
+                                      });
 		case SQL_HANDLE_DESC:
-			ENTER_CONN_CS(conn);
-			ret = WD_AllocDesc(InputHandle, OutputHandle);
-			LEAVE_CONN_CS(conn);
-MYLOG(DETAIL_LOG_LEVEL, "OutputHandle=%p\n", *OutputHandle);
-			break;
+                  return ODBCConnection::ExecuteWithDiagnostics(InputHandle, [&] {
+                    return WD_AllocDesc(InputHandle, OutputHandle);
+                                      });
 		default:
-			ret = SQL_ERROR;
-			break;
+			return SQL_ERROR;
 	}
-	return ret;
 }
 
 /*	SQLBindParameter/SQLSetParam -> SQLBindParam */
@@ -88,18 +92,19 @@ SQLBindParam(HSTMT StatementHandle,
 			 SQLSMALLINT ParameterScale, PTR ParameterValue,
 			 SQLLEN *StrLen_or_Ind)
 {
-	RETCODE			ret;
-	StatementClass	*stmt = (StatementClass *) StatementHandle;
-	int			BufferLength = 512;		/* Is it OK ? */
+  return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, [&] {
+    throw DriverException("Unsupported function", "HYC00");
+    RETCODE ret;
+    StatementClass *stmt = (StatementClass *)StatementHandle;
+    int BufferLength = 512; /* Is it OK ? */
 
-	MYLOG(0, "Entering\n");
-	ENTER_STMT_CS(stmt);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	ret = WD_BindParameter(StatementHandle, ParameterNumber, SQL_PARAM_INPUT, ValueType, ParameterType, LengthPrecision, ParameterScale, ParameterValue, BufferLength, StrLen_or_Ind);
-	ret = DiscardStatementSvp(stmt,ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+    MYLOG(0, "Entering\n");
+    ret = WD_BindParameter(StatementHandle, ParameterNumber, SQL_PARAM_INPUT,
+                           ValueType, ParameterType, LengthPrecision,
+                           ParameterScale, ParameterValue, BufferLength,
+                           StrLen_or_Ind);
+    return ret;
+        });
 }
 
 /*	New function */
@@ -107,15 +112,14 @@ WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLCloseCursor(HSTMT StatementHandle)
 {
-	ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(StatementHandle);
-	RETCODE	ret;
+  return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, [&] {
+    ODBCStatement *stmt = ODBCStatement::of(StatementHandle);
+    RETCODE ret;
 
-	MYLOG(0, "Entering\n");
+    MYLOG(0, "Entering\n");
 
-	ENTER_STMT_CS(stmt);
-	ret = WD_FreeStmt(StatementHandle, SQL_CLOSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+    return stmt->closeCursor(false);
+        });
 }
 
 #ifndef	UNICODE_SUPPORTXX
@@ -135,14 +139,15 @@ SQLColAttribute(SQLHSTMT StatementHandle,
 #endif
 			)
 {
-	RETCODE	ret;
-	StatementClass	*stmt = (StatementClass *) StatementHandle;
+  return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, [&] {
+    RETCODE ret;
 
-	MYLOG(0, "Entering\n");
-	ret = WD_ColAttributes(StatementHandle, ColumnNumber,
-					   FieldIdentifier, CharacterAttribute, BufferLength,
-							   StringLength, static_cast<SQLLEN*>(NumericAttribute));
-	return ret;
+    MYLOG(0, "Entering\n");
+    ret = WD_ColAttributes(StatementHandle, ColumnNumber, FieldIdentifier,
+                           CharacterAttribute, BufferLength, StringLength,
+                           static_cast<SQLLEN *>(NumericAttribute));
+    return ret;
+        });
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -152,11 +157,18 @@ RETCODE		SQL_API
 SQLCopyDesc(SQLHDESC SourceDescHandle,
 			SQLHDESC TargetDescHandle)
 {
-	RETCODE	ret;
+  if (!SourceDescHandle || !TargetDescHandle) {
+    return SQL_INVALID_HANDLE;
+  }
 
-	MYLOG(0, "Entering\n");
-	ret = WD_CopyDesc(SourceDescHandle, TargetDescHandle);
-	return ret;
+  return ODBCDescriptor::ExecuteWithDiagnostics(TargetDescHandle, [&] {
+    throw DriverException("Unsupported function.", "HYC00");
+    RETCODE ret;
+
+    MYLOG(0, "Entering\n");
+    ret = WD_CopyDesc(SourceDescHandle, TargetDescHandle);
+    return ret;
+        });
 }
 
 /*	SQLTransact -> SQLEndTran */
@@ -171,19 +183,15 @@ SQLEndTran(SQLSMALLINT HandleType, SQLHANDLE Handle,
 	switch (HandleType)
 	{
 		case SQL_HANDLE_ENV:
-			ENTER_ENV_CS((EnvironmentClass *) Handle);
-			ret = WD_Transact(Handle, SQL_NULL_HDBC, CompletionType);
-			LEAVE_ENV_CS((EnvironmentClass *) Handle);
-			break;
+                  return ODBCEnvironment::ExecuteWithDiagnostics(Handle, [&] {
+                    return WD_Transact(Handle, SQL_NULL_HDBC, CompletionType);
+                                      });
 		case SQL_HANDLE_DBC:
-			CC_examine_global_transaction((ConnectionClass *) Handle);
-			ENTER_CONN_CS((ConnectionClass *) Handle);
-			CC_clear_error((ConnectionClass *) Handle);
-			ret = WD_Transact(SQL_NULL_HENV, Handle, CompletionType);
-			LEAVE_CONN_CS((ConnectionClass *) Handle);
-			break;
+                  return ODBCConnection::ExecuteWithDiagnostics(Handle, [&] {
+                    return WD_Transact(SQL_NULL_HENV, Handle, CompletionType);
+                                      });
 		default:
-			ret = SQL_ERROR;
+			return SQL_ERROR;
 			break;
 	}
 	return ret;
@@ -194,36 +202,40 @@ RETCODE		SQL_API
 SQLFetchScroll(HSTMT StatementHandle,
 			   SQLSMALLINT FetchOrientation, SQLLEN FetchOffset)
 {
-  if (FetchOrientation != SQL_FETCH_NEXT) {
-    throw DriverException("HY016 Fetch type unsupported");
-  }
-
-  struct ARDArraySizeTracker {
-    ARDArraySizeTracker(ODBCDescriptor* ard, SQLLEN newSize) :
-      m_ard(ard), m_newSize(newSize), m_oldSize(ard->GetArraySize()) {
-      if (m_newSize != m_oldSize) {
-        m_ard->SetHeaderField(SQL_DESC_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(m_newSize), 0);
-      }
+  return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, [&] {
+    if (FetchOrientation != SQL_FETCH_NEXT) {
+      throw DriverException("Fetch type unsupported", "HY106");
     }
 
-    ~ARDArraySizeTracker() {
-      if (m_newSize != m_oldSize) {
-        m_ard->SetHeaderField(SQL_DESC_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(m_oldSize), 0);
+    struct ARDArraySizeTracker {
+      ARDArraySizeTracker(ODBCDescriptor *ard, SQLLEN newSize)
+          : m_ard(ard), m_newSize(newSize), m_oldSize(ard->GetArraySize()) {
+        if (m_newSize != m_oldSize) {
+          m_ard->SetHeaderField(SQL_DESC_ARRAY_SIZE,
+                                reinterpret_cast<SQLPOINTER>(m_newSize), 0);
+        }
       }
-    }
 
-    ODBCDescriptor* m_ard;
-    SQLLEN m_newSize;
-    SQLLEN m_oldSize;
-  };
+      ~ARDArraySizeTracker() {
+        if (m_newSize != m_oldSize) {
+          m_ard->SetHeaderField(SQL_DESC_ARRAY_SIZE,
+                                reinterpret_cast<SQLPOINTER>(m_oldSize), 0);
+        }
+      }
 
-  ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(StatementHandle);
-  ODBCDescriptor* ard = stmt->GetARD();
+      ODBCDescriptor *m_ard;
+      SQLLEN m_newSize;
+      SQLLEN m_oldSize;
+    };
 
-  ARDArraySizeTracker tracker(ard, FetchOffset);
+    ODBCStatement *stmt = ODBCStatement::of(StatementHandle);
+    ODBCDescriptor *ard = stmt->GetARD();
 
-  RETCODE result = WD_Fetch(StatementHandle);
-  return result;
+    ARDArraySizeTracker tracker(ard, FetchOffset);
+
+    RETCODE result = WD_Fetch(StatementHandle);
+    return result;
+  });
 }
 
 /*	SQLFree(Connect/Env/Stmt) -> SQLFreeHandle */
@@ -232,9 +244,6 @@ RETCODE		SQL_API
 SQLFreeHandle(SQLSMALLINT HandleType, SQLHANDLE Handle)
 {
 	RETCODE		ret;
-	StatementClass *stmt;
-	ConnectionClass *conn = NULL;
-
 	MYLOG(0, "Entering\n");
 
 	switch (HandleType)
@@ -267,12 +276,14 @@ SQLGetDescField(SQLHDESC DescriptorHandle,
 				PTR Value, SQLINTEGER BufferLength,
 				SQLINTEGER *StringLength)
 {
-	RETCODE	ret;
+  return ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, [&] {
+    RETCODE ret;
 
-	MYLOG(0, "Entering\n");
-	ret = WD_GetDescField(DescriptorHandle, RecNumber, FieldIdentifier,
-			Value, BufferLength, StringLength);
-	return ret;
+    MYLOG(0, "Entering\n");
+    ret = WD_GetDescField(DescriptorHandle, RecNumber, FieldIdentifier, Value,
+                          BufferLength, StringLength);
+    return ret;
+        });
 }
 
 /*	new function */
@@ -285,12 +296,15 @@ SQLGetDescRec(SQLHDESC DescriptorHandle,
 			  SQLLEN *Length, SQLSMALLINT *Precision,
 			  SQLSMALLINT *Scale, SQLSMALLINT *Nullable)
 {
-	RETCODE	ret;
+  return ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, [&] {
+    RETCODE ret;
 
-	MYLOG(0, "Entering\n");
-	ret = WD_GetDescRec(DescriptorHandle, RecNumber, Name, BufferLength,
-		StringLength, Type, SubType, Length, Precision, Scale, Nullable);
-	return ret;
+    MYLOG(0, "Entering\n");
+    ret = WD_GetDescRec(DescriptorHandle, RecNumber, Name, BufferLength,
+                        StringLength, Type, SubType, Length, Precision, Scale,
+                        Nullable);
+    return ret;
+        });
 }
 
 /*	new function */
@@ -301,12 +315,23 @@ SQLGetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 				PTR DiagInfo, SQLSMALLINT BufferLength,
 				SQLSMALLINT *StringLength)
 {
+  // Note: Do not use the diag manager here.
 	RETCODE	ret;
+        try {
 
-	MYLOG(0, "Entering Handle=(%u,%p) Rec=%d Id=%d info=(%p,%d)\n", HandleType, Handle, RecNumber, DiagIdentifier, DiagInfo, BufferLength);
-	ret = WD_GetDiagField(HandleType, Handle, RecNumber, DiagIdentifier,
-				DiagInfo, BufferLength, StringLength);
-	return ret;
+          MYLOG(0, "Entering Handle=(%u,%p) Rec=%d Id=%d info=(%p,%d)\n",
+                HandleType, Handle, RecNumber, DiagIdentifier, DiagInfo,
+                BufferLength);
+          ret = WD_GetDiagField(HandleType, Handle, RecNumber, DiagIdentifier,
+                                DiagInfo, BufferLength, StringLength);
+          return ret;
+        } catch (std::exception& ex) {
+          MYLOG(0, "Error getting diagnostics: %s", ex.what());
+          return SQL_ERROR;
+        } catch (...) {
+          MYLOG(0, "Unknown error getting diagnostics.");
+          return SQL_ERROR;
+        }
 }
 
 /*	SQLError -> SQLDiagRec */
@@ -317,12 +342,22 @@ SQLGetDiagRec(SQLSMALLINT HandleType, SQLHANDLE Handle,
 			  SQLINTEGER *NativeError, SQLCHAR *MessageText,
 			  SQLSMALLINT BufferLength, SQLSMALLINT *TextLength)
 {
+  // Note: Do not use the diag manager here.
 	RETCODE	ret;
+        try {
 
-	MYLOG(0, "Entering\n");
-	ret = WD_GetDiagRec(HandleType, Handle, RecNumber, Sqlstate,
-			NativeError, MessageText, BufferLength, TextLength);
-	return ret;
+          MYLOG(0, "Entering\n");
+          ret =
+              WD_GetDiagRec(HandleType, Handle, RecNumber, Sqlstate,
+                            NativeError, MessageText, BufferLength, TextLength);
+          return ret;
+        } catch (std::exception& ex) {
+          MYLOG(0, "Error getting diagnostics: %s", ex.what());
+          return SQL_ERROR;
+        } catch (...) {
+          MYLOG(0, "Unknown error getting diagnostics.");
+          return SQL_ERROR;
+        }
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -333,32 +368,31 @@ SQLGetEnvAttr(HENV EnvironmentHandle,
 			  SQLINTEGER Attribute, PTR Value,
 			  SQLINTEGER BufferLength, SQLINTEGER *StringLength)
 {
-	RETCODE	ret;
-	ODBC::ODBCEnvironment *env = reinterpret_cast<ODBC::ODBCEnvironment*>(EnvironmentHandle);
+  return ODBCEnvironment::ExecuteWithDiagnostics(EnvironmentHandle, [&] {
+    RETCODE ret;
+    ODBC::ODBCEnvironment *env =
+        reinterpret_cast<ODBC::ODBCEnvironment *>(EnvironmentHandle);
 
-	MYLOG(0, "Entering " FORMAT_INTEGER "\n", Attribute);
-	ENTER_ENV_CS(env);
-	ret = SQL_SUCCESS;
-	switch (Attribute)
-	{
-		case SQL_ATTR_CONNECTION_POOLING:
-			*((SQLINTEGER *) Value) = env->getConnectionPooling();
-			break;
-		case SQL_ATTR_CP_MATCH:
-			*((SQLINTEGER *) Value) = SQL_CP_RELAXED_MATCH;
-			break;
-		case SQL_ATTR_ODBC_VERSION:
-			*((SQLINTEGER *) Value) = env->getODBCVersion();
-			break;
-		case SQL_ATTR_OUTPUT_NTS:
-			*((SQLINTEGER *) Value) = SQL_TRUE;
-			break;
-		default:
-	//		env->errornumber = CONN_INVALID_ARGUMENT_NO;
-			ret = SQL_ERROR;
-	}
-	LEAVE_ENV_CS(env);
-	return ret;
+    MYLOG(0, "Entering " FORMAT_INTEGER "\n", Attribute);
+    ret = SQL_SUCCESS;
+    switch (Attribute) {
+    case SQL_ATTR_CONNECTION_POOLING:
+      *((SQLINTEGER *)Value) = env->getConnectionPooling();
+      break;
+    case SQL_ATTR_CP_MATCH:
+      *((SQLINTEGER *)Value) = SQL_CP_RELAXED_MATCH;
+      break;
+    case SQL_ATTR_ODBC_VERSION:
+      *((SQLINTEGER *)Value) = env->getODBCVersion();
+      break;
+    case SQL_ATTR_OUTPUT_NTS:
+      *((SQLINTEGER *)Value) = SQL_TRUE;
+      break;
+    default:
+      throw DriverException("Invalid environment attribute", "HY024");
+    }
+    return ret;
+        });
 }
 
 #ifndef	UNICODE_SUPPORTXX
@@ -369,12 +403,14 @@ SQLGetConnectAttr(HDBC ConnectionHandle,
 				  SQLINTEGER Attribute, PTR Value,
 				  SQLINTEGER BufferLength, SQLINTEGER *StringLength)
 {
-	RETCODE	ret = SQL_SUCCESS;
+  return ODBCConnection::ExecuteWithDiagnostics(ConnectionHandle, [&] {
+    RETCODE ret = SQL_SUCCESS;
 
-	MYLOG(0, "Entering " FORMAT_UINTEGER "\n", Attribute);
-	ret = WD_GetConnectAttr(ConnectionHandle, Attribute, Value,
-			BufferLength, StringLength, false);
-	return ret;
+    MYLOG(0, "Entering " FORMAT_UINTEGER "\n", Attribute);
+    ret = WD_GetConnectAttr(ConnectionHandle, Attribute, Value, BufferLength,
+                            StringLength, false);
+    return ret;
+        });
 }
 
 /*	SQLGetStmtOption -> SQLGetStmtAttr */
@@ -384,12 +420,15 @@ SQLGetStmtAttr(HSTMT StatementHandle,
 			   SQLINTEGER Attribute, PTR Value,
 			   SQLINTEGER BufferLength, SQLINTEGER *StringLength)
 {
-	RETCODE	ret;
+  return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, [&] {
+    RETCODE ret;
 
-	MYLOG(0, "Entering Handle=%p " FORMAT_INTEGER "\n", StatementHandle, Attribute);
-	ret = WD_GetStmtAttr(StatementHandle, Attribute, Value, BufferLength,
-                             StringLength, false);
-	return ret;
+    MYLOG(0, "Entering Handle=%p " FORMAT_INTEGER "\n", StatementHandle,
+          Attribute);
+    ret = WD_GetStmtAttr(StatementHandle, Attribute, Value, BufferLength,
+                         StringLength, false);
+    return ret;
+        });
 }
 
 /*	SQLSetConnectOption -> SQLSetConnectAttr */
@@ -399,12 +438,14 @@ SQLSetConnectAttr(HDBC ConnectionHandle,
 				  SQLINTEGER Attribute, PTR Value,
 				  SQLINTEGER StringLength)
 {
-	RETCODE	ret = SQL_SUCCESS;
+  return ODBCConnection::ExecuteWithDiagnostics(ConnectionHandle, [&] {
+    RETCODE ret = SQL_SUCCESS;
 
-	MYLOG(0, "Entering " FORMAT_INTEGER "\n", Attribute);
-	ret = WD_SetConnectAttr(ConnectionHandle, Attribute, Value,
-				  StringLength, false);
-	return ret;
+    MYLOG(0, "Entering " FORMAT_INTEGER "\n", Attribute);
+    ret = WD_SetConnectAttr(ConnectionHandle, Attribute, Value, StringLength,
+                            false);
+    return ret;
+        });
 }
 
 /*	new function */
@@ -414,12 +455,15 @@ SQLSetDescField(SQLHDESC DescriptorHandle,
 				SQLSMALLINT RecNumber, SQLSMALLINT FieldIdentifier,
 				PTR Value, SQLINTEGER BufferLength)
 {
-	RETCODE		ret;
+  return ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, [&] {
+    RETCODE ret;
 
-	MYLOG(0, "Entering h=%p rec=%d field=%d val=%p\n", DescriptorHandle, RecNumber, FieldIdentifier, Value);
-	ret = WD_SetDescField(DescriptorHandle, RecNumber, FieldIdentifier,
-				Value, BufferLength);
-	return ret;
+    MYLOG(0, "Entering h=%p rec=%d field=%d val=%p\n", DescriptorHandle,
+          RecNumber, FieldIdentifier, Value);
+    ret = WD_SetDescField(DescriptorHandle, RecNumber, FieldIdentifier, Value,
+                          BufferLength);
+    return ret;
+        });
 }
 
 /*	new fucntion */
@@ -432,10 +476,13 @@ SQLSetDescRec(SQLHDESC DescriptorHandle,
 			  PTR Data, SQLLEN *StringLength,
 			  SQLLEN *Indicator)
 {
-	RETCODE ret;
-	MYLOG(0, "Entering\n");
-	ret = WD_SetDescRec(DescriptorHandle, RecNumber, Type, SubType, Length, Precision, Scale, Data, StringLength, Indicator);
-	return ret;
+  return ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, [&] {
+    RETCODE ret;
+    MYLOG(0, "Entering\n");
+    ret = WD_SetDescRec(DescriptorHandle, RecNumber, Type, SubType, Length,
+                        Precision, Scale, Data, StringLength, Indicator);
+    return ret;
+        });
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -446,50 +493,49 @@ SQLSetEnvAttr(HENV EnvironmentHandle,
 			  SQLINTEGER Attribute, PTR Value,
 			  SQLINTEGER StringLength)
 {
-	RETCODE	ret;
-	ODBC::ODBCEnvironment* env = reinterpret_cast<ODBC::ODBCEnvironment*>(EnvironmentHandle);
+  return ODBCEnvironment::ExecuteWithDiagnostics(EnvironmentHandle, [&] {
+    RETCODE ret;
+    ODBC::ODBCEnvironment *env =
+        reinterpret_cast<ODBC::ODBCEnvironment *>(EnvironmentHandle);
 
-	MYLOG(0, "Entering att=" FORMAT_INTEGER "," FORMAT_ULEN "\n", Attribute, (SQLULEN) Value);
-	ENTER_ENV_CS(env);
-	switch (Attribute)
-	{
-		case SQL_ATTR_CONNECTION_POOLING:
-			switch ((ULONG_PTR) Value)
-			{
-				case SQL_CP_OFF:
-				case SQL_CP_ONE_PER_DRIVER:
-					env->setConnectionPooling(CAST_UPTR(SQLUINTEGER, Value));
-					ret = SQL_SUCCESS;
-					break;
-				default:
-					ret = SQL_SUCCESS_WITH_INFO;
-			}
-			break;
-		case SQL_ATTR_CP_MATCH:
-			/* *((unsigned int *) Value) = SQL_CP_RELAXED_MATCH; */
-			ret = SQL_SUCCESS;
-			break;
-		case SQL_ATTR_ODBC_VERSION:
-			env->setODBCVersion(CAST_UPTR(SQLUINTEGER, Value));
-			ret = SQL_SUCCESS;
-			break;
-		case SQL_ATTR_OUTPUT_NTS:
-			if (SQL_TRUE == CAST_UPTR(SQLUINTEGER, Value))
-				ret = SQL_SUCCESS;
-			else
-				ret = SQL_SUCCESS_WITH_INFO;
-			break;
-		default:
-//			env->errornumber = CONN_INVALID_ARGUMENT_NO;
-			ret = SQL_ERROR;
-	}
-	if (SQL_SUCCESS_WITH_INFO == ret)
-	{
-//		env->errornumber = CONN_OPTION_VALUE_CHANGED;
-//		env->errormsg = "SetEnv changed to ";
-	}
-	LEAVE_ENV_CS(env);
-	return ret;
+    MYLOG(0, "Entering att=" FORMAT_INTEGER "," FORMAT_ULEN "\n", Attribute,
+          (SQLULEN)Value);
+    switch (Attribute) {
+    case SQL_ATTR_CONNECTION_POOLING:
+      switch ((ULONG_PTR)Value) {
+      case SQL_CP_OFF:
+      case SQL_CP_ONE_PER_DRIVER:
+        env->setConnectionPooling(CAST_UPTR(SQLUINTEGER, Value));
+        ret = SQL_SUCCESS;
+        break;
+      default:
+        ret = SQL_SUCCESS_WITH_INFO;
+      }
+      break;
+    case SQL_ATTR_CP_MATCH:
+      /* *((unsigned int *) Value) = SQL_CP_RELAXED_MATCH; */
+      ret = SQL_SUCCESS;
+      break;
+    case SQL_ATTR_ODBC_VERSION:
+      env->setODBCVersion(CAST_UPTR(SQLUINTEGER, Value));
+      ret = SQL_SUCCESS;
+      break;
+    case SQL_ATTR_OUTPUT_NTS:
+      if (SQL_TRUE == CAST_UPTR(SQLUINTEGER, Value))
+        ret = SQL_SUCCESS;
+      else
+        ret = SQL_SUCCESS_WITH_INFO;
+      break;
+    default:
+      throw DriverException("Invalid environment attribute", "HY024");
+    }
+    if (SQL_SUCCESS_WITH_INFO == ret) {
+      ODBCEnvironment::of(EnvironmentHandle)->GetDiagnostics().AddWarning(
+          "Option value changed",
+          "01S02", ODBCErrorCodes_GENERAL_WARNING);
+    }
+    return ret;
+        });
 }
 
 #ifndef	UNICODE_SUPPORTXX
@@ -500,12 +546,15 @@ SQLSetStmtAttr(HSTMT StatementHandle,
 			   SQLINTEGER Attribute, PTR Value,
 			   SQLINTEGER StringLength)
 {
-	RETCODE	ret = SQL_SUCCESS;
+  ODBCStatement::ExecuteWithDiagnostics(StatementHandle, [&] {
+    RETCODE ret = SQL_SUCCESS;
 
-	MYLOG(0, "Entering Handle=%p " FORMAT_INTEGER "," FORMAT_ULEN "\n", StatementHandle, Attribute, (SQLULEN) Value);
-	ret = WD_SetStmtAttr(StatementHandle, Attribute, Value, StringLength,
-                             false);
-	return ret;
+    MYLOG(0, "Entering Handle=%p " FORMAT_INTEGER "," FORMAT_ULEN "\n",
+          StatementHandle, Attribute, (SQLULEN)Value);
+    ret =
+        WD_SetStmtAttr(StatementHandle, Attribute, Value, StringLength, false);
+    return ret;
+        });
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -623,20 +672,23 @@ WD_GetFunctions30(HDBC hdbc, SQLUSMALLINT fFunction, SQLUSMALLINT FAR * pfExists
 RETCODE	SQL_API
 SQLBulkOperations(HSTMT hstmt, SQLSMALLINT operation)
 {
-	RETCODE	ret;
-	StatementClass	*stmt = (StatementClass *) hstmt;
+  return ODBCStatement::ExecuteWithDiagnostics(hstmt, [&] {
+    RETCODE ret;
+    throw DriverException("Unsupported function", "HYC00");
+    StatementClass *stmt = (StatementClass *)hstmt;
 
-	if (SC_connection_lost_check(stmt, __FUNCTION__))
-		return SQL_ERROR;
+    if (SC_connection_lost_check(stmt, __FUNCTION__))
+      return SQL_ERROR;
 
-	ENTER_STMT_CS(stmt);
-	MYLOG(0, "Entering Handle=%p %d\n", hstmt, operation);
-	SC_clear_error(stmt);
-	StartRollbackState(stmt);
-	ret = WD_BulkOperations(hstmt, operation);
-	ret = DiscardStatementSvp(stmt,ret, FALSE);
-	LEAVE_STMT_CS(stmt);
-	return ret;
+    ENTER_STMT_CS(stmt);
+    MYLOG(0, "Entering Handle=%p %d\n", hstmt, operation);
+    SC_clear_error(stmt);
+    StartRollbackState(stmt);
+    ret = WD_BulkOperations(hstmt, operation);
+    ret = DiscardStatementSvp(stmt, ret, FALSE);
+    LEAVE_STMT_CS(stmt);
+    return SQL_ERROR;
+        });
 }
 
 }

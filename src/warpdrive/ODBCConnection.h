@@ -11,6 +11,7 @@
 #include <vector>
 #include <map>
 #include <odbcabstraction/connection.h>
+#include "ODBCHandle.h"
 
 namespace ODBC
 {
@@ -24,7 +25,7 @@ namespace ODBC
  */
 namespace ODBC
 {
-class ODBCConnection {
+class ODBCConnection : public ODBCHandle<ODBCConnection> {
   public:
     ODBCConnection(const ODBCConnection&) = delete;
     ODBCConnection& operator=(const ODBCConnection&) = delete;
@@ -32,6 +33,8 @@ class ODBCConnection {
     ODBCConnection(ODBCEnvironment& environment, 
       std::shared_ptr<driver::odbcabstraction::Connection> spiConnection);
     
+    driver::odbcabstraction::Diagnostics& GetDiagnostics_Impl();
+
     bool isConnected() const;
     void connect(std::string dsn, const driver::odbcabstraction::Connection::ConnPropertyMap &properties,
                        std::vector<std::string> &missing_properties);
