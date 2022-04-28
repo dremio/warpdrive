@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include "ODBCHandle.h"
 
 namespace driver {
 namespace odbcabstraction {
@@ -64,18 +65,23 @@ namespace ODBC
     void CheckConsistency();
   };
 
-  class ODBCDescriptor {
+  class ODBCDescriptor : public ODBCHandle<ODBCDescriptor>{
     public:
       /**
        * @brief Construct a new ODBCDescriptor object. Link the descriptor to a connection,
        * if applicable. A nullptr should be supplied for conn if the descriptor should not be linked.
        */
-      ODBCDescriptor(ODBCConnection* conn, bool isAppDescriptor, bool isWritable, bool is2xConnection);
+      ODBCDescriptor(driver::odbcabstraction::Diagnostics& baseDiagnostics,
+                     ODBCConnection* conn, ODBCStatement* stmt, bool isAppDescriptor, bool isWritable, bool is2xConnection);
+
+      driver::odbcabstraction::Diagnostics& GetDiagnostics_Impl();
+
+      ODBCConnection &GetConnection();
 
       void SetHeaderField(SQLSMALLINT fieldIdentifier, SQLPOINTER value, SQLINTEGER bufferLength);
       void SetField(SQLSMALLINT recordNumber, SQLSMALLINT fieldIdentifier, SQLPOINTER value, SQLINTEGER bufferLength);
       void GetHeaderField(SQLSMALLINT fieldIdentifier, SQLPOINTER value, SQLINTEGER bufferLength, SQLINTEGER* outputLength) const;
-      void GetField(SQLSMALLINT recordNumber, SQLSMALLINT fieldIdentifier, SQLPOINTER value, SQLINTEGER bufferLength, SQLINTEGER* outputLength) const;
+      void GetField(SQLSMALLINT recordNumber, SQLSMALLINT fieldIdentifier, SQLPOINTER value, SQLINTEGER bufferLength, SQLINTEGER* outputLength);
       SQLSMALLINT getAllocType() const;
       bool IsAppDescriptor() const;
       bool HaveBindingsChanged() const;
@@ -110,10 +116,12 @@ namespace ODBC
       }
 
     private:
+      driver::odbcabstraction::Diagnostics m_diagnostics;
       std::vector<ODBCStatement*> m_registeredOnStatementsAsApd;
       std::vector<ODBCStatement*> m_registeredOnStatementsAsArd;
       std::vector<DescriptorRecord> m_records;
       ODBCConnection* m_owningConnection;
+      ODBCStatement* m_parentStatement;
       SQLUSMALLINT* m_arrayStatusPtr;
       SQLLEN* m_bindOffsetPtr;
       SQLULEN* m_rowsProccessedPtr;

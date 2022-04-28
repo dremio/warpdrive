@@ -466,3 +466,4 @@ src/warpdrive/WarpdriveOptions.cmake
 
 # CLion
 .idea
+cscope.files
