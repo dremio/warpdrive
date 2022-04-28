@@ -23,6 +23,15 @@
 #include "statement.h"
 #include "misc.h"
 
+#include "ODBCConnection.h"
+#include "ODBCDescriptor.h"
+#include "ODBCEnvironment.h"
+#include "ODBCStatement.h"
+#include "c_ptr.h"
+
+using namespace ODBC;
+using namespace driver::odbcabstraction;
+
 extern "C" {
 WD_EXPORT_SYMBOL
 RETCODE	SQL_API
@@ -32,11 +41,14 @@ SQLGetStmtAttrW(SQLHSTMT hstmt,
 				SQLINTEGER	cbValueMax,
 				SQLINTEGER	*pcbValue)
 {
-	RETCODE	ret = SQL_SUCCESS;
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+    RETCODE ret = SQL_SUCCESS;
 
-	ret = WD_GetStmtAttr(hstmt, fAttribute, rgbValue,
-		cbValueMax, pcbValue, true);
-	return ret;
+    ret =
+        WD_GetStmtAttr(hstmt, fAttribute, rgbValue, cbValueMax, pcbValue, true);
+    return ret;
+        });
 }
 
 WD_EXPORT_SYMBOL
@@ -46,11 +58,12 @@ SQLSetStmtAttrW(SQLHSTMT hstmt,
 				PTR		rgbValue,
 				SQLINTEGER	cbValueMax)
 {
-	RETCODE	ret = SQL_SUCCESS;
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
 
-	MYLOG(0, "Entering\n");
-	ret = WD_SetStmtAttr(hstmt, fAttribute, rgbValue,cbValueMax, true);
-	return ret;
+    MYLOG(0, "Entering\n");
+    return WD_SetStmtAttr(hstmt, fAttribute, rgbValue, cbValueMax, true);
+        });
 }
 
 WD_EXPORT_SYMBOL
@@ -61,12 +74,13 @@ SQLGetConnectAttrW(HDBC hdbc,
 				   SQLINTEGER	cbValueMax,
 				   SQLINTEGER	*pcbValue)
 {
-	RETCODE	ret = SQL_SUCCESS;
-
-	MYLOG(0, "Entering\n");
-	ret = WD_GetConnectAttr(hdbc, fAttribute, rgbValue, cbValueMax,
-                                pcbValue, true);
-	return ret;
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCConnection::ExecuteWithDiagnostics(hdbc, rc, [&]() -> SQLRETURN {
+    MYLOG(0, "Entering\n");
+    return WD_GetConnectAttr(hdbc, fAttribute, rgbValue, cbValueMax, pcbValue,
+                            true);
+        });
+                                                }
 }
 
 WD_EXPORT_SYMBOL
@@ -76,12 +90,11 @@ SQLSetConnectAttrW(HDBC hdbc,
 				   PTR		rgbValue,
 				   SQLINTEGER	cbValue)
 {
-  RETCODE	ret = SQL_SUCCESS;
-
-  MYLOG(0, "Entering " FORMAT_INTEGER "\n", fAttribute);
-  ret = WD_SetConnectAttr(hdbc, fAttribute, rgbValue,
-                          cbValue, true);
-  return ret;
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCConnection::ExecuteWithDiagnostics(hdbc, rc, [&]() -> SQLRETURN {
+    MYLOG(0, "Entering " FORMAT_INTEGER "\n", fAttribute);
+    return WD_SetConnectAttr(hdbc, fAttribute, rgbValue, cbValue, true);
+  });
 }
 
 /*      new function */
@@ -91,42 +104,36 @@ SQLSetDescFieldW(SQLHDESC DescriptorHandle, SQLSMALLINT RecNumber,
 				 SQLSMALLINT FieldIdentifier, PTR Value,
 				 SQLINTEGER BufferLength)
 {
-	RETCODE	ret;
-	SQLLEN	vallen;
-        char    *uval = NULL;
-	BOOL	val_alloced = FALSE;
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, rc, [&]() -> SQLRETURN {
+    RETCODE ret;
+    SQLLEN vallen;
+    c_ptr uval;
 
-	MYLOG(0, "Entering\n");
-	if (BufferLength > 0 || SQL_NTS == BufferLength)
-	{
-		switch (FieldIdentifier)
-		{
-			case SQL_DESC_BASE_COLUMN_NAME:
-			case SQL_DESC_BASE_TABLE_NAME:
-			case SQL_DESC_CATALOG_NAME:
-			case SQL_DESC_LABEL:
-			case SQL_DESC_LITERAL_PREFIX:
-			case SQL_DESC_LITERAL_SUFFIX:
-			case SQL_DESC_LOCAL_TYPE_NAME:
-			case SQL_DESC_NAME:
-			case SQL_DESC_SCHEMA_NAME:
-			case SQL_DESC_TABLE_NAME:
-			case SQL_DESC_TYPE_NAME:
-				uval = ucs2_to_utf8(static_cast<SQLWCHAR*>(Value), BufferLength > 0 ? BufferLength / WCLEN : BufferLength, &vallen, FALSE);
-				val_alloced = TRUE;
-			break;
-		}
-	}
-	if (!val_alloced)
-	{
-		uval = static_cast<char*>(Value);
-		vallen = BufferLength;
-	}
-	ret = WD_SetDescField(DescriptorHandle, RecNumber, FieldIdentifier,
-				uval, (SQLINTEGER) vallen);
-	if (val_alloced)
-		free(uval);
-	return ret;
+    MYLOG(0, "Entering\n");
+    if (BufferLength > 0 || SQL_NTS == BufferLength) {
+      switch (FieldIdentifier) {
+      case SQL_DESC_BASE_COLUMN_NAME:
+      case SQL_DESC_BASE_TABLE_NAME:
+      case SQL_DESC_CATALOG_NAME:
+      case SQL_DESC_LABEL:
+      case SQL_DESC_LITERAL_PREFIX:
+      case SQL_DESC_LITERAL_SUFFIX:
+      case SQL_DESC_LOCAL_TYPE_NAME:
+      case SQL_DESC_NAME:
+      case SQL_DESC_SCHEMA_NAME:
+      case SQL_DESC_TABLE_NAME:
+      case SQL_DESC_TYPE_NAME:
+        uval.reset(
+            ucs2_to_utf8(static_cast<SQLWCHAR *>(Value),
+                         BufferLength > 0 ? BufferLength / WCLEN : BufferLength,
+                         &vallen, FALSE));
+        break;
+      }
+    }
+    return WD_SetDescField(DescriptorHandle, RecNumber, FieldIdentifier, uval ? uval.get() : Value,
+                          uval ? (SQLINTEGER)vallen : BufferLength);
+        });
 }
 
 WD_EXPORT_SYMBOL
@@ -135,62 +142,56 @@ SQLGetDescFieldW(SQLHDESC hdesc, SQLSMALLINT iRecord, SQLSMALLINT iField,
 				 PTR rgbValue, SQLINTEGER cbValueMax,
 				 SQLINTEGER *pcbValue)
 {
-	RETCODE	ret;
-	SQLINTEGER		blen = 0, bMax,	*pcbV;
-        char    *rgbV = NULL, *rgbVt;
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCDescriptor::ExecuteWithDiagnostics(hdesc, rc, [&]() -> SQLRETURN {
+    RETCODE ret;
+    SQLINTEGER blen = 0, bMax, *pcbV;
+    c_ptr rgbV;
 
-	MYLOG(0, "Entering\n");
-	switch (iField)
-	{
-		case SQL_DESC_BASE_COLUMN_NAME:
-		case SQL_DESC_BASE_TABLE_NAME:
-		case SQL_DESC_CATALOG_NAME:
-		case SQL_DESC_LABEL:
-		case SQL_DESC_LITERAL_PREFIX:
-		case SQL_DESC_LITERAL_SUFFIX:
-		case SQL_DESC_LOCAL_TYPE_NAME:
-		case SQL_DESC_NAME:
-		case SQL_DESC_SCHEMA_NAME:
-		case SQL_DESC_TABLE_NAME:
-		case SQL_DESC_TYPE_NAME:
-			bMax = cbValueMax * 3 / WCLEN;
-			rgbV = static_cast<char*>(malloc(bMax + 1));
-			pcbV = &blen;
-			for (rgbVt = rgbV;; bMax = blen + 1, rgbVt = static_cast<char*>(realloc(rgbV, bMax)))
-			{
-				if (!rgbVt)
-				{
-					ret = SQL_ERROR;
-					break;
-				}
-				rgbV = rgbVt;
-				ret = WD_GetDescField(hdesc, iRecord, iField, rgbV, bMax, pcbV);
-				if (SQL_SUCCESS_WITH_INFO != ret || blen < bMax)
-					break;
-			}
-			if (SQL_SUCCEEDED(ret))
-			{
-				blen = (SQLINTEGER) utf8_to_ucs2(rgbV, blen, (SQLWCHAR *) rgbValue, cbValueMax / WCLEN);
-				if (SQL_SUCCESS == ret && static_cast<SQLINTEGER>(blen * WCLEN) >= cbValueMax)
-				{
-					ret = SQL_SUCCESS_WITH_INFO;
-					DC_set_error(static_cast<DescriptorClass*>(hdesc), STMT_TRUNCATED, "The buffer was too small for the rgbDesc.");
-				}
-				if (pcbValue)
-					*pcbValue = blen * WCLEN;
-			}
-			if (rgbV)
-				free(rgbV);
-			break;
-		default:
-			rgbV = static_cast<char*>(rgbValue);
-			bMax = cbValueMax;
-			pcbV = pcbValue;
-			ret = WD_GetDescField(hdesc, iRecord, iField, rgbV, bMax, pcbV);
-			break;
-	}
+    MYLOG(0, "Entering\n");
+    switch (iField) {
+    case SQL_DESC_BASE_COLUMN_NAME:
+    case SQL_DESC_BASE_TABLE_NAME:
+    case SQL_DESC_CATALOG_NAME:
+    case SQL_DESC_LABEL:
+    case SQL_DESC_LITERAL_PREFIX:
+    case SQL_DESC_LITERAL_SUFFIX:
+    case SQL_DESC_LOCAL_TYPE_NAME:
+    case SQL_DESC_NAME:
+    case SQL_DESC_SCHEMA_NAME:
+    case SQL_DESC_TABLE_NAME:
+    case SQL_DESC_TYPE_NAME:
+      bMax = cbValueMax * 3 / WCLEN;
+      rgbV.reset(static_cast<char *>(malloc(bMax + 1)));
+      pcbV = &blen;
+      for (;;
+           bMax = blen + 1, rgbV.reallocate(bMax)) {
+        if (!rgbV) {
+          throw std::bad_alloc();
+        }
+        ret = WD_GetDescField(hdesc, iRecord, iField, rgbV.get(), bMax, pcbV);
+        if (SQL_SUCCESS_WITH_INFO != ret || blen < bMax)
+          break;
+      }
+      if (SQL_SUCCEEDED(ret)) {
+        blen = (SQLINTEGER)utf8_to_ucs2(rgbV.get(), blen, (SQLWCHAR *)rgbValue,
+                                        cbValueMax / WCLEN);
+        if (SQL_SUCCESS == ret &&
+            static_cast<SQLINTEGER>(blen * WCLEN) >= cbValueMax) {
+          ret = SQL_SUCCESS_WITH_INFO;
+          ODBCDescriptor::of(hdesc)->GetDiagnostics().AddTruncationWarning();
+        }
+        if (pcbValue)
+          *pcbValue = blen * WCLEN;
+      }
+      break;
+    default:
+      ret = WD_GetDescField(hdesc, iRecord, iField, rgbValue, cbValueMax, pcbValue);
+      break;
+    }
 
-	return ret;
+    return ret;
+        });
 }
 
 WD_EXPORT_SYMBOL
@@ -204,30 +205,29 @@ SQLGetDiagRecW(SQLSMALLINT fHandleType,
 			   SQLSMALLINT	cbErrorMsgMax,
 			   SQLSMALLINT	*pcbErrorMsg)
 {
-	return SQL_NO_DATA_FOUND;
-#if 0
 	RETCODE	ret;
         SQLSMALLINT	buflen, tlen;
-        char    qstr_ansi[8], *mtxt = NULL;
+        char    qstr_ansi[8];
+        c_ptr mtxt;
 
 	MYLOG(0, "Entering\n");
 	buflen = 0;
         if (szErrorMsg && cbErrorMsgMax > 0)
 	{
 		buflen = cbErrorMsgMax;
-                mtxt = static_cast<char*>(malloc(buflen));
+                mtxt.reset(static_cast<char*>(malloc(buflen)));
 	}
 	ret = WD_GetDiagRec(fHandleType, handle, iRecord, (SQLCHAR *) qstr_ansi,
-						   pfNativeError, (SQLCHAR *) mtxt, buflen, &tlen);
+						   pfNativeError, (SQLCHAR *) mtxt.get(), buflen, &tlen);
 	if (SQL_SUCCEEDED(ret))
 	{
 		if (szSqlState)
 			utf8_to_ucs2(qstr_ansi, -1, szSqlState, 6);
 		if (mtxt && tlen <= cbErrorMsgMax)
 		{
-			SQLULEN ulen = utf8_to_ucs2_lf(mtxt, tlen, FALSE, szErrorMsg, cbErrorMsgMax, TRUE);
+			SQLULEN ulen = utf8_to_ucs2_lf(mtxt.get(), tlen, FALSE, szErrorMsg, cbErrorMsgMax, TRUE);
 			if (ulen == (SQLULEN) -1)
-				tlen = (SQLSMALLINT) locale_to_sqlwchar((SQLWCHAR *) szErrorMsg, mtxt, cbErrorMsgMax, FALSE);
+				tlen = (SQLSMALLINT) locale_to_sqlwchar((SQLWCHAR *) szErrorMsg, mtxt.get(), cbErrorMsgMax, FALSE);
 			else
 				tlen = (SQLSMALLINT) ulen;
 			if (tlen >= cbErrorMsgMax)
@@ -243,10 +243,7 @@ SQLGetDiagRecW(SQLSMALLINT fHandleType,
 		if (pcbErrorMsg)
 			*pcbErrorMsg = tlen;
 	}
-	if (mtxt)
-		free(mtxt);
 	return ret;
-#endif
 }
 
 WD_EXPORT_SYMBOL
@@ -264,67 +261,61 @@ SQLColAttributeW(SQLHSTMT	hstmt,
 #endif
 	)
 {
-	CSTR func = "SQLColAttributeW";
-	RETCODE	ret;
-	SQLSMALLINT	*rgbL, blen = 0, bMax;
-        char    *rgbD = NULL, *rgbDt;
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+    CSTR func = "SQLColAttributeW";
+    RETCODE ret;
+    SQLSMALLINT *rgbL, blen = 0, bMax;
+    c_ptr rgbD;
 
-	MYLOG(0, "Entering\n");
-	switch (iField)
-	{
-		case SQL_DESC_BASE_COLUMN_NAME:
-		case SQL_DESC_BASE_TABLE_NAME:
-		case SQL_DESC_CATALOG_NAME:
-		case SQL_DESC_LABEL:
-		case SQL_DESC_LITERAL_PREFIX:
-		case SQL_DESC_LITERAL_SUFFIX:
-		case SQL_DESC_LOCAL_TYPE_NAME:
-		case SQL_DESC_NAME:
-		case SQL_DESC_SCHEMA_NAME:
-		case SQL_DESC_TABLE_NAME:
-		case SQL_DESC_TYPE_NAME:
-		case SQL_COLUMN_NAME:
-			bMax = cbCharAttrMax * 3 / WCLEN;
-			rgbD = static_cast<char*>(malloc(bMax));
-			rgbL = &blen;
-			for (rgbDt = rgbD;; bMax = blen + 1, rgbDt = static_cast<char*>(realloc(rgbD, bMax)))
-			{
-				if (!rgbDt)
-				{
-					ret = SQL_ERROR;
-					break;
-				}
-				rgbD = rgbDt;
-				ret = WD_ColAttributes(hstmt, iCol, iField, rgbD,
-					bMax, rgbL, static_cast<SQLLEN*>(pNumAttr));
-				if (SQL_SUCCESS_WITH_INFO != ret || blen < bMax)
-					break;
-			}
-			if (SQL_SUCCEEDED(ret))
-			{
-				blen = (SQLSMALLINT) utf8_to_ucs2(rgbD, blen, (SQLWCHAR *) pCharAttr, cbCharAttrMax / WCLEN);
-				if (SQL_SUCCESS == ret && static_cast<SQLSMALLINT>(blen * WCLEN) >= cbCharAttrMax)
-				{
-					ret = SQL_SUCCESS_WITH_INFO;
-//					SC_set_error(stmt, STMT_TRUNCATED, "The buffer was too small for the pCharAttr.", func);
-				}
-				if (pcbCharAttr)
-					*pcbCharAttr = blen * WCLEN;
-			}
-			if (rgbD)
-				free(rgbD);
-			break;
-		default:
-			rgbD = static_cast<char*>(pCharAttr);
-			bMax = cbCharAttrMax;
-			rgbL = pcbCharAttr;
-			ret = WD_ColAttributes(hstmt, iCol, iField, rgbD,
-					bMax, rgbL, static_cast<SQLLEN*>(pNumAttr));
-			break;
-	}
-	LEAVE_STMT_CS(stmt);
+    MYLOG(0, "Entering\n");
+    switch (iField) {
+    case SQL_DESC_BASE_COLUMN_NAME:
+    case SQL_DESC_BASE_TABLE_NAME:
+    case SQL_DESC_CATALOG_NAME:
+    case SQL_DESC_LABEL:
+    case SQL_DESC_LITERAL_PREFIX:
+    case SQL_DESC_LITERAL_SUFFIX:
+    case SQL_DESC_LOCAL_TYPE_NAME:
+    case SQL_DESC_NAME:
+    case SQL_DESC_SCHEMA_NAME:
+    case SQL_DESC_TABLE_NAME:
+    case SQL_DESC_TYPE_NAME:
+    case SQL_COLUMN_NAME:
+      bMax = cbCharAttrMax * 3 / WCLEN;
+      rgbD.reset(static_cast<char *>(malloc(bMax)));
+      rgbL = &blen;
+      for (;;
+           bMax = blen + 1, rgbD.reallocate(bMax)) {
+        if (!rgbD) {
+          ret = SQL_ERROR;
+          throw std::bad_alloc();
+        }
+        ret = WD_ColAttributes(hstmt, iCol, iField, rgbD.get(), bMax, rgbL,
+                               static_cast<SQLLEN *>(pNumAttr));
+        if (SQL_SUCCESS_WITH_INFO != ret || blen < bMax)
+          break;
+      }
+      if (SQL_SUCCEEDED(ret)) {
+        blen = (SQLSMALLINT)utf8_to_ucs2(rgbD.get(), blen, (SQLWCHAR *)pCharAttr,
+                                         cbCharAttrMax / WCLEN);
+        if (SQL_SUCCESS == ret &&
+            static_cast<SQLSMALLINT>(blen * WCLEN) >= cbCharAttrMax) {
+          ret = SQL_SUCCESS_WITH_INFO;
+          ODBCStatement::of(hstmt)->GetDiagnostics().AddTruncationWarning();
+        }
+        if (pcbCharAttr)
+          *pcbCharAttr = blen * WCLEN;
+      }
+      break;
+    default:
+      ret = WD_ColAttributes(hstmt, iCol, iField, pCharAttr, cbCharAttrMax, pcbCharAttr,
+                             static_cast<SQLLEN *>(pNumAttr));
+      break;
+    }
 
-	return ret;
+    return ret;
+        });
 }
 
 WD_EXPORT_SYMBOL
@@ -337,65 +328,102 @@ SQLGetDiagFieldW(SQLSMALLINT	fHandleType,
 				 SQLSMALLINT	cbDiagInfoMax,
 				 SQLSMALLINT   *pcbDiagInfo)
 {
-	RETCODE		ret;
-	SQLSMALLINT	*rgbL, blen = 0, bMax;
-	char	   *rgbD = NULL, *rgbDt;
+  // Note: Ensure the diagnostics manager is empty at the end of this function.
+  RETCODE ret = SQL_SUCCESS;
+  auto func = [&]() -> SQLRETURN {
+    SQLSMALLINT *rgbL, blen = 0, bMax;
+    c_ptr rgbD;
 
-	MYLOG(0, "Entering Handle=(%u,%p) Rec=%d Id=%d info=(%p,%d)\n", fHandleType,
-			handle, iRecord, fDiagField, rgbDiagInfo, cbDiagInfoMax);
-	switch (fDiagField)
-	{
-		case SQL_DIAG_DYNAMIC_FUNCTION:
-		case SQL_DIAG_CLASS_ORIGIN:
-		case SQL_DIAG_CONNECTION_NAME:
-		case SQL_DIAG_MESSAGE_TEXT:
-		case SQL_DIAG_SERVER_NAME:
-		case SQL_DIAG_SQLSTATE:
-		case SQL_DIAG_SUBCLASS_ORIGIN:
-			bMax = cbDiagInfoMax * 3 / WCLEN + 1;
-			if (rgbD = static_cast<char*>(malloc(bMax)), !rgbD)
-				return SQL_ERROR;
-			rgbL = &blen;
-			for (rgbDt = rgbD;; bMax = blen + 1, rgbDt = static_cast<char*>(realloc(rgbD, bMax)))
-			{
-				if (!rgbDt)
-				{
-					free(rgbD);
-					return SQL_ERROR;
-				}
-				rgbD = rgbDt;
-				ret = WD_GetDiagField(fHandleType, handle, iRecord, fDiagField, rgbD,
-					bMax, rgbL);
-				if (SQL_SUCCESS_WITH_INFO != ret || blen < bMax)
-					break;
-			}
-			if (SQL_SUCCEEDED(ret))
-			{
-				SQLULEN ulen = (SQLSMALLINT) utf8_to_ucs2_lf(rgbD, blen, FALSE, (SQLWCHAR *) rgbDiagInfo, cbDiagInfoMax / WCLEN, TRUE);
-				if (ulen == (SQLULEN) -1)
-					blen = (SQLSMALLINT) locale_to_sqlwchar((SQLWCHAR *) rgbDiagInfo, rgbD, cbDiagInfoMax / WCLEN, FALSE);
-				else
-					blen = (SQLSMALLINT) ulen;
-				if (SQL_SUCCESS == ret && blen * WCLEN >= static_cast<unsigned long>(cbDiagInfoMax))
-					ret = SQL_SUCCESS_WITH_INFO;
-				if (pcbDiagInfo)
-				{
-					*pcbDiagInfo = blen * WCLEN;
-				}
-			}
-			if (rgbD)
-				free(rgbD);
-			break;
-		default:
-			rgbD = static_cast<char*>(rgbDiagInfo);
-			bMax = cbDiagInfoMax;
-			rgbL = pcbDiagInfo;
-			ret = WD_GetDiagField(fHandleType, handle, iRecord, fDiagField, rgbD,
-				bMax, rgbL);
-			break;
-	}
+    MYLOG(0, "Entering Handle=(%u,%p) Rec=%d Id=%d info=(%p,%d)\n", fHandleType,
+          handle, iRecord, fDiagField, rgbDiagInfo, cbDiagInfoMax);
 
-	return ret;
+    switch (fDiagField) {
+    case SQL_DIAG_DYNAMIC_FUNCTION:
+    case SQL_DIAG_CLASS_ORIGIN:
+    case SQL_DIAG_CONNECTION_NAME:
+    case SQL_DIAG_MESSAGE_TEXT:
+    case SQL_DIAG_SERVER_NAME:
+    case SQL_DIAG_SQLSTATE:
+    case SQL_DIAG_SUBCLASS_ORIGIN:
+      bMax = cbDiagInfoMax * 3 / WCLEN + 1;
+      rgbD.reset(static_cast<char *>(malloc(bMax)));
+      if (!rgbD)
+        return SQL_ERROR;
+      rgbL = &blen;
+      for (;; bMax = blen + 1, rgbD.reallocate(bMax)) {
+        if (!rgbD) {
+          return SQL_ERROR;
+        }
+        ret = WD_GetDiagField(fHandleType, handle, iRecord, fDiagField,
+                              rgbD.get(), bMax, rgbL);
+        if (SQL_SUCCESS_WITH_INFO != ret || blen < bMax)
+          break;
+      }
+      if (SQL_SUCCEEDED(ret)) {
+        SQLULEN ulen = (SQLSMALLINT)utf8_to_ucs2_lf(
+            rgbD.get(), blen, FALSE, (SQLWCHAR *)rgbDiagInfo, cbDiagInfoMax / WCLEN,
+            TRUE);
+        if (ulen == (SQLULEN)-1)
+          blen = (SQLSMALLINT)locale_to_sqlwchar((SQLWCHAR *)rgbDiagInfo, rgbD.get(),
+                                                 cbDiagInfoMax / WCLEN, FALSE);
+        else
+          blen = (SQLSMALLINT)ulen;
+        if (SQL_SUCCESS == ret &&
+            blen * WCLEN >= static_cast<unsigned long>(cbDiagInfoMax))
+          ret = SQL_SUCCESS_WITH_INFO;
+        if (pcbDiagInfo) {
+          *pcbDiagInfo = blen * WCLEN;
+        }
+      }
+      break;
+    default:
+      ret = WD_GetDiagField(fHandleType, handle, iRecord, fDiagField, rgbDiagInfo,
+                            cbDiagInfoMax, pcbDiagInfo);
+      break;
+    }
+  };
+
+  Diagnostics* diagnostics = nullptr;
+  SQLRETURN rc = SQL_SUCCESS;
+  try {
+    switch (fHandleType) {
+    case SQL_HANDLE_ENV:
+      diagnostics = &ODBCEnvironment::of(handle)->GetDiagnostics();
+      ret = ODBCEnvironment::ExecuteWithDiagnostics(handle, rc, func);
+      break;
+    case SQL_HANDLE_DBC:
+      diagnostics = &ODBCConnection::of(handle)->GetDiagnostics();
+      ret = ODBCConnection::ExecuteWithDiagnostics(handle, rc, func);
+      break;
+    case SQL_HANDLE_STMT:
+      diagnostics = &ODBCStatement::of(handle)->GetDiagnostics();
+      ret = ODBCStatement::ExecuteWithDiagnostics(handle, rc, func);
+      break;
+    case SQL_HANDLE_DESC:
+      diagnostics = &ODBCDescriptor::of(handle)->GetDiagnostics();
+      ret = ODBCDescriptor::ExecuteWithDiagnostics(handle, rc, func);
+      break;
+    default:
+      return SQL_INVALID_HANDLE;
+    }
+  } catch (std::exception& e) {
+    MYLOG(0, "Error when getting diagnostics: %s", e.what());
+    ret = SQL_ERROR;
+  } catch (...) {
+    MYLOG(0, "Unknown error when getting diagnostics.");
+    ret = SQL_ERROR;
+  }
+
+  if (SQL_SUCCEEDED(ret)) {
+    if (diagnostics->HasError()) {
+      ret = SQL_ERROR;
+    } else if (diagnostics->HasWarning()) {
+      ret = SQL_SUCCESS_WITH_INFO;
+    }
+  }
+
+  diagnostics->Clear();
+  return ret;
 }
 
 /*	new function */
@@ -408,51 +436,46 @@ SQLGetDescRecW(SQLHDESC DescriptorHandle,
 			  SQLLEN *Length, SQLSMALLINT *Precision,
 			  SQLSMALLINT *Scale, SQLSMALLINT *Nullable)
 {
-	RETCODE	ret;
-	SQLSMALLINT	buflen, nmlen;
-	char	*clName = NULL, *clNamet = NULL;
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, rc, [&]() -> SQLRETURN {
+    RETCODE ret;
+    SQLSMALLINT buflen, nmlen;
+    c_ptr clName;
 
-	MYLOG(0, "Entering\n");
-	buflen = 0;
-	if (BufferLength > 0)
-		buflen = BufferLength * 3;
-	else if (StringLength)
-		buflen = 32;
-	if (buflen > 0)
-		clNamet = static_cast<char*>(malloc(buflen));
-	for (;; buflen = nmlen + 1, clNamet = static_cast<char*>(realloc(clName, buflen)))
-	{
-		if (!clNamet)
-		{
-		//	SC_set_error(stmt, STMT_NO_MEMORY_ERROR, "Could not allocate memory for column name", func);
-			ret = SQL_ERROR;
-			break;
-		}
-		clName = clNamet;
-		ret = WD_GetDescRec(DescriptorHandle, RecNumber,
-								(SQLCHAR *) clName, buflen,
-								&nmlen, Type, SubType, Length,
-			Precision, Scale, Nullable);
-		if (SQL_SUCCESS_WITH_INFO != ret || nmlen < buflen)
-			break;
-	}
-	if (SQL_SUCCEEDED(ret))
-	{
-		SQLLEN	nmcount = nmlen;
+    MYLOG(0, "Entering\n");
+    buflen = 0;
+    if (BufferLength > 0)
+      buflen = BufferLength * 3;
+    else if (StringLength)
+      buflen = 32;
+    if (buflen > 0)
+      clName.reset(static_cast<char *>(malloc(buflen)));
+    for (;; buflen = nmlen + 1,
+            clName.reallocate(buflen)) {
+      if (!clName) {
+        ret = SQL_ERROR;
+        throw std::bad_alloc();
+      }
+      ret = WD_GetDescRec(DescriptorHandle, RecNumber, (SQLCHAR *)clName.get(),
+                          buflen, &nmlen, Type, SubType, Length, Precision,
+                          Scale, Nullable);
+      if (SQL_SUCCESS_WITH_INFO != ret || nmlen < buflen)
+        break;
+    }
+    if (SQL_SUCCEEDED(ret)) {
+      SQLLEN nmcount = nmlen;
 
-		if (nmlen < buflen)
-			nmcount = utf8_to_ucs2(clName, nmlen, Name, BufferLength);
-		if (SQL_SUCCESS == ret && BufferLength > 0 && nmcount > BufferLength)
-		{
-			ret = SQL_SUCCESS_WITH_INFO;
-		//	SC_set_error(stmt, STMT_TRUNCATED, "Column name too large", func);
-		}
-		if (StringLength)
-			*StringLength = (SQLSMALLINT) nmcount;
-	}
-	if (clName)
-		free(clName);
-	return ret;
+      if (nmlen < buflen)
+        nmcount = utf8_to_ucs2(clName.get(), nmlen, Name, BufferLength);
+      if (SQL_SUCCESS == ret && BufferLength > 0 && nmcount > BufferLength) {
+        ret = SQL_SUCCESS_WITH_INFO;
+        ODBCDescriptor::of(DescriptorHandle)->GetDiagnostics().AddTruncationWarning();
+      }
+      if (StringLength)
+        *StringLength = (SQLSMALLINT)nmcount;
+    }
+    return ret;
+        });
 }
 
 /*	new fucntion */
@@ -465,9 +488,10 @@ SQLSetDescRecW(SQLHDESC DescriptorHandle,
 			  PTR Data, SQLLEN *StringLength,
 			  SQLLEN *Indicator)
 {
-	RETCODE ret;
-	MYLOG(0, "Entering\n");
-	ret = WD_SetDescRec(DescriptorHandle, RecNumber, Type, SubType, Length, Precision, Scale, Data, StringLength, Indicator);
-	return ret;
-}
+  SQLRETURN rc = SQL_SUCCESS;
+  return ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, rc, [&]() -> SQLRETURN {
+    MYLOG(0, "Entering\n");
+    return WD_SetDescRec(DescriptorHandle, RecNumber, Type, SubType, Length,
+                        Precision, Scale, Data, StringLength, Indicator);
+        });
 }

@@ -90,16 +90,20 @@ ODBCConnection::ODBCConnection(ODBCEnvironment& environment,
 
 }
 
+Diagnostics &ODBCConnection::GetDiagnostics_Impl() {
+  return m_spiConnection->GetDiagnostics();
+}
+
 bool ODBCConnection::isConnected() const
 {
-    return m_isConnected;
+  return m_isConnected;
 }
 
 void ODBCConnection::connect(std::string dsn, const Connection::ConnPropertyMap &properties,
   std::vector<std::string> &missing_properties)
 {
   if (m_isConnected) {
-    throw DriverException("Already connected.");
+    throw DriverException("Already connected.", "HY010");
   }
 
   m_spiConnection->Connect(properties, missing_properties);
@@ -130,10 +134,10 @@ void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLIN
       break;
     #endif
     case SQL_DATA_SOURCE_NAME:
-      GetStringAttribute(isUnicode, m_dsn, value, bufferLength, outputLength);
+      GetStringAttribute(isUnicode, m_dsn, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_DRIVER_ODBC_VER:
-      GetStringAttribute(isUnicode, "03.80", value, bufferLength, outputLength);
+      GetStringAttribute(isUnicode, "03.80", value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_DYNAMIC_CURSOR_ATTRIBUTES1:
       GetAttribute(static_cast<SQLUINTEGER>(0), value, bufferLength, outputLength);
@@ -171,7 +175,7 @@ void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLIN
       GetAttribute(static_cast<SQLUINTEGER>(SQL_PAS_NO_SELECT), value, bufferLength, outputLength);
       break;
     case SQL_ROW_UPDATES:
-      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength);
+      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_SCROLL_OPTIONS:
       GetAttribute(static_cast<SQLUINTEGER>(SQL_SO_FORWARD_ONLY), value, bufferLength, outputLength);
@@ -186,16 +190,16 @@ void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLIN
       GetAttribute(static_cast<SQLUINTEGER>(0), value, bufferLength, outputLength);
       break;
     case SQL_DESCRIBE_PARAMETER:
-      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength);
+      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_MULT_RESULT_SETS:
-      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength);
+      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_MULTIPLE_ACTIVE_TXN:
-      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength);
+      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_NEED_LONG_DATA_LEN:
-      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength);
+      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_TXN_CAPABLE:
       GetAttribute(static_cast<SQLUSMALLINT>(SQL_TC_NONE), value, bufferLength, outputLength);
@@ -204,10 +208,10 @@ void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLIN
       GetAttribute(static_cast<SQLUINTEGER>(0), value, bufferLength, outputLength);
       break;
     case SQL_TABLE_TERM:
-      GetStringAttribute(isUnicode, "table", value, bufferLength, outputLength);
+      GetStringAttribute(isUnicode, "table", value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_COLUMN_ALIAS:
-      GetStringAttribute(isUnicode, "Y", value, bufferLength, outputLength);
+      GetStringAttribute(isUnicode, "Y", value, bufferLength, outputLength, GetDiagnostics());
       break;
     // Deprecated ODBC 2.x fields required for backwards compatibility.
     case SQL_ODBC_API_CONFORMANCE:
@@ -257,7 +261,7 @@ void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLIN
     {
       const auto& info = m_spiConnection->GetInfo(infoType);
       const std::string& infoValue = boost::get<std::string>(info);
-      GetStringAttribute(isUnicode, infoValue, value, bufferLength, outputLength);
+      GetStringAttribute(isUnicode, infoValue, value, bufferLength, outputLength, GetDiagnostics());
       break;
     }
 
@@ -375,10 +379,10 @@ void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLIN
       const auto &attr =
         m_spiConnection->GetAttribute(Connection::CURRENT_CATALOG);
       if (!attr) {
-        throw DriverException("Optional feature not supported.");
+        throw DriverException("Optional feature not supported.", "HYC00");
       }
       const std::string &infoValue = boost::get<std::string>(*attr);
-      GetStringAttribute(isUnicode, infoValue, value, bufferLength,outputLength);
+      GetStringAttribute(isUnicode, infoValue, value, bufferLength,outputLength, GetDiagnostics());
       break;
     }
     default:
@@ -393,49 +397,47 @@ void ODBCConnection::SetConnectAttr(SQLINTEGER attribute, SQLPOINTER value, SQLI
     // Internal connection attributes
 #ifdef SQL_ATR_ASYNC_DBC_EVENT
   case SQL_ATTR_ASYNC_DBC_EVENT:
-    throw DriverException("Optional feature not supported.");
+    throw DriverException("Optional feature not supported.", "HYC00");
 #endif
 #ifdef SQL_ATTR_ASYNC_DBC_FUNCTIONS_ENABLE
   case SQL_ATTR_ASYNC_DBC_FUNCTIONS_ENABLE:
-    throw DriverException("Optional feature not supported.");
+    throw DriverException("Optional feature not supported.", "HYC00");
 #endif
 #ifdef SQL_ATTR_ASYNC_PCALLBACK
   case SQL_ATTR_ASYNC_DBC_PCALLBACK:
-    throw DriverException("Optional feature not supported.");
+    throw DriverException("Optional feature not supported.", "HYC00");
 #endif
 #ifdef SQL_ATTR_ASYNC_DBC_PCONTEXT
   case SQL_ATTR_ASYNC_DBC_PCONTEXT:
-    throw DriverException("Optional feature not supported.");
+    throw DriverException("Optional feature not supported.", "HYC00");
 #endif
   case SQL_ATTR_AUTO_IPD:
-    throw DriverException("Cannot set read-only attribute");
+    throw DriverException("Cannot set read-only attribute", "HY092");
   case SQL_ATTR_AUTOCOMMIT:
     CheckIfAttributeIsSetToOnlyValidValue(value, static_cast<SQLUINTEGER>(SQL_AUTOCOMMIT_OFF));
     return;
   case SQL_ATTR_CONNECTION_DEAD:
-    throw DriverException("Cannot set read-only attribute");
+    throw DriverException("Cannot set read-only attribute", "HY092");
 #ifdef SQL_ATTR_DBC_INFO_TOKEN
   case SQL_ATTR_DBC_INFO_TOKEN:
-    throw DriverException("Optional feature not supported.");
+    throw DriverException("Optional feature not supported.", "HYC00");
 #endif
   case SQL_ATTR_ENLIST_IN_DTC:
-    throw DriverException("Optional feature not supported.");
+    throw DriverException("Optional feature not supported.", "HYC00");
   case SQL_ATTR_ODBC_CURSORS: // DM-only.
- //   throw DriverException("Invalid attribute");
- // Commented out because iodbc allows setting this on the driver, and we can't report the error
- // properly yet.
+    throw DriverException("Invalid attribute", "HY092");
   case SQL_ATTR_QUIET_MODE:
-    throw DriverException("Cannot set read-only attribute");
+    throw DriverException("Cannot set read-only attribute", "HY092");
   case SQL_ATTR_TRACE: // DM-only
-    throw DriverException("Cannot set read-only attribute");
+    throw DriverException("Cannot set read-only attribute", "HY092");
   case SQL_ATTR_TRACEFILE:
-    throw DriverException("Optional feature not supported.");
+    throw DriverException("Optional feature not supported.", "HYC00");
   case SQL_ATTR_TRANSLATE_LIB:
-    throw DriverException("Optional feature not supported.");
+    throw DriverException("Optional feature not supported.", "HYC00");
   case SQL_ATTR_TRANSLATE_OPTION:
-    throw DriverException("Optional feature not supported.");
+    throw DriverException("Optional feature not supported.", "HYC00");
   case SQL_ATTR_TXN_ISOLATION:
-    throw DriverException("Optional feature not supported.");
+    throw DriverException("Optional feature not supported.", "HYC00");
 
   // ODBCAbstraction-level attributes
   case SQL_ATTR_CURRENT_CATALOG: {
@@ -446,7 +448,7 @@ void ODBCConnection::SetConnectAttr(SQLINTEGER attribute, SQLPOINTER value, SQLI
       SetAttributeSQLWCHAR(value, stringLength, catalog);
     }
     if (!m_spiConnection->SetAttribute(Connection::CURRENT_CATALOG, catalog)) {
-      throw DriverException("Optional value changed.");
+      throw DriverException("Option value changed.", "01S02");
     }
     return;
   }
@@ -488,13 +490,11 @@ void ODBCConnection::SetConnectAttr(SQLINTEGER attribute, SQLPOINTER value, SQLI
     successfully_written = m_spiConnection->SetAttribute(Connection::PACKET_SIZE, attributeToWrite);
     break;
   default:
-    ;
-  //  throw DriverException("Invalid attribute: " + std::to_string(attribute));
+    throw DriverException("Invalid attribute: " + std::to_string(attribute), "HY092");
   }
 
   if (!successfully_written) {
-  //  throw DriverException("Optional value changed.");
-  // Commented out until we can properly report this error.
+    GetDiagnostics().AddWarning("Option value changed.", "01S02", ODBCErrorCodes_GENERAL_WARNING);
   }
 }
 
@@ -537,26 +537,26 @@ void ODBCConnection::GetConnectAttr(SQLINTEGER attribute, SQLPOINTER value,
     return;
 #ifdef SQL_ATTR_DBC_INFO_TOKEN
   case SQL_ATTR_DBC_INFO_TOKEN:
-    throw DriverException("Cannot read set-only attribute");
+    throw DriverException("Cannot read set-only attribute", "HY092");
 #endif
   case SQL_ATTR_ENLIST_IN_DTC:
     GetAttribute(static_cast<SQLPOINTER>(NULL), value, bufferLength, outputLength);
     return;
   case SQL_ATTR_ODBC_CURSORS: // DM-only.
-     throw DriverException("Invalid attribute");
+    throw DriverException("Invalid attribute", "HY092");
   case SQL_ATTR_QUIET_MODE:
     GetAttribute(static_cast<SQLPOINTER>(NULL), value, bufferLength, outputLength);
     return;
   case SQL_ATTR_TRACE: // DM-only
-    throw DriverException("Invalid attribute");
+    throw DriverException("Invalid attribute", "HY092");
   case SQL_ATTR_TRACEFILE:
-    throw DriverException("Optional feature not supported.");
+    throw DriverException("Optional feature not supported.", "HYC00");
   case SQL_ATTR_TRANSLATE_LIB:
-    throw DriverException("Optional feature not supported.");
+    throw DriverException("Optional feature not supported.", "HYC00");
   case SQL_ATTR_TRANSLATE_OPTION:
-    throw DriverException("Optional feature not supported.");
+    throw DriverException("Optional feature not supported.", "HYC00");
   case SQL_ATTR_TXN_ISOLATION:
-    throw DriverException("Optional feature not supported.");
+    throw DriverException("Optional feature not supported.", "HCY00");
 
   // ODBCAbstraction-level connection attributes.
   case SQL_ATTR_CURRENT_CATALOG:
@@ -564,10 +564,10 @@ void ODBCConnection::GetConnectAttr(SQLINTEGER attribute, SQLPOINTER value,
     const auto &catalog =
         m_spiConnection->GetAttribute(Connection::CURRENT_CATALOG);
     if (!catalog) {
-      throw DriverException("Optional feature not supported.");
+      throw DriverException("Optional feature not supported.", "HYC00");
     }
     const std::string &infoValue = boost::get<std::string>(*catalog);
-    GetStringAttribute(isUnicode, infoValue, value, bufferLength,outputLength);
+    GetStringAttribute(isUnicode, infoValue, value, bufferLength,outputLength, GetDiagnostics());
     return;
   }
 
@@ -588,11 +588,11 @@ void ODBCConnection::GetConnectAttr(SQLINTEGER attribute, SQLPOINTER value,
     spiAttribute = m_spiConnection->GetAttribute(Connection::PACKET_SIZE);
     break;
   default:
-    throw DriverException("Invalid attribute");
+    throw DriverException("Invalid attribute", "HY092");
   }
 
   if (!spiAttribute) {
-    throw DriverException("Invalid attribute");
+    throw DriverException("Invalid attribute", "HY092");
   }
 
   GetAttribute(static_cast<SQLUINTEGER>(boost::get<uint32_t>(*spiAttribute)), value, bufferLength, outputLength);
@@ -627,7 +627,8 @@ void ODBCConnection::dropStatement(ODBCStatement* stmt) {
 }
 
 std::shared_ptr<ODBCDescriptor> ODBCConnection::createDescriptor() {
-  std::shared_ptr<ODBCDescriptor> desc = std::make_shared<ODBCDescriptor>(this, true, true, false);
+  std::shared_ptr<ODBCDescriptor> desc = std::make_shared<ODBCDescriptor>(
+      m_spiConnection->GetDiagnostics(), this, nullptr, true, true, false);
   m_descriptors.push_back(desc);
   return desc;
 }
