@@ -34,7 +34,9 @@ namespace {
 }
 
 // Public =========================================================================================
-ODBCDescriptor::ODBCDescriptor(ODBCConnection* conn, bool isAppDescriptor, bool isWritable, bool is2xConnection) :
+ODBCDescriptor::ODBCDescriptor(Diagnostics& baseDiagnostics,
+                               ODBCConnection* conn, bool isAppDescriptor, bool isWritable, bool is2xConnection) :
+  m_diagnostics(baseDiagnostics.GetVendor(), baseDiagnostics.GetDataSourceComponent(), V_3),
   m_owningConnection(conn),
   m_arrayStatusPtr(nullptr),
   m_bindOffsetPtr(nullptr),
@@ -46,6 +48,10 @@ ODBCDescriptor::ODBCDescriptor(ODBCConnection* conn, bool isAppDescriptor, bool 
   m_isAppDescriptor(isAppDescriptor),
   m_isWritable(isWritable),
   m_hasBindingsChanged(true) {
+}
+
+Diagnostics &ODBCDescriptor::GetDiagnostics_Impl() {
+  return m_diagnostics;
 }
 
 void ODBCDescriptor::SetHeaderField(SQLSMALLINT fieldIdentifier, SQLPOINTER value, SQLINTEGER bufferLength) {

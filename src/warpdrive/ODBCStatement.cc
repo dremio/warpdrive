@@ -189,16 +189,20 @@ ODBCStatement::ODBCStatement(ODBCConnection& connection,
   std::shared_ptr<driver::odbcabstraction::Statement> spiStatement) :
   m_connection(connection),
   m_spiStatement(std::move(spiStatement)),
-  m_builtInArd(std::make_shared<ODBCDescriptor>(nullptr, true, true, connection.IsOdbc2Connection())),
-  m_builtInApd(std::make_shared<ODBCDescriptor>(nullptr, true, true, connection.IsOdbc2Connection())),
-  m_ipd(std::make_shared<ODBCDescriptor>(nullptr, false, true, connection.IsOdbc2Connection())),
-  m_ird(std::make_shared<ODBCDescriptor>(nullptr, false, false, connection.IsOdbc2Connection())),
+  m_builtInArd(std::make_shared<ODBCDescriptor>(m_spiStatement->GetDiagnostics(), nullptr, true, true, connection.IsOdbc2Connection())),
+  m_builtInApd(std::make_shared<ODBCDescriptor>(m_spiStatement->GetDiagnostics(), nullptr, true, true, connection.IsOdbc2Connection())),
+  m_ipd(std::make_shared<ODBCDescriptor>(m_spiStatement->GetDiagnostics(), nullptr, false, true, connection.IsOdbc2Connection())),
+  m_ird(std::make_shared<ODBCDescriptor>(m_spiStatement->GetDiagnostics(), nullptr, false, false, connection.IsOdbc2Connection())),
   m_currentArd(m_builtInApd.get()),
   m_currentApd(m_builtInApd.get()),
   m_rowNumber(0),
   m_maxRows(0),
   m_isPrepared(false),
   m_hasReachedEndOfResult(false) {
+}
+
+Diagnostics &ODBCStatement::GetDiagnostics_Impl() {
+  return m_spiStatement->GetDiagnostics();
 }
 
 void ODBCStatement::CopyAttributesFromConnection(ODBCConnection& connection) {

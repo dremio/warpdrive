@@ -9,6 +9,7 @@
 #include <sql.h>
 #include <memory>
 #include <vector>
+#include "ODBCHandle.h"
 
 namespace driver {
 namespace odbcabstraction {
@@ -25,9 +26,10 @@ namespace ODBC {
  */
 namespace ODBC
 {
-class ODBCEnvironment {
+class ODBCEnvironment : public ODBCHandle<ODBCEnvironment> {
   public:
     ODBCEnvironment(std::shared_ptr<driver::odbcabstraction::Driver> driver);
+    driver::odbcabstraction::Diagnostics& GetDiagnostics_Impl();
     SQLINTEGER getODBCVersion() const;
     void setODBCVersion(SQLINTEGER version);
     SQLINTEGER getConnectionPooling() const;
@@ -39,6 +41,7 @@ class ODBCEnvironment {
   private:
     std::vector<std::shared_ptr<ODBCConnection> > m_connections;
     std::shared_ptr<driver::odbcabstraction::Driver> m_driver;
+    std::unique_ptr<driver::odbcabstraction::Diagnostics> m_diagnostics;
     SQLINTEGER m_version;
     SQLINTEGER m_connectionPooling;
 };

@@ -9,6 +9,7 @@
 #include <sql.h>
 #include <memory>
 #include <string>
+#include "ODBCHandle.h"
 
 namespace driver {
 namespace odbcabstraction {
@@ -27,7 +28,7 @@ namespace ODBC {
  */
 namespace ODBC
 {
-class ODBCStatement {
+class ODBCStatement : public ODBCHandle<ODBCStatement> {
   public:
     ODBCStatement(const ODBCStatement&) = delete;
     ODBCStatement& operator=(const ODBCStatement&) = delete;
@@ -36,6 +37,8 @@ class ODBCStatement {
       std::shared_ptr<driver::odbcabstraction::Statement> spiStatement);
     
     ~ODBCStatement() = default;
+
+    driver::odbcabstraction::Diagnostics& GetDiagnostics_Impl();
 
     void CopyAttributesFromConnection(ODBCConnection& connection);
     void Prepare(const std::string& query);

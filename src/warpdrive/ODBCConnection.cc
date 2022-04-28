@@ -90,9 +90,13 @@ ODBCConnection::ODBCConnection(ODBCEnvironment& environment,
 
 }
 
+Diagnostics &ODBCConnection::GetDiagnostics_Impl() {
+  return m_spiConnection->GetDiagnostics();
+}
+
 bool ODBCConnection::isConnected() const
 {
-    return m_isConnected;
+  return m_isConnected;
 }
 
 void ODBCConnection::connect(std::string dsn, const Connection::ConnPropertyMap &properties,
@@ -627,7 +631,8 @@ void ODBCConnection::dropStatement(ODBCStatement* stmt) {
 }
 
 std::shared_ptr<ODBCDescriptor> ODBCConnection::createDescriptor() {
-  std::shared_ptr<ODBCDescriptor> desc = std::make_shared<ODBCDescriptor>(this, true, true, false);
+  std::shared_ptr<ODBCDescriptor> desc = std::make_shared<ODBCDescriptor>(
+      m_spiConnection->GetDiagnostics(), this, true, true, false);
   m_descriptors.push_back(desc);
   return desc;
 }
