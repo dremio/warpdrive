@@ -889,6 +889,8 @@ WD_Cancel(HSTMT hstmt)		/* Statement to cancel. */
 	StatementClass *stmt = (StatementClass *) hstmt, *estmt;
 	ConnectionClass *conn;
 	RETCODE		ret = SQL_SUCCESS;
+        throw driver::odbcabstraction::DriverException("Unsupported function");
+
 
 	MYLOG(0, "entering...\n");
 
@@ -983,7 +985,6 @@ WD_NativeSql(HDBC hdbc,
 	CSTR func = "WD_NativeSql";
 	size_t		len = 0;
 	const char	   *ptr;
-	ConnectionClass *conn = (ConnectionClass *) hdbc;
 	RETCODE		result;
 
 	MYLOG(0, "entering...cbSqlStrIn=" FORMAT_INTEGER "\n", cbSqlStrIn);
@@ -991,8 +992,7 @@ WD_NativeSql(HDBC hdbc,
 	ptr = (cbSqlStrIn == 0) ? "" : make_string(szSqlStrIn, cbSqlStrIn, NULL, 0);
 	if (!ptr)
 	{
-		CC_set_error(conn, CONN_NO_MEMORY_ERROR, "No memory available to store native sql string", func);
-		return SQL_ERROR;
+          throw std::bad_alloc();
 	}
 
 	result = SQL_SUCCESS;
@@ -1005,7 +1005,7 @@ WD_NativeSql(HDBC hdbc,
 		if (len >= cbSqlStrMax)
 		{
 			result = SQL_SUCCESS_WITH_INFO;
-			CC_set_error(conn, CONN_TRUNCATED, "The buffer was too small for the NativeSQL.", func);
+                        ODBCConnection::of(hdbc)->GetDiagnostics().AddTruncationWarning();
 		}
 	}
 

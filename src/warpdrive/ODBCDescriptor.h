@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include "ODBCHandle.h"
 
 namespace driver {
 namespace odbcabstraction {
@@ -64,13 +65,16 @@ namespace ODBC
     void CheckConsistency();
   };
 
-  class ODBCDescriptor {
+  class ODBCDescriptor : public ODBCHandle<ODBCDescriptor>{
     public:
       /**
        * @brief Construct a new ODBCDescriptor object. Link the descriptor to a connection,
        * if applicable. A nullptr should be supplied for conn if the descriptor should not be linked.
        */
-      ODBCDescriptor(ODBCConnection* conn, bool isAppDescriptor, bool isWritable, bool is2xConnection);
+      ODBCDescriptor(driver::odbcabstraction::Diagnostics& baseDiagnostics,
+                     ODBCConnection* conn, bool isAppDescriptor, bool isWritable, bool is2xConnection);
+
+      driver::odbcabstraction::Diagnostics& GetDiagnostics_Impl();
 
       void SetHeaderField(SQLSMALLINT fieldIdentifier, SQLPOINTER value, SQLINTEGER bufferLength);
       void SetField(SQLSMALLINT recordNumber, SQLSMALLINT fieldIdentifier, SQLPOINTER value, SQLINTEGER bufferLength);
@@ -110,6 +114,7 @@ namespace ODBC
       }
 
     private:
+      driver::odbcabstraction::Diagnostics m_diagnostics;
       std::vector<ODBCStatement*> m_registeredOnStatementsAsApd;
       std::vector<ODBCStatement*> m_registeredOnStatementsAsArd;
       std::vector<DescriptorRecord> m_records;
