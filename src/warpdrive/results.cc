@@ -149,13 +149,13 @@ WD_DescribeCol(HSTMT hstmt,
     throw DriverException("InvalidDescriptorIndex");
   }
 
-  const ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
+  ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
   const std::vector<DescriptorRecord>& records = stmt->GetIRD()->GetRecords();
 
   SQLUSMALLINT zeroBasedIndex = icol - 1;
   const DescriptorRecord& record = records[zeroBasedIndex];
   SQLSMALLINT totalColumnNameLen;
-  GetAttributeUTF8(record.m_name, szColName, cbColNameMax, &totalColumnNameLen);
+  GetAttributeUTF8(record.m_name, szColName, cbColNameMax, &totalColumnNameLen, stmt->GetDiagnostics());
   if (pcbColName) {
     *pcbColName = totalColumnNameLen;
   }
@@ -187,7 +187,7 @@ WD_ColAttributes(HSTMT hstmt,
   }
 
 	
-  const ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
+  ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
   const std::vector<DescriptorRecord>& records = stmt->GetIRD()->GetRecords();
   
   if (fDescType == SQL_DESC_COUNT) {
@@ -295,7 +295,7 @@ WD_ColAttributes(HSTMT hstmt,
   // Character attribute.
   if (recordStrValue) {
 	SQLINTEGER outputLen = 0;
-    GetAttributeUTF8(*recordStrValue, rgbDesc, static_cast<SQLINTEGER>(cbDescMax), &outputLen);
+    GetAttributeUTF8(*recordStrValue, rgbDesc, static_cast<SQLINTEGER>(cbDescMax), &outputLen, stmt->GetDiagnostics());
 	if (pcbDesc) {
 	  *pcbDesc = static_cast<SQLSMALLINT>(outputLen);
 	}

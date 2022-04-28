@@ -174,7 +174,7 @@ namespace {
         return SQL_INTERVAL_MONTH;
 
       default:
-        throw DriverException("Unknown type");
+        throw DriverException("Unknown SQL type: " + std::to_string(record.m_conciseType), "HY003");
     }
   }
 
@@ -191,10 +191,10 @@ ODBCStatement::ODBCStatement(ODBCConnection& connection,
   std::shared_ptr<driver::odbcabstraction::Statement> spiStatement) :
   m_connection(connection),
   m_spiStatement(std::move(spiStatement)),
-  m_builtInArd(std::make_shared<ODBCDescriptor>(nullptr, true, true, connection.IsOdbc2Connection())),
-  m_builtInApd(std::make_shared<ODBCDescriptor>(nullptr, true, true, connection.IsOdbc2Connection())),
-  m_ipd(std::make_shared<ODBCDescriptor>(nullptr, false, true, connection.IsOdbc2Connection())),
-  m_ird(std::make_shared<ODBCDescriptor>(nullptr, false, false, connection.IsOdbc2Connection())),
+  m_builtInArd(std::make_shared<ODBCDescriptor>(m_spiStatement->GetDiagnostics(), nullptr, this, true, true, connection.IsOdbc2Connection())),
+  m_builtInApd(std::make_shared<ODBCDescriptor>(m_spiStatement->GetDiagnostics(), nullptr, this, true, true, connection.IsOdbc2Connection())),
+  m_ipd(std::make_shared<ODBCDescriptor>(m_spiStatement->GetDiagnostics(), nullptr, this, false, true, connection.IsOdbc2Connection())),
+  m_ird(std::make_shared<ODBCDescriptor>(m_spiStatement->GetDiagnostics(), nullptr, this, false, false, connection.IsOdbc2Connection())),
   m_currentArd(m_builtInApd.get()),
   m_currentApd(m_builtInApd.get()),
   m_rowNumber(0),
@@ -202,6 +202,14 @@ ODBCStatement::ODBCStatement(ODBCConnection& connection,
   m_rowsetSize(1),
   m_isPrepared(false),
   m_hasReachedEndOfResult(false) {
+}
+
+Diagnostics &ODBCStatement::GetDiagnostics_Impl() {
+  return m_spiStatement->GetDiagnostics();
+}
+
+ODBCConnection &ODBCStatement::GetConnection() {
+  return m_connection;
 }
 
 void ODBCStatement::CopyAttributesFromConnection(ODBCConnection& connection) {
@@ -247,7 +255,7 @@ void ODBCStatement::Prepare(const std::string& query) {
 
 void ODBCStatement::ExecutePrepared() {
   if (!m_isPrepared) {
-    throw DriverException("Function sequence error");
+    throw DriverException("Function sequence error", "HY010");
   }
 
   if (m_spiStatement->ExecutePrepared()) {
@@ -369,15 +377,15 @@ void ODBCStatement::GetStmtAttr(SQLINTEGER statementAttribute,
 
 #ifdef SQL_ATTR_ASYNC_STMT_EVENT
     case SQL_ATTR_ASYNC_STMT_EVENT:
-      throw DriverException("Unsupported attribute");
+      throw DriverException("Unsupported attribute", "HYC00");
 #endif
 #ifdef SQL_ATTR_ASYNC_STMT_PCALLBACK
     case SQL_ATTR_ASYNC_STMT_PCALLBACK:
-      throw DriverException("Unsupported attribute");
+      throw DriverException("Unsupported attribute", "HYC00");
 #endif
 #ifdef SQL_ATTR_ASYNC_STMT_PCONTEXT
     case SQL_ATTR_ASYNC_STMT_PCONTEXT:
-      throw DriverException("Unsupported attribute");
+      throw DriverException("Unsupported attribute", "HYC00");
 #endif
     case SQL_ATTR_CURSOR_SCROLLABLE:
       GetAttribute(static_cast<SQLULEN>(SQL_NONSCROLLABLE), output, bufferSize, strLenPtr);
@@ -439,8 +447,7 @@ void ODBCStatement::GetStmtAttr(SQLINTEGER statementAttribute,
       spiAttribute = m_spiStatement->GetAttribute(Statement::QUERY_TIMEOUT);
       break;
     default:
-      return;
-  //    throw DriverException("Invalid statement attribute");
+      throw DriverException("Invalid statement attribute: " + std::to_string(statementAttribute), "HY092");
   }
 
   if (spiAttribute) {
@@ -448,7 +455,7 @@ void ODBCStatement::GetStmtAttr(SQLINTEGER statementAttribute,
                  output, bufferSize, strLenPtr);
   }
 
-  // throw DriverException("Invalid statement attribute");
+  throw DriverException("Invalid statement attribute: " + std::to_string(statementAttribute), "HY092");
 }
 
 void ODBCStatement::SetStmtAttr(SQLINTEGER statementAttribute, SQLPOINTER value,
@@ -484,9 +491,9 @@ void ODBCStatement::SetStmtAttr(SQLINTEGER statementAttribute, SQLPOINTER value,
       return;
     }
     case SQL_ATTR_IMP_PARAM_DESC:
-      throw DriverException("Cannot assign impl descriptor.");
+      throw DriverException("Cannot assign implementation descriptor.", "HY017");
     case SQL_ATTR_IMP_ROW_DESC:
-      throw DriverException("Cannot assign impl descriptor.");
+      throw DriverException("Cannot assign implementation descriptor.", "HY017");
       // Attributes that are descriptor fields
     case SQL_ATTR_PARAM_BIND_OFFSET_PTR:
       m_currentApd->SetHeaderField(SQL_DESC_BIND_OFFSET_PTR, value, bufferSize);
@@ -528,15 +535,15 @@ void ODBCStatement::SetStmtAttr(SQLINTEGER statementAttribute, SQLPOINTER value,
     case SQL_ATTR_ASYNC_ENABLE:
 #ifdef SQL_ATTR_ASYNC_STMT_EVENT
     case SQL_ATTR_ASYNC_STMT_EVENT:
-      throw DriverException("Unsupported attribute");
+      throw DriverException("Unsupported attribute", "HYC00");
 #endif
 #ifdef SQL_ATTR_ASYNC_STMT_PCALLBACK
     case SQL_ATTR_ASYNC_STMT_PCALLBACK:
-      throw DriverException("Unsupported attribute");
+      throw DriverException("Unsupported attribute", "HYC00");
 #endif
 #ifdef SQL_ATTR_ASYNC_STMT_PCONTEXT
     case SQL_ATTR_ASYNC_STMT_PCONTEXT:
-      throw DriverException("Unsupported attribute");
+      throw DriverException("Unsupported attribute", "HYC00");
 #endif
     case SQL_ATTR_CONCURRENCY:
       CheckIfAttributeIsSetToOnlyValidValue(value, static_cast<SQLULEN>(SQL_CONCUR_READ_ONLY));
@@ -555,14 +562,14 @@ void ODBCStatement::SetStmtAttr(SQLINTEGER statementAttribute, SQLPOINTER value,
       return;
     case SQL_ATTR_FETCH_BOOKMARK_PTR:
       if (value != NULL) {
-        throw DriverException("Optional feature not implemented");
+        throw DriverException("Optional feature not implemented", "HYC00");
       }
       return;
     case SQL_ATTR_KEYSET_SIZE:
       CheckIfAttributeIsSetToOnlyValidValue(value, static_cast<SQLULEN>(0));
       return;
     case SQL_ATTR_ROW_NUMBER:
-      throw DriverException("Cannot set read-only attribute");
+      throw DriverException("Cannot set read-only attribute", "HY092");
     case SQL_ATTR_SIMULATE_CURSOR:
       CheckIfAttributeIsSetToOnlyValidValue(value, static_cast<SQLULEN>(SQL_SC_UNIQUE));
       return;
@@ -577,7 +584,7 @@ void ODBCStatement::SetStmtAttr(SQLINTEGER statementAttribute, SQLPOINTER value,
       return;
 
     case SQL_ATTR_MAX_ROWS:
-      throw DriverException("Cannot set read-only attribute");
+      throw DriverException("Cannot set read-only attribute", "HY092");
 
     // Driver-leve statement attributes. These are all size_t attributes
     case SQL_ATTR_MAX_LENGTH:
@@ -597,12 +604,10 @@ void ODBCStatement::SetStmtAttr(SQLINTEGER statementAttribute, SQLPOINTER value,
       successfully_written = m_spiStatement->SetAttribute(Statement::QUERY_TIMEOUT, attributeToWrite);
       break;
     default:
-          ;
-      //  throw DriverException("Invalid attribute: " + std::to_string(attribute));
+        throw DriverException("Invalid attribute: " + std::to_string(attributeToWrite), "HY092");
   }
   if (!successfully_written) {
-    //  throw DriverException("Optional value changed.");
-    // Commented out until we can properly report this error.
+    GetDiagnostics().AddWarning("Optional value changed.", "01S02", ODBCErrorCodes_GENERAL_WARNING);
   }
 }
 
@@ -615,18 +620,20 @@ void ODBCStatement::RevertAppDescriptor(bool isApd) {
 }
 
 void ODBCStatement::closeCursor(bool suppressErrors) {
-  if (!suppressErrors && !m_currenResult.get()) {
-    throw DriverException("Invalid cursor state");
+  if (!suppressErrors && !m_currenResult) {
+    throw DriverException("Invalid cursor state", "28000");
   }
   
-  if (m_currenResult.get()) {
+  if (m_currenResult) {
     m_currenResult->Close();
   }
 }
 
 bool ODBCStatement::GetData(SQLSMALLINT recordNumber, SQLSMALLINT cType, SQLPOINTER dataPtr, SQLLEN bufferLength, SQLLEN* indicatorPtr) {
   if (recordNumber == 0) {
-    throw DriverException("Bookmarks are not supported");
+    throw DriverException("Bookmarks are not supported", "07009");
+  } else if (recordNumber > m_ird->GetRecords().size()) {
+    throw DriverException("Invalid column index: " + std::to_string(recordNumber), "07009");
   }
 
   SQLSMALLINT evaluatedCType = cType;

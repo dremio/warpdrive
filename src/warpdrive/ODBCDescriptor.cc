@@ -34,8 +34,11 @@ namespace {
 }
 
 // Public =========================================================================================
-ODBCDescriptor::ODBCDescriptor(ODBCConnection* conn, bool isAppDescriptor, bool isWritable, bool is2xConnection) :
+ODBCDescriptor::ODBCDescriptor(Diagnostics& baseDiagnostics,
+                               ODBCConnection* conn, ODBCStatement* stmt, bool isAppDescriptor, bool isWritable, bool is2xConnection) :
+  m_diagnostics(baseDiagnostics.GetVendor(), baseDiagnostics.GetDataSourceComponent(), V_3),
   m_owningConnection(conn),
+  m_parentStatement(stmt),
   m_arrayStatusPtr(nullptr),
   m_bindOffsetPtr(nullptr),
   m_rowsProccessedPtr(nullptr),
@@ -48,19 +51,31 @@ ODBCDescriptor::ODBCDescriptor(ODBCConnection* conn, bool isAppDescriptor, bool 
   m_hasBindingsChanged(true) {
 }
 
+Diagnostics &ODBCDescriptor::GetDiagnostics_Impl() {
+  return m_diagnostics;
+}
+
+ODBCConnection &ODBCDescriptor::GetConnection() {
+  if (m_owningConnection) {
+    return *m_owningConnection;
+  }
+  assert(m_parentStatement);
+  return m_parentStatement->GetConnection();
+}
+
 void ODBCDescriptor::SetHeaderField(SQLSMALLINT fieldIdentifier, SQLPOINTER value, SQLINTEGER bufferLength) {
   if (!m_isWritable) {
-    throw DriverException("Cannot modify read-only descriptor");
+    throw DriverException("Cannot modify read-only descriptor", "HY016");
   }
 
   // TODO: Remove this check when parameters are supported.
   if (!m_isAppDescriptor) {
-    throw DriverException("Parameters are not supported. Cannot write to IPD.");
+    throw DriverException("Parameters are not supported. Cannot write to IPD.", "HYC00");
   }
 
   switch (fieldIdentifier) {
     case SQL_DESC_ALLOC_TYPE:
-      throw DriverException("Invalid descriptor field");
+      throw DriverException("Invalid descriptor field", "HY091");
     case SQL_DESC_ARRAY_SIZE:
       SetAttribute(value, m_arraySize);
       m_hasBindingsChanged = true;
@@ -94,21 +109,21 @@ void ODBCDescriptor::SetHeaderField(SQLSMALLINT fieldIdentifier, SQLPOINTER valu
       break;
     }
     default:
-      throw DriverException("Invalid descriptor field");
+      throw DriverException("Invalid descriptor field", "HY091");
   }
 }
 
 void ODBCDescriptor::SetField(SQLSMALLINT recordNumber, SQLSMALLINT fieldIdentifier, SQLPOINTER value, SQLINTEGER bufferLength) {
   if (!m_isWritable) {
-    throw DriverException("Cannot modify read-only descriptor");
+    throw DriverException("Cannot modify read-only descriptor", "HY016");
   }
 
   if (recordNumber == 0) {
-    throw DriverException("Bookmarks are unsupported.");
+    throw DriverException("Bookmarks are unsupported.", "07009");
   }
 
   if (recordNumber > m_records.size()) {
-    throw DriverException("Invalid descriptor index");
+    throw DriverException("Invalid descriptor index", "HY009");
   }
 
   SQLSMALLINT zeroBasedRecord = recordNumber - 1;
@@ -135,7 +150,7 @@ void ODBCDescriptor::SetField(SQLSMALLINT recordNumber, SQLSMALLINT fieldIdentif
     case SQL_DESC_UNNAMED:
     case SQL_DESC_UNSIGNED:
     case SQL_DESC_UPDATABLE:
-      throw DriverException("Cannot modify read-only field.");
+      throw DriverException("Cannot modify read-only field.", "HY092");
     case SQL_DESC_CONCISE_TYPE:
       SetAttribute(value, record.m_conciseType);
       record.m_isBound = false;
@@ -194,7 +209,7 @@ void ODBCDescriptor::SetField(SQLSMALLINT recordNumber, SQLSMALLINT fieldIdentif
       m_hasBindingsChanged = true;
       break;
     default:
-      throw DriverException("Invalid descriptor field");
+      throw DriverException("Invalid descriptor field", "HY091");
   }
 }
 
@@ -230,11 +245,11 @@ void ODBCDescriptor::GetHeaderField(SQLSMALLINT fieldIdentifier, SQLPOINTER valu
       break;
     }
     default:
-      throw DriverException("Invalid descriptor field");
+      throw DriverException("Invalid descriptor field", "HY091");
   }
 }
 
-void ODBCDescriptor::GetField(SQLSMALLINT recordNumber, SQLSMALLINT fieldIdentifier, SQLPOINTER value, SQLINTEGER bufferLength, SQLINTEGER* outputLength) const {
+void ODBCDescriptor::GetField(SQLSMALLINT recordNumber, SQLSMALLINT fieldIdentifier, SQLPOINTER value, SQLINTEGER bufferLength, SQLINTEGER* outputLength) {
   // Handle header fields before validating the record number.
   switch (fieldIdentifier) {
     case SQL_DESC_ALLOC_TYPE:
@@ -251,11 +266,11 @@ void ODBCDescriptor::GetField(SQLSMALLINT recordNumber, SQLSMALLINT fieldIdentif
   }
 
   if (recordNumber == 0) {
-    throw DriverException("Bookmarks are unsupported.");
+    throw DriverException("Bookmarks are unsupported.", "07009");
   }
 
   if (recordNumber > m_records.size()) {
-    throw DriverException("Invalid descriptor index");
+    throw DriverException("Invalid descriptor index", "07009");
   }
 
   // TODO: Restrict fields based on AppDescriptor IPD, and IRD.
@@ -264,37 +279,37 @@ void ODBCDescriptor::GetField(SQLSMALLINT recordNumber, SQLSMALLINT fieldIdentif
   const DescriptorRecord& record = m_records[zeroBasedRecord];
   switch (fieldIdentifier) {
     case SQL_DESC_BASE_COLUMN_NAME:
-      GetAttributeUTF8(record.m_baseColumnName, value, bufferLength, outputLength);
+      GetAttributeUTF8(record.m_baseColumnName, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_DESC_BASE_TABLE_NAME:
-      GetAttributeUTF8(record.m_baseTableName, value, bufferLength, outputLength);
+      GetAttributeUTF8(record.m_baseTableName, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_DESC_CATALOG_NAME:
-      GetAttributeUTF8(record.m_catalogName, value, bufferLength, outputLength);
+      GetAttributeUTF8(record.m_catalogName, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_DESC_LABEL:
-      GetAttributeUTF8(record.m_label, value, bufferLength, outputLength);
+      GetAttributeUTF8(record.m_label, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_DESC_LITERAL_PREFIX:
-      GetAttributeUTF8(record.m_literalPrefix, value, bufferLength, outputLength);
+      GetAttributeUTF8(record.m_literalPrefix, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_DESC_LITERAL_SUFFIX:
-      GetAttributeUTF8(record.m_literalSuffix, value, bufferLength, outputLength);
+      GetAttributeUTF8(record.m_literalSuffix, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_DESC_LOCAL_TYPE_NAME:
-      GetAttributeUTF8(record.m_localTypeName, value, bufferLength, outputLength);
+      GetAttributeUTF8(record.m_localTypeName, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_DESC_NAME:
-      GetAttributeUTF8(record.m_name, value, bufferLength, outputLength);
+      GetAttributeUTF8(record.m_name, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_DESC_SCHEMA_NAME:
-      GetAttributeUTF8(record.m_schemaName, value, bufferLength, outputLength);
+      GetAttributeUTF8(record.m_schemaName, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_DESC_TABLE_NAME:
-      GetAttributeUTF8(record.m_tableName, value, bufferLength, outputLength);
+      GetAttributeUTF8(record.m_tableName, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_DESC_TYPE_NAME:
-      GetAttributeUTF8(record.m_typeName, value, bufferLength, outputLength);
+      GetAttributeUTF8(record.m_typeName, value, bufferLength, outputLength, GetDiagnostics());
       break;
 
     case SQL_DESC_DATA_PTR:
@@ -368,7 +383,7 @@ void ODBCDescriptor::GetField(SQLSMALLINT recordNumber, SQLSMALLINT fieldIdentif
       GetAttribute(record.m_updatable, value, bufferLength, outputLength);
       break;
     default:
-      throw DriverException("Invalid descriptor field");
+      throw DriverException("Invalid descriptor field", "HY091");
   }
 }
 
