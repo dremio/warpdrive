@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d24ffc6c_24ca9fb0",
+        "filename": "src/test/.gitignore",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-04-28T15:37:41Z",
+      "side": 1,
+      "message": "Doesn\u0027t this need to go in the main warpdrive\u0027s .gitignore?",
+      "revId": "7d8d9f0e04ffdb1feeb5d3889fbc6e5ae6b8f0cc",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "826985b6_636a287f",
+        "filename": "src/test/CMakeLists.txt",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-04-28T15:37:41Z",
+      "side": 1,
+      "message": "Please add license comment at the top.",
+      "revId": "7d8d9f0e04ffdb1feeb5d3889fbc6e5ae6b8f0cc",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "91159c11_fb868bf0",
+        "filename": "src/test/CMakeLists.txt",
+        "patchSetId": 6
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-04-28T15:37:41Z",
+      "side": 1,
+      "message": "Should we include this directory in the main CMake? And have it run when using the test configuration?",
+      "revId": "7d8d9f0e04ffdb1feeb5d3889fbc6e5ae6b8f0cc",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8407a0e7_cee38c59",
+        "filename": "src/test/CMakeLists.txt",
+        "patchSetId": 6
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-04-28T15:37:41Z",
+      "side": 1,
+      "message": "We should just use the ODBC_LIBRARIES that find_package resolved. The reason we set them explicitly in the driver is that we didn\u0027t actually want a dependency on the Driver Manager, just the Driver Installer libraries.",
+      "revId": "7d8d9f0e04ffdb1feeb5d3889fbc6e5ae6b8f0cc",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
