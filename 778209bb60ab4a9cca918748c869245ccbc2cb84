@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ecdbfe12_2ed2410d",
+        "filename": ".vscode/settings.json",
+        "patchSetId": 4
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-02T14:47:21Z",
+      "side": 1,
+      "message": "Removing",
+      "range": {
+        "startLine": 2,
+        "startChar": 2,
+        "endLine": 21,
+        "endChar": 30
+      },
+      "revId": "778209bb60ab4a9cca918748c869245ccbc2cb84",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
