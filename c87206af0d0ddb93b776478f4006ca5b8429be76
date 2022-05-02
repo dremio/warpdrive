@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "84cc9d69_057f3ac0",
+        "filename": "src/warpdrive/odbcapi30.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-05-02T16:59:42Z",
+      "side": 0,
+      "message": "Don\u0027t know if any of these calls should be in the new code",
+      "revId": "c87206af0d0ddb93b776478f4006ca5b8429be76",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}

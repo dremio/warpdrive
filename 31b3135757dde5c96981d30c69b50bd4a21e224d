@@ -1,0 +1,208 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a220a3da_8f89804b",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 4
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-05-02T16:59:42Z",
+      "side": 1,
+      "message": "Undo",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "5259cb5a_9b88f02d",
+        "filename": "src/warpdrive/ODBCConnection.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-05-02T16:59:42Z",
+      "side": 1,
+      "message": "Missing break here and below",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "52381f5b_5610ec90",
+        "filename": "src/warpdrive/ODBCDescriptor.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-05-02T16:59:42Z",
+      "side": 1,
+      "message": "Can use `is2xConnection` here",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "bb44eaf0_ced66ee1",
+        "filename": "src/warpdrive/odbcapi.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-05-02T16:59:42Z",
+      "side": 1,
+      "message": "Does `rc !\u003d SQL_SUCCESS` on any method? Looks like it could be deleted",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7e608e54_e72a72ab",
+        "filename": "src/warpdrive/odbcapi.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-05-02T16:59:42Z",
+      "side": 1,
+      "message": "return `WD_Execute(StatementHandle, flag)` directly",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "fbc707fb_64355abf",
+        "filename": "src/warpdrive/odbcapi.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-05-02T16:59:42Z",
+      "side": 1,
+      "message": "Return WD_Tables directly",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "80ea4696_57765c9c",
+        "filename": "src/warpdrive/odbcapi.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 1140,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-05-02T16:59:42Z",
+      "side": 1,
+      "message": "Can we remove or comment these chunks of dead code?",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "801d5c02_df5a47f8",
+        "filename": "src/warpdrive/odbcapi30.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-05-02T16:59:42Z",
+      "side": 1,
+      "message": "nit: Return WD_BindParameter(...) directly?",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "fd958ca9_80459adb",
+        "filename": "src/warpdrive/odbcapi30w.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-05-02T16:59:42Z",
+      "side": 1,
+      "message": "`ret` won\u0027t be considered in this case",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d89d95de_718674be",
+        "filename": "src/warpdrive/odbcapiw.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-05-02T16:59:42Z",
+      "side": 1,
+      "message": "On the original code it was SQL_ERROR, Is this right?",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "bfd78a2f_5a1cb926",
+        "filename": "src/warpdrive/odbcapiw.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-05-02T16:59:42Z",
+      "side": 1,
+      "message": "Maybe we should receive the error message as a parameter?",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e7ea6ae0_713dc552",
+        "filename": "src/warpdrive/wdapi30.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-05-02T16:59:42Z",
+      "side": 1,
+      "message": "Can check `if (RecNumber \u003c\u003d 0)` only once at the top instead of on each case in this switch statement.\n\nAlso `diagnostics-\u003eHasRecord(RecNumber-1)`",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
