@@ -16,6 +16,24 @@
       "message": "Don\u0027t know if any of these calls should be in the new code",
       "revId": "c87206af0d0ddb93b776478f4006ca5b8429be76",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "eaae4666_2eb65d95",
+        "filename": "src/warpdrive/odbcapi30.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-03T10:10:34Z",
+      "side": 0,
+      "message": "These methods are from PostgreQSL structures. I will make SQLEndtran throw an unsupported exception though since we don\u0027t support transactions.",
+      "parentUuid": "84cc9d69_057f3ac0",
+      "revId": "c87206af0d0ddb93b776478f4006ca5b8429be76",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }

@@ -18,6 +18,24 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "fcc74aa3_ee3016e0",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 4
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-03T10:10:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a220a3da_8f89804b",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "5259cb5a_9b88f02d",
@@ -31,6 +49,24 @@
       "writtenOn": "2022-05-02T16:59:42Z",
       "side": 1,
       "message": "Missing break here and below",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "5682c399_e0ed4fe7",
+        "filename": "src/warpdrive/ODBCConnection.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-03T10:10:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5259cb5a_9b88f02d",
       "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
@@ -52,6 +88,24 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "ddc96e2f_04b86098",
+        "filename": "src/warpdrive/ODBCDescriptor.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-03T10:10:34Z",
+      "side": 1,
+      "message": "Descriptors are a 3x concept only from a diagnostics perspective so it doesn\u0027t make sense to use is2xConnection.",
+      "parentUuid": "52381f5b_5610ec90",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "bb44eaf0_ced66ee1",
@@ -65,6 +119,24 @@
       "writtenOn": "2022-05-02T16:59:42Z",
       "side": 1,
       "message": "Does `rc !\u003d SQL_SUCCESS` on any method? Looks like it could be deleted",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "952f033e_eb944bdc",
+        "filename": "src/warpdrive/odbcapi.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-03T10:10:34Z",
+      "side": 1,
+      "message": "Yes, some methods can return SQL_NO_DATA or return SQL_ERROR or SQL_SUCCESS_WITH_INFO directly.",
+      "parentUuid": "bb44eaf0_ced66ee1",
       "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
@@ -86,6 +158,24 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "64ae1125_6dda7ff5",
+        "filename": "src/warpdrive/odbcapi.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-03T10:10:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7e608e54_e72a72ab",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "fbc707fb_64355abf",
@@ -99,6 +189,24 @@
       "writtenOn": "2022-05-02T16:59:42Z",
       "side": 1,
       "message": "Return WD_Tables directly",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "78b61e31_24fbffa5",
+        "filename": "src/warpdrive/odbcapi.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-03T10:10:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fbc707fb_64355abf",
       "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
@@ -120,6 +228,24 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "ccd99385_9b557ec6",
+        "filename": "src/warpdrive/odbcapi.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 1140,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-03T10:10:34Z",
+      "side": 1,
+      "message": "I think this sort of clean-up should be done in a separate patch. This is already a large patch and there are other significant chunks of unused PG code.",
+      "parentUuid": "80ea4696_57765c9c",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "801d5c02_df5a47f8",
@@ -133,6 +259,24 @@
       "writtenOn": "2022-05-02T16:59:42Z",
       "side": 1,
       "message": "nit: Return WD_BindParameter(...) directly?",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "df3d13a6_438a926f",
+        "filename": "src/warpdrive/odbcapi30.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-03T10:10:34Z",
+      "side": 1,
+      "message": "Skipping this since bind parameter isn\u0027t supported yet.",
+      "parentUuid": "801d5c02_df5a47f8",
       "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
@@ -154,6 +298,24 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "d2331e25_ba688bae",
+        "filename": "src/warpdrive/odbcapi30w.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-03T10:10:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fd958ca9_80459adb",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "d89d95de_718674be",
@@ -167,6 +329,24 @@
       "writtenOn": "2022-05-02T16:59:42Z",
       "side": 1,
       "message": "On the original code it was SQL_ERROR, Is this right?",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "31b1122a_45200512",
+        "filename": "src/warpdrive/odbcapiw.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-03T10:10:34Z",
+      "side": 1,
+      "message": "Truncation for API calls (but not necessarily cell data) is always a warning so SQL_SUCCESS_WITH_INFO",
+      "parentUuid": "d89d95de_718674be",
       "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
@@ -188,6 +368,24 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "dd4f3fdd_34394e97",
+        "filename": "src/warpdrive/odbcapiw.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-03T10:10:34Z",
+      "side": 1,
+      "message": "This is an optimization. Truncation warnings need to be fast to allow SQLGetData to perform well iteratively.",
+      "parentUuid": "bfd78a2f_5a1cb926",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "e7ea6ae0_713dc552",
@@ -201,6 +399,24 @@
       "writtenOn": "2022-05-02T16:59:42Z",
       "side": 1,
       "message": "Can check `if (RecNumber \u003c\u003d 0)` only once at the top instead of on each case in this switch statement.\n\nAlso `diagnostics-\u003eHasRecord(RecNumber-1)`",
+      "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7869bedf_714d7eef",
+        "filename": "src/warpdrive/wdapi30.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-03T10:10:34Z",
+      "side": 1,
+      "message": "This can\u0027t be done reliably. Some of these fields are header fields and don\u0027t rely on the record number so doing the check early will cause the fields to fail when they shouldn\u0027t.",
+      "parentUuid": "e7ea6ae0_713dc552",
       "revId": "31b3135757dde5c96981d30c69b50bd4a21e224d",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
