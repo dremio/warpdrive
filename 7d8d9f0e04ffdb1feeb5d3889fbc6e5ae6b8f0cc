@@ -36,6 +36,24 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "6067fede_c92cde11",
+        "filename": "src/test/.gitignore",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-04T20:53:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fa8f1c04_ed0b0b54",
+      "revId": "7d8d9f0e04ffdb1feeb5d3889fbc6e5ae6b8f0cc",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "826985b6_636a287f",
@@ -155,6 +173,24 @@
       "side": 1,
       "message": "I have not been able to get this to work without these conditionals.",
       "parentUuid": "8407a0e7_cee38c59",
+      "revId": "7d8d9f0e04ffdb1feeb5d3889fbc6e5ae6b8f0cc",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2ca8f572_98f22db5",
+        "filename": "src/test/CMakeLists.txt",
+        "patchSetId": 6
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-04T20:53:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "21da70ff_88a97b8e",
       "revId": "7d8d9f0e04ffdb1feeb5d3889fbc6e5ae6b8f0cc",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
