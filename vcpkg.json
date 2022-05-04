@@ -12,6 +12,7 @@
     "boost-optional",
     "boost-variant",
     "boost-xpressive",
+    "boost-beast",
     "brotli",
     "gflags",
     "openssl",
@@ -21,7 +22,8 @@
     "grpc",
     "utf8proc",
     "zlib",
-    "zstd"
+    "zstd",
+    "rapidjson"
   ],
   "builtin-baseline": "4e485c34f5e056327ef00c14e2e3620bc50de098"
 }
