@@ -229,6 +229,24 @@
       "parentUuid": "ca0512e5_fd4adf3c",
       "revId": "7d8d9f0e04ffdb1feeb5d3889fbc6e5ae6b8f0cc",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "81d673f9_6fe64d6c",
+        "filename": "src/test/CMakeLists.txt",
+        "patchSetId": 6
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-05T22:51:54Z",
+      "side": 1,
+      "message": "I think this is good. Have you tried build the Linux build using the Dockerfile? I assume Windows works?",
+      "parentUuid": "981cc266_b920602a",
+      "revId": "7d8d9f0e04ffdb1feeb5d3889fbc6e5ae6b8f0cc",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
