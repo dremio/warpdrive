@@ -700,8 +700,11 @@ void ODBCStatement::GetColumns(const std::string* catalog, const std::string* sc
 
 void ODBCStatement::GetTypeInfo(SQLSMALLINT dataType) {
   closeCursor(true);
-  m_currenResult = m_spiStatement->GetTypeInfo(dataType);
-
+  if (m_connection.IsOdbc2Connection()) {
+    m_currenResult = m_spiStatement->GetTypeInfo_V2(dataType);
+  } else {
+    m_currenResult = m_spiStatement->GetTypeInfo_V3(dataType);
+  }
   m_ird->PopulateFromResultSetMetadata(m_currenResult->GetMetadata().get());
   m_hasReachedEndOfResult = false;
 
