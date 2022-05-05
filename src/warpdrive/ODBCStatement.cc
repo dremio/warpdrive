@@ -698,10 +698,13 @@ void ODBCStatement::GetColumns(const std::string* catalog, const std::string* sc
   m_isPrepared = false;
 }
 
-void ODBCStatement::GetTypeInfo(SQLSMALLINT dataType) {
+void ODBCStatement::GetTypeInfo(SQLSMALLINT data_type) {
   closeCursor(true);
-  m_currenResult = m_spiStatement->GetTypeInfo(dataType);
-
+  if (m_connection.IsOdbc2Connection()) {
+    m_currenResult = m_spiStatement->GetTypeInfo_V2(data_type);
+  } else {
+    m_currenResult = m_spiStatement->GetTypeInfo_V3(data_type);
+  }
   m_ird->PopulateFromResultSetMetadata(m_currenResult->GetMetadata().get());
   m_hasReachedEndOfResult = false;
 
