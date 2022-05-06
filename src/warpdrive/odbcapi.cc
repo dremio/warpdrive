@@ -464,7 +464,7 @@ SQLSpecialColumns(HSTMT StatementHandle,
   SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLSpecialColumns";
 	RETCODE	ret;
-        ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+       return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
           throw DriverException("Unsupported function", "HYC00");
                 });
 }
