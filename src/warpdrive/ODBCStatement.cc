@@ -295,7 +295,7 @@ bool ODBCStatement::Fetch(size_t rows) {
     for (size_t i = 0; i < m_ird->GetRecords().size(); i++) {
       if (i < m_currentArd->GetRecords().size() && m_currentArd->GetRecords()[i].m_isBound) {
         const DescriptorRecord& ardRecord = m_currentArd->GetRecords()[i];
-        m_currenResult->BindColumn(i+1, static_cast<CDataType>(ardRecord.m_type), ardRecord.m_precision,
+        m_currenResult->BindColumn(i+1, ardRecord.m_type, ardRecord.m_precision,
           ardRecord.m_scale, reinterpret_cast<char*>(ardRecord.m_dataPtr) + bindOffset,
           GetLength(ardRecord),
           reinterpret_cast<ssize_t*>(
@@ -661,7 +661,7 @@ bool ODBCStatement::GetData(SQLSMALLINT recordNumber, SQLSMALLINT cType, SQLPOIN
     evaluatedCType = getCTypeForSQLType(irdRecord);
   }
 
-  return m_currenResult->GetData(recordNumber, static_cast<CDataType>(evaluatedCType), precision,
+  return m_currenResult->GetData(recordNumber, evaluatedCType, precision,
                        scale, dataPtr, bufferLength, indicatorPtr);
 }
 
