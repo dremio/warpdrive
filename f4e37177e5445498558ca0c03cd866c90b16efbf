@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "5626b117_80bf9815",
+        "filename": "src/warpdrive/ODBCStatement.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-06T21:15:18Z",
+      "side": 1,
+      "message": "This cast is superfluous since m_type is a SQLSMALLINT, which is an int16.",
+      "revId": "f4e37177e5445498558ca0c03cd866c90b16efbf",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
