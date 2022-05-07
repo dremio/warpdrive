@@ -61,27 +61,27 @@ inline SQLRETURN GetAttributeUTF8(const std::string &attributeValue,
 }
 
 template <typename O>
-inline SQLRETURN GetAttributeSQLWCHAR(const std::string &attributeValue,
+inline SQLRETURN GetAttributeSQLWCHAR(const std::string &attributeValue, bool isLengthInBytes,
                                  SQLPOINTER output, O outputSize,
                                  O *outputLenPtr) {
   size_t result = ConvertToSqlWChar(
-      attributeValue, reinterpret_cast<SQLWCHAR *>(output), outputSize);
+      attributeValue, reinterpret_cast<SQLWCHAR *>(output), isLengthInBytes ? outputSize : outputSize * sizeof(SQLWCHAR));
 
   if (outputLenPtr) {
-    *outputLenPtr = static_cast<O>(result);
+    *outputLenPtr = static_cast<O>(isLengthInBytes ? result : result / sizeof(SQLWCHAR));
   }
 
-  if (outputSize < result + sizeof(SQLWCHAR)) {
+  if (outputSize < result + isLengthInBytes ? sizeof(SQLWCHAR) : 1) {
     return SQL_SUCCESS_WITH_INFO;
   }
   return SQL_SUCCESS;
 }
 
 template <typename O>
-inline SQLRETURN GetAttributeSQLWCHAR(const std::string &attributeValue,
+inline SQLRETURN GetAttributeSQLWCHAR(const std::string &attributeValue, bool isLengthInBytes,
                                       SQLPOINTER output, O outputSize,
                                       O *outputLenPtr, driver::odbcabstraction::Diagnostics& diagnostics) {
-  SQLRETURN result = GetAttributeSQLWCHAR(attributeValue, output, outputSize, outputLenPtr);
+  SQLRETURN result = GetAttributeSQLWCHAR(attributeValue, isLengthInBytes, output, outputSize, outputLenPtr);
   if (SQL_SUCCESS_WITH_INFO == result) {
     diagnostics.AddTruncationWarning();
   }
@@ -90,11 +90,11 @@ inline SQLRETURN GetAttributeSQLWCHAR(const std::string &attributeValue,
 
 template <typename O>
 inline SQLRETURN
-GetStringAttribute(bool isUnicode, const std::string &attributeValue,
+GetStringAttribute(bool isUnicode, const std::string &attributeValue, bool isLengthInBytes,
                    SQLPOINTER output, O outputSize, O *outputLenPtr, driver::odbcabstraction::Diagnostics& diagnostics) {
   SQLRETURN result = SQL_SUCCESS;
   if (isUnicode) {
-    result = GetAttributeSQLWCHAR(attributeValue, output, outputSize, outputLenPtr);
+    result = GetAttributeSQLWCHAR(attributeValue, isLengthInBytes, output, outputSize, outputLenPtr);
   } else {
     result = GetAttributeUTF8(attributeValue, output, outputSize, outputLenPtr);
   }

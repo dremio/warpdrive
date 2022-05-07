@@ -38,7 +38,7 @@ namespace ODBC {
   // Return the number of bytes required for the conversion.
   inline size_t ConvertToSqlWChar(const std::string& str, SQLWCHAR* buffer, SQLLEN bufferSizeInBytes) {
     SqlWString wstr = CharToWStrConverter().from_bytes(str);
-    SQLLEN valueLengthInBytes = wstr.size();
+    SQLLEN valueLengthInBytes = wstr.size() * sizeof(SqlWChar);
 
     if (buffer) {
       memcpy(buffer, wstr.data(), WD_MIN(static_cast<SQLLEN>(wstr.size() * sizeof(SqlWChar)), bufferSizeInBytes));

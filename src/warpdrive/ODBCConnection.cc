@@ -134,10 +134,10 @@ void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLIN
       break;
     #endif
     case SQL_DATA_SOURCE_NAME:
-      GetStringAttribute(isUnicode, m_dsn, value, bufferLength, outputLength, GetDiagnostics());
+      GetStringAttribute(isUnicode, m_dsn, true, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_DRIVER_ODBC_VER:
-      GetStringAttribute(isUnicode, "03.80", value, bufferLength, outputLength, GetDiagnostics());
+      GetStringAttribute(isUnicode, "03.80", true, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_DYNAMIC_CURSOR_ATTRIBUTES1:
       GetAttribute(static_cast<SQLUINTEGER>(0), value, bufferLength, outputLength);
@@ -175,7 +175,7 @@ void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLIN
       GetAttribute(static_cast<SQLUINTEGER>(SQL_PAS_NO_SELECT), value, bufferLength, outputLength);
       break;
     case SQL_ROW_UPDATES:
-      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength, GetDiagnostics());
+      GetStringAttribute(isUnicode, "N", true, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_SCROLL_OPTIONS:
       GetAttribute(static_cast<SQLUINTEGER>(SQL_SO_FORWARD_ONLY), value, bufferLength, outputLength);
@@ -190,16 +190,16 @@ void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLIN
       GetAttribute(static_cast<SQLUINTEGER>(0), value, bufferLength, outputLength);
       break;
     case SQL_DESCRIBE_PARAMETER:
-      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength, GetDiagnostics());
+      GetStringAttribute(isUnicode, "N", true, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_MULT_RESULT_SETS:
-      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength, GetDiagnostics());
+      GetStringAttribute(isUnicode, "N", true, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_MULTIPLE_ACTIVE_TXN:
-      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength, GetDiagnostics());
+      GetStringAttribute(isUnicode, "N", true, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_NEED_LONG_DATA_LEN:
-      GetStringAttribute(isUnicode, "N", value, bufferLength, outputLength, GetDiagnostics());
+      GetStringAttribute(isUnicode, "N", true, value, bufferLength, outputLength, GetDiagnostics());
       break;
     case SQL_TXN_CAPABLE:
       GetAttribute(static_cast<SQLUSMALLINT>(SQL_TC_NONE), value, bufferLength, outputLength);
@@ -208,10 +208,10 @@ void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLIN
       GetAttribute(static_cast<SQLUINTEGER>(0), value, bufferLength, outputLength);
       break;
     case SQL_TABLE_TERM:
-      GetStringAttribute(isUnicode, "table", value, bufferLength, outputLength, GetDiagnostics());
+      GetStringAttribute(isUnicode, "table", true, value, bufferLength, outputLength, GetDiagnostics());
       break;
-    case SQL_COLUMN_ALIAS:
-      GetStringAttribute(isUnicode, "Y", value, bufferLength, outputLength, GetDiagnostics());
+    case SQL_COLUMN_ALIAS: true, 
+      GetStringAttribute(isUnicode, "Y", true, value, bufferLength, outputLength, GetDiagnostics());
       break;
     // Deprecated ODBC 2.x fields required for backwards compatibility.
     case SQL_ODBC_API_CONFORMANCE:
@@ -261,7 +261,7 @@ void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLIN
     {
       const auto& info = m_spiConnection->GetInfo(infoType);
       const std::string& infoValue = boost::get<std::string>(info);
-      GetStringAttribute(isUnicode, infoValue, value, bufferLength, outputLength, GetDiagnostics());
+      GetStringAttribute(isUnicode, infoValue, true, value, bufferLength, outputLength, GetDiagnostics());
       break;
     }
 
@@ -382,7 +382,7 @@ void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLIN
         throw DriverException("Optional feature not supported.", "HYC00");
       }
       const std::string &infoValue = boost::get<std::string>(*attr);
-      GetStringAttribute(isUnicode, infoValue, value, bufferLength,outputLength, GetDiagnostics());
+      GetStringAttribute(isUnicode, infoValue, true, value, bufferLength,outputLength, GetDiagnostics());
       break;
     }
     default:
@@ -567,7 +567,7 @@ void ODBCConnection::GetConnectAttr(SQLINTEGER attribute, SQLPOINTER value,
       throw DriverException("Optional feature not supported.", "HYC00");
     }
     const std::string &infoValue = boost::get<std::string>(*catalog);
-    GetStringAttribute(isUnicode, infoValue, value, bufferLength,outputLength, GetDiagnostics());
+    GetStringAttribute(isUnicode, infoValue, true, value, bufferLength,outputLength, GetDiagnostics());
     return;
   }
 
