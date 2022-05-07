@@ -330,7 +330,7 @@ SQLGetDiagFieldW(SQLSMALLINT	fHandleType,
 {
   // Note: Ensure the diagnostics manager is empty at the end of this function.
   RETCODE ret = SQL_SUCCESS;
-  auto func = [&]() -> SQLRETURN {
+  try {
     SQLSMALLINT *rgbL, blen = 0, bMax;
     c_ptr rgbD;
 
@@ -381,32 +381,7 @@ SQLGetDiagFieldW(SQLSMALLINT	fHandleType,
                             cbDiagInfoMax, pcbDiagInfo);
       break;
     }
-  };
-
-  Diagnostics* diagnostics = nullptr;
-  SQLRETURN rc = SQL_SUCCESS;
-  try {
-    switch (fHandleType) {
-    case SQL_HANDLE_ENV:
-      diagnostics = &ODBCEnvironment::of(handle)->GetDiagnostics();
-      ret = ODBCEnvironment::ExecuteWithDiagnostics(handle, rc, func);
-      break;
-    case SQL_HANDLE_DBC:
-      diagnostics = &ODBCConnection::of(handle)->GetDiagnostics();
-      ret = ODBCConnection::ExecuteWithDiagnostics(handle, rc, func);
-      break;
-    case SQL_HANDLE_STMT:
-      diagnostics = &ODBCStatement::of(handle)->GetDiagnostics();
-      ret = ODBCStatement::ExecuteWithDiagnostics(handle, rc, func);
-      break;
-    case SQL_HANDLE_DESC:
-      diagnostics = &ODBCDescriptor::of(handle)->GetDiagnostics();
-      ret = ODBCDescriptor::ExecuteWithDiagnostics(handle, rc, func);
-      break;
-    default:
-      return SQL_INVALID_HANDLE;
-    }
-  } catch (std::exception& e) {
+  } catch (const std::exception& e) {
     MYLOG(0, "Error when getting diagnostics: %s", e.what());
     ret = SQL_ERROR;
   } catch (...) {
@@ -414,15 +389,6 @@ SQLGetDiagFieldW(SQLSMALLINT	fHandleType,
     ret = SQL_ERROR;
   }
 
-  if (SQL_SUCCEEDED(ret)) {
-    if (diagnostics->HasError()) {
-      ret = SQL_ERROR;
-    } else if (diagnostics->HasWarning()) {
-      ret = SQL_SUCCESS_WITH_INFO;
-    }
-  }
-
-  diagnostics->Clear();
   return ret;
 }
 

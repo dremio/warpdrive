@@ -335,7 +335,7 @@ SQLGetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
                 BufferLength);
           return WD_GetDiagField(HandleType, Handle, RecNumber, DiagIdentifier,
                                 DiagInfo, BufferLength, StringLength);
-        } catch (std::exception& ex) {
+        } catch (const std::exception& ex) {
           MYLOG(0, "Error getting diagnostics: %s", ex.what());
           return SQL_ERROR;
         } catch (...) {
@@ -361,7 +361,7 @@ SQLGetDiagRec(SQLSMALLINT HandleType, SQLHANDLE Handle,
               WD_GetDiagRec(HandleType, Handle, RecNumber, Sqlstate,
                             NativeError, MessageText, BufferLength, TextLength);
           return ret;
-        } catch (std::exception& ex) {
+        } catch (const std::exception& ex) {
           MYLOG(0, "Error getting diagnostics: %s", ex.what());
           return SQL_ERROR;
         } catch (...) {
