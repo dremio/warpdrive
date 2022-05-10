@@ -64,13 +64,9 @@ ODBCConnection &ODBCDescriptor::GetConnection() {
 }
 
 void ODBCDescriptor::SetHeaderField(SQLSMALLINT fieldIdentifier, SQLPOINTER value, SQLINTEGER bufferLength) {
-  if (!m_isWritable) {
+  // Only these two fields can be set on the IRD.
+  if (!m_isWritable && fieldIdentifier != SQL_DESC_ARRAY_STATUS_PTR && fieldIdentifier != SQL_DESC_ROWS_PROCESSED_PTR) {
     throw DriverException("Cannot modify read-only descriptor", "HY016");
-  }
-
-  // TODO: Remove this check when parameters are supported.
-  if (!m_isAppDescriptor) {
-    throw DriverException("Parameters are not supported. Cannot write to IPD.", "HYC00");
   }
 
   switch (fieldIdentifier) {
