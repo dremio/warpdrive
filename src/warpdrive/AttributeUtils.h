@@ -34,10 +34,10 @@ template <typename O>
 inline SQLRETURN GetAttributeUTF8(const std::string &attributeValue,
                              SQLPOINTER output, O outputSize, O *outputLenPtr) {
   if (output) {
-    size_t outputLen =
-        WD_MIN(static_cast<O>(attributeValue.size()), outputSize);
-    memcpy(output, attributeValue.c_str(), outputLen);
-    reinterpret_cast<char *>(output)[outputLen] = '\0';
+    size_t outputLenBeforeNul =
+        WD_MIN(static_cast<O>(attributeValue.size()), outputSize - 1);
+    memcpy(output, attributeValue.c_str(), outputLenBeforeNul);
+    reinterpret_cast<char *>(output)[outputLenBeforeNul] = '\0';
   }
 
   if (outputLenPtr) {
@@ -71,7 +71,7 @@ inline SQLRETURN GetAttributeSQLWCHAR(const std::string &attributeValue, bool is
     *outputLenPtr = static_cast<O>(isLengthInBytes ? result : result / sizeof(SQLWCHAR));
   }
 
-  if (outputSize < result + isLengthInBytes ? sizeof(SQLWCHAR) : 1) {
+  if (outputSize < result + (isLengthInBytes ? sizeof(SQLWCHAR) : 1)) {
     return SQL_SUCCESS_WITH_INFO;
   }
   return SQL_SUCCESS;

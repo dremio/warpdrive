@@ -171,7 +171,10 @@ SQLGetDescFieldW(SQLHDESC hdesc, SQLSMALLINT iRecord, SQLSMALLINT iField,
         }
         ret = WD_GetDescField(hdesc, iRecord, iField, rgbV.get(), bMax, pcbV);
         if (SQL_SUCCESS_WITH_INFO != ret || blen < bMax)
-          break;
+            break;
+        else
+            // Get rid of any internally-generated truncation warnings.
+            ODBCStatement::of(hdesc)->GetDiagnostics().Clear();
       }
       if (SQL_SUCCEEDED(ret)) {
         blen = (SQLINTEGER)utf8_to_ucs2(rgbV.get(), blen, (SQLWCHAR *)rgbValue,
@@ -294,7 +297,10 @@ SQLColAttributeW(SQLHSTMT	hstmt,
         ret = WD_ColAttributes(hstmt, iCol, iField, rgbD.get(), bMax, rgbL,
                                static_cast<SQLLEN *>(pNumAttr));
         if (SQL_SUCCESS_WITH_INFO != ret || blen < bMax)
-          break;
+            break;
+        else
+            // Get rid of any internally-generated truncation warnings.
+            ODBCStatement::of(hstmt)->GetDiagnostics().Clear();
       }
       if (SQL_SUCCEEDED(ret)) {
         blen = (SQLSMALLINT)utf8_to_ucs2(rgbD.get(), blen, (SQLWCHAR *)pCharAttr,

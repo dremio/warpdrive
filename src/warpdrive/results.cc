@@ -155,15 +155,15 @@ WD_DescribeCol(HSTMT hstmt,
   SQLUSMALLINT zeroBasedIndex = icol - 1;
   const DescriptorRecord& record = records[zeroBasedIndex];
   SQLSMALLINT totalColumnNameLen;
-  GetAttributeUTF8(record.m_name, szColName, cbColNameMax, &totalColumnNameLen, stmt->GetDiagnostics());
+  SQLRETURN ret = GetAttributeUTF8(record.m_name, szColName, cbColNameMax, &totalColumnNameLen, stmt->GetDiagnostics());
   if (pcbColName) {
     *pcbColName = totalColumnNameLen;
   }
   GetAttribute<SQLSMALLINT, size_t>(record.m_type, pfSqlType, sizeof(SQLUSMALLINT), nullptr);
   GetAttribute<SQLUINTEGER, size_t>(record.m_length, pcbColDef, sizeof(SQLULEN), nullptr);
   GetAttribute<SQLSMALLINT, size_t>(record.m_nullable, pfNullable, sizeof(SQLSMALLINT), nullptr);
-
-  return SQL_SUCCESS;
+  
+  return ret;
 }
 
 /*		Returns result column descriptor information for a result set. */

@@ -221,7 +221,10 @@ SQLDescribeColW(HSTMT StatementHandle,
                                  buflen, &nmlen, DataType, ColumnSize, DecimalDigits,
                                  Nullable);
             if (SQL_SUCCESS_WITH_INFO != ret || nmlen < buflen)
-              break;
+                break;
+            else
+                // Get rid of any internally-generated truncation warnings.
+                ODBCStatement::of(StatementHandle)->GetDiagnostics().Clear();
           }
           if (SQL_SUCCEEDED(ret)) {
             SQLLEN nmcount = nmlen;
@@ -287,7 +290,10 @@ SQLGetCursorNameW(HSTMT StatementHandle,
             ret = WD_GetCursorName(StatementHandle, (SQLCHAR *)crName.get(), buflen,
                                    &clen);
             if (SQL_SUCCESS_WITH_INFO != ret || clen < buflen)
-              break;
+                break;
+            else
+                // Get rid of any internally-generated truncation warnings.
+                ODBCStatement::of(StatementHandle)->GetDiagnostics().Clear();
           }
           if (SQL_SUCCEEDED(ret)) {
             SQLLEN nmcount = clen;
@@ -551,7 +557,10 @@ SQLNativeSqlW(HDBC			hdbc,
             ret = WD_NativeSql(hdbc, (SQLCHAR *)szIn.get(), (SQLINTEGER)slen,
                                (SQLCHAR *)szOut.get(), buflen, &olen);
             if (SQL_SUCCESS_WITH_INFO != ret || olen < buflen)
-              break;
+                break;
+            else
+                // Get rid of any internally-generated truncation warnings.
+                ODBCStatement::of(hdbc)->GetDiagnostics().Clear();
           }
           if (SQL_SUCCEEDED(ret)) {
             SQLLEN szcount = olen;
