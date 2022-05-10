@@ -1,6 +1,7 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <string>
 
 #ifdef WIN32
 #include <windows.h>
@@ -32,7 +33,15 @@ extern SQLHDBC conn;
 		exit(1);									\
     }
 
+<<<<<<< HEAD
+=======
+
+extern void CHECK_STMT_RESULT(SQLRETURN rc, char* msg, SQLHANDLE hstmt);
+extern std::string format_diagnostic(const std::string msg, SQLSMALLINT htype, SQLHANDLE handle);
+extern std::string get_diagnostic(SQLHANDLE handle, SQLSMALLINT htype);
+>>>>>>> cb7abc3 ((WIP) Modify common.h and common.cc to use cpp like semantics)
 extern void print_diag(char *msg, SQLSMALLINT htype, SQLHANDLE handle);
+extern void print_diag(const std::string, SQLSMALLINT htype, SQLHANDLE handle);
 extern const char *get_test_dsn(void);
 extern int  IsAnsi(void);
 extern void test_connect_ext(char *extraparams);
