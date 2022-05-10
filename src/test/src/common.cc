@@ -1,19 +1,22 @@
 #include "common.h"
+#include <ostream>
+#include <gtest/gtest.h>
 
 SQLHENV env;
 SQLHDBC conn;
 
 void
 CHECK_STMT_RESULT(SQLRETURN rc, char* msg, SQLHANDLE hstmt) {
-	ASSERT_TRUE(SQL_SUCCEEDED(rc))
-		<< msg
-		<< std::endl
-	    << print_diagnostic(hstmt, SQL_HANDLE_STMT)
-		<< std::endl;
+	ASSERT_TRUE(SQL_SUCCEEDED(rc)) << format_diagnostic(msg, SQL_HANDLE_STMT, hstmt);
 }
 
 std::string
-print_diagnostic(SQLHANDLE handle, SQLSMALLINT htype) {
+format_diagnostic(const std::string msg, SQLSMALLINT htype, SQLHANDLE handle) {
+	return msg + get_diagnostic(handle, htype);
+}
+
+std::string
+get_diagnostic(SQLHANDLE handle, SQLSMALLINT htype) {
 	std::string buf;
 	SQLCHAR     sqlstate[32];
 	SQLCHAR     message[1000];
@@ -44,32 +47,12 @@ print_diagnostic(SQLHANDLE handle, SQLSMALLINT htype) {
 	return buf;
 }
 
-void
-print_diag(char *msg, SQLSMALLINT htype, SQLHANDLE handle)
-{
-	SQLCHAR     sqlstate[32];
-	SQLCHAR     message[1000];
-	SQLINTEGER	nativeerror;
-	SQLSMALLINT textlen;
-	SQLRETURN	ret;
-	SQLSMALLINT	recno = 0;
+void print_diag(char *msg, SQLSMALLINT htype, SQLHANDLE handle) {
+	std::cout << format_diagnostic(std::string(msg), htype, handle);
+}
 
-	if (msg)
-		printf("%s\n", msg);
-
-	do
-	{
-		recno++;
-		ret = SQLGetDiagRec(htype, handle, recno, sqlstate, &nativeerror,
-							message, sizeof(message), &textlen);
-		if (ret == SQL_INVALID_HANDLE)
-			printf("Invalid handle\n");
-		else if (SQL_SUCCEEDED(ret))
-			printf("%s=%s\n", sqlstate, message);
-	} while (ret == SQL_SUCCESS);
-
-	if (ret == SQL_NO_DATA && recno == 1)
-		printf("No error information\n");
+void print_diag(const std::string msg, SQLSMALLINT htype, SQLHANDLE handle) {
+	std::cout << format_diagnostic(msg, htype, handle);
 }
 
 const char * const default_dsn = "Arrow";
