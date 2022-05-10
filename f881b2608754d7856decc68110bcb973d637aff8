@@ -16,6 +16,24 @@
       "message": "Was this change necessary? Looks they are equivalent",
       "revId": "f881b2608754d7856decc68110bcb973d637aff8",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "09be7e52_f344611e",
+        "filename": "src/warpdrive/ODBCDescriptor.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-10T20:44:49Z",
+      "side": 1,
+      "message": "This would underflow if records.size() was zero.\nBecause it\u0027d assign i to 0 - 1 \u003d\u003d -1, then try to access -1 as an array index.",
+      "parentUuid": "1e8843c6_a5243597",
+      "revId": "f881b2608754d7856decc68110bcb973d637aff8",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
