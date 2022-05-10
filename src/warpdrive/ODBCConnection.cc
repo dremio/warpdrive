@@ -238,6 +238,8 @@ void ODBCConnection::GetInfo(SQLUSMALLINT infoType, SQLPOINTER value, SQLSMALLIN
 
     // Driver-level string properties.
     case SQL_USER_NAME:
+    case SQL_DBMS_NAME:
+    case SQL_DBMS_VER:
     case SQL_DRIVER_NAME:
     case SQL_DRIVER_VER:
     case SQL_SEARCH_PATTERN_ESCAPE:
