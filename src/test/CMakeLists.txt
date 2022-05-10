@@ -33,6 +33,20 @@ endif()
 include_directories(${ODBC_INCLUDE_DIRS})
 link_libraries(${ODBC_LIBRARIES})
 
+include(FetchContent)
+FetchContent_Declare(
+        googletest
+        # Specify the commit you depend on and update it regularly.
+        URL https://github.com/google/googletest/archive/e2239ee6043f73722e7aa812a459f54a28552929.zip
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+add_executable(hello_test src/hello_test.cc)
+target_link_libraries(hello_test gtest_main)
+add_test(NAME example_test COMMAND hello_test)
+
 # Test executables
 add_executable(alter src/alter-test.cc src/common.cc)
 add_executable(arraybinding src/arraybinding-test.cc src/common.cc)
