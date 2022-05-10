@@ -24,9 +24,9 @@ namespace {
   SQLSMALLINT CalculateHighestBoundRecord(const std::vector<DescriptorRecord>& records) {
     // Most applications will bind every column, so optimistically assume that we'll
     // find the next bound record fastest by counting backwards.
-    for (size_t i = records.size() - 1; i >= 0; --i) {
-      if (records[i].m_isBound) {
-        return i + 1;
+    for (size_t i = records.size(); i > 0; --i) {
+      if (records[i-1].m_isBound) {
+        return i;
       }
     }
     return 0;
@@ -97,7 +97,8 @@ void ODBCDescriptor::SetHeaderField(SQLSMALLINT fieldIdentifier, SQLPOINTER valu
       m_hasBindingsChanged = true;
       break;
     case SQL_DESC_COUNT: {
-      SQLSMALLINT newCount = *reinterpret_cast<SQLSMALLINT*>(value);
+      SQLSMALLINT newCount;
+      SetAttribute(value, newCount);
       m_records.resize(newCount);
 
       if (m_isAppDescriptor && newCount <= m_highestOneBasedBoundRecord) {
@@ -116,6 +117,21 @@ void ODBCDescriptor::SetHeaderField(SQLSMALLINT fieldIdentifier, SQLPOINTER valu
 void ODBCDescriptor::SetField(SQLSMALLINT recordNumber, SQLSMALLINT fieldIdentifier, SQLPOINTER value, SQLINTEGER bufferLength) {
   if (!m_isWritable) {
     throw DriverException("Cannot modify read-only descriptor", "HY016");
+  }
+
+  // Handle header fields before validating the record number.
+  switch (fieldIdentifier) {
+  case SQL_DESC_ALLOC_TYPE:
+  case SQL_DESC_ARRAY_SIZE:
+  case SQL_DESC_ARRAY_STATUS_PTR:
+  case SQL_DESC_BIND_OFFSET_PTR:
+  case SQL_DESC_BIND_TYPE:
+  case SQL_DESC_ROWS_PROCESSED_PTR:
+  case SQL_DESC_COUNT:
+      SetHeaderField(fieldIdentifier, value, bufferLength);
+      return;
+  default:
+      break;
   }
 
   if (recordNumber == 0) {
@@ -492,6 +508,7 @@ void ODBCDescriptor::BindCol(SQLSMALLINT recordNumber, SQLSMALLINT cType, SQLPOI
   DescriptorRecord& record = m_records[zeroBasedRecordIndex];
 
   record.m_type = cType;
+  record.m_indicatorPtr = indicatorPtr;
   SetDataPtrOnRecord(dataPtr, recordNumber);
 }
 
