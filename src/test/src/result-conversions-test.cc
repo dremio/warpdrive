@@ -13,6 +13,7 @@
 #endif
 
 #include "common.h"
+#include <gtest/gtest.h>
 
 /* Visual Studio didn't have isinf and isinf until VS2013. */
 #if defined (WIN32) && (_MSC_VER < 1800)
@@ -481,11 +482,7 @@ test_conversion(const char *pgtype, const char *pgvalue, int sqltype, const char
 	fixed_len = get_sql_type_size(sqltype);
 	if (fixed_len != -1)
 		buflen = fixed_len;
-	if (buflen == -1)
-	{
-		printf("no buffer length given!");
-		exit(1);
-	}
+	ASSERT_NE(buflen, -1) << "no buffer length given";
 
 	/*
 	 * Use dollar-quotes to make the test case insensitive to
@@ -497,54 +494,48 @@ test_conversion(const char *pgtype, const char *pgvalue, int sqltype, const char
 			 pgvalue, pgtype, pgtype, sqltypestr);
 
 	rc = SQLExecDirect(hstmt, (SQLCHAR *) sql, SQL_NTS);
-	CHECK_STMT_RESULT(rc, "SQLExecDirect failed", hstmt);
+	ASSERT_TRUE(SQL_SUCCEEDED(rc)) << "SQLExecDirect failed";
 
 	rc = SQLFetch(hstmt);
-	CHECK_STMT_RESULT(rc, "SQLFetch failed", hstmt);
+	ASSERT_TRUE(SQL_SUCCEEDED(rc)) << "SQLFetch failed";
 
 	rc = SQLGetData(hstmt, 1, sqltype, resultbuf, buflen, &len_or_ind);
-	if (SQL_SUCCEEDED(rc))
+	ASSERT_TRUE(SQL_SUCCEEDED(rc)) << "SQLGetData failed";
+
+	print_sql_type(sqltype, resultbuf, len_or_ind, use_time);
+
+	if (rc == SQL_SUCCESS_WITH_INFO)
 	{
-		print_sql_type(sqltype, resultbuf, len_or_ind, use_time);
+		SQLCHAR sqlstate[10];
 
-		if (rc == SQL_SUCCESS_WITH_INFO)
-		{
-			SQLCHAR sqlstate[10];
-
-			rc = SQLGetDiagRec(SQL_HANDLE_STMT, hstmt, 1, sqlstate, NULL, NULL, 0, NULL);
-			if (!SQL_SUCCEEDED(rc) && SQL_NO_DATA != rc)
-				print_diag(" SQLGetDiagRec failed", SQL_HANDLE_STMT, hstmt);
-			else
-			{
-				if (memcmp(sqlstate, "01004", 5) == 0)
-					printf(" (truncated)");
-				else if (SQL_NO_DATA == rc && IsAnsi()) /* maybe */
-					printf(" (truncated)");
-				else
-					print_diag("SQLGetData success with info", SQL_HANDLE_STMT, hstmt);
-			}
-		}
-		/* just in order to fix ansi driver test on Windows */
-		else if (1 <=  buflen &&
-			 SQL_C_WCHAR == sqltype &&
-			 0 == len_or_ind &&
-			 0 == strcmp(pgtype, "text") &&
-			 IsAnsi())
+		rc = SQLGetDiagRec(SQL_HANDLE_STMT, hstmt, 1, sqlstate, NULL, NULL, 0, NULL);
+		if (!SQL_SUCCEEDED(rc) && SQL_NO_DATA != rc)
+		ASSERT_TRUE(SQL_SUCCEEDED(rc) || SQL_NO_DATA == rc) << "SQLGetDiagRec failed";
+		if (memcmp(sqlstate, "01004", 5) == 0)
 			printf(" (truncated)");
+		else if (SQL_NO_DATA == rc && IsAnsi()) /* maybe */
+			printf(" (truncated)");
+		else
+			print_diag("SQLGetData success with info", SQL_HANDLE_STMT, hstmt);
+		
+	} else if (1 <=  buflen &&
+		 SQL_C_WCHAR == sqltype &&
+		 0 == len_or_ind &&
+		 0 == strcmp(pgtype, "text") &&
+		 IsAnsi()) {
+		/* just in order to fix ansi driver test on Windows */
+		printf(" (truncated)");
+    }
 
-		printf("\n");
-		/* Check that the driver didn't write past the buffer */
-		if ((unsigned char) resultbuf[buflen] != 0xFF)
-			printf("For %s Driver wrote byte %02X past result buffer of size %d!\n", sql, (unsigned char) resultbuf[buflen], buflen);
-	}
-	else
-	{
-		/* some of the conversions throw an error; that's OK */
-		print_diag("SQLGetData failed", SQL_HANDLE_STMT, hstmt);
-	}
+	/* Check that the driver didn't write past the buffer */
+	
+	int msg_len = 500;
+	char msg[msg_len];
+	snprintf(msg, msg_len, "For %s Driver wrote byte %02X past result buffer of size %d!\n", sql, (unsigned char) resultbuf[buflen], buflen);
+	ASSERT_FALSE((unsigned char) resultbuf[buflen] != 0xFF) << msg;
 
 	rc = SQLFreeStmt(hstmt, SQL_CLOSE);
-	CHECK_STMT_RESULT(rc, "SQLFreeStmt failed", hstmt);
+	ASSERT_TRUE(SQL_SUCCEEDED(rc)) << "SQLFreeStmt failed";
 
 	fflush(stdout);
 }
@@ -564,8 +555,7 @@ exec_cmd(char *sql)
 	printf("Executed: %s\n", sql);
 }
 
-int main(int argc, char **argv)
-{
+TEST(ResultConversionsTest, AllTests) {
 	SQLRETURN	rc;
 	int			sqltype_i;
 	int			pgtype_i;
@@ -573,11 +563,7 @@ int main(int argc, char **argv)
 	test_connect();
 
 	rc = SQLAllocHandle(SQL_HANDLE_STMT, conn, &hstmt);
-	if (!SQL_SUCCEEDED(rc))
-	{
-		print_diag("failed to allocate stmt handle", SQL_HANDLE_DBC, conn);
-		exit(1);
-	}
+	ASSERT_TRUE(SQL_SUCCEEDED(rc)) << "failed to allocate stmt handle";
 
 	/*
 	 * The interval stuff requires intervalstyle=postgres at the momemnt.
@@ -586,13 +572,6 @@ int main(int argc, char **argv)
 	 */
 	exec_cmd("SET intervalstyle=postgres");
 	SQLExecDirect(hstmt, (SQLCHAR *) "SET timezone=-08", SQL_NTS);
-
-	/*
-	 * Use octal escape bytea format in the tests. We will test the conversion
-	 * from the hex format separately later.
-	 */
-	exec_cmd("SET bytea_output=escape");
-	exec_cmd("SET lc_monetary='C'");
 
 	/* Test all combinations of PostgreSQL data types and SQL datatypes */
 	for (pgtype_i = 0; pgtypes[pgtype_i * 2] != NULL; pgtype_i++)
@@ -680,6 +659,4 @@ int main(int argc, char **argv)
 
 	/* Clean up */
 	test_disconnect();
-
-	return 0;
 }

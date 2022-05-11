@@ -4,6 +4,47 @@ SQLHENV env;
 SQLHDBC conn;
 
 void
+CHECK_STMT_RESULT(SQLRETURN rc, char* msg, SQLHANDLE hstmt) {
+	ASSERT_TRUE(SQL_SUCCEEDED(rc))
+		<< msg
+		<< std::endl
+	    << print_diagnostic(hstmt, SQL_HANDLE_STMT)
+		<< std::endl;
+}
+
+std::string
+print_diagnostic(SQLHANDLE handle, SQLSMALLINT htype) {
+	std::string buf;
+	SQLCHAR     sqlstate[32];
+	SQLCHAR     message[1000];
+	SQLINTEGER	nativeerror;
+	SQLSMALLINT textlen;
+	SQLRETURN	ret;
+	SQLSMALLINT	recno = 0;
+
+	do {
+		recno++;
+		ret = SQLGetDiagRec(htype, handle, recno, sqlstate, &nativeerror,
+							message, sizeof(message), &textlen);
+		if (ret == SQL_INVALID_HANDLE) {
+			return "Invalid handle";
+		}
+		else if (SQL_SUCCEEDED(ret)) {
+			buf.append(reinterpret_cast<char*>(sqlstate));
+			buf.append("=");
+			buf.append(reinterpret_cast<char*>(message));
+			buf.append("\n");
+		}
+	} while (ret == SQL_SUCCESS);
+
+	if (ret == SQL_NO_DATA && recno == 1) {
+		return "No error information";
+	}
+
+	return buf;
+}
+
+void
 print_diag(char *msg, SQLSMALLINT htype, SQLHANDLE handle)
 {
 	SQLCHAR     sqlstate[32];

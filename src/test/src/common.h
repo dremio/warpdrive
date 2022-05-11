@@ -10,6 +10,7 @@
 
 #include <sql.h>
 #include <sqlext.h>
+#include <gtest/gtest.h>
 
 #ifdef WIN32
 #define snprintf _snprintf
@@ -18,12 +19,6 @@
 extern SQLHENV env;
 extern SQLHDBC conn;
 
-#define CHECK_STMT_RESULT(rc, msg, hstmt)	\
-	if (!SQL_SUCCEEDED(rc)) \
-	{ \
-		print_diag(msg, SQL_HANDLE_STMT, hstmt);	\
-		exit(1);									\
-    }
 
 #define CHECK_CONN_RESULT(rc, msg, hconn)	\
 	if (!SQL_SUCCEEDED(rc)) \
@@ -32,6 +27,9 @@ extern SQLHDBC conn;
 		exit(1);									\
     }
 
+
+extern void CHECK_STMT_RESULT(SQLRETURN rc, char* msg, SQLHANDLE hstmt);
+extern std::string print_diagnostic(SQLHANDLE handle, SQLSMALLINT htype);
 extern void print_diag(char *msg, SQLSMALLINT htype, SQLHANDLE handle);
 extern const char *get_test_dsn(void);
 extern int  IsAnsi(void);
