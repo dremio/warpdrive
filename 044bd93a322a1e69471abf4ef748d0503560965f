@@ -33,6 +33,24 @@
       "message": "Can you explain this line?",
       "revId": "044bd93a322a1e69471abf4ef748d0503560965f",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2f4a4e5a_471de752",
+        "filename": "src/test/CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1000302
+      },
+      "writtenOn": "2022-05-11T14:10:23Z",
+      "side": 1,
+      "message": "This is the creation of the test target for cmake, so when running then through ctest all the tests will be under the warpdrive-tests binary.",
+      "parentUuid": "ffa3b6e8_070409f5",
+      "revId": "044bd93a322a1e69471abf4ef748d0503560965f",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
