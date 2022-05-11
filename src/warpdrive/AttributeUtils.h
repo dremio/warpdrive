@@ -35,7 +35,7 @@ inline SQLRETURN GetAttributeUTF8(const std::string &attributeValue,
                              SQLPOINTER output, O outputSize, O *outputLenPtr) {
   if (output) {
     size_t outputLenBeforeNul =
-        WD_MIN(static_cast<O>(attributeValue.size()), outputSize - 1);
+        WD_MIN(static_cast<O>(attributeValue.size()), static_cast<O>(outputSize - 1));
     memcpy(output, attributeValue.c_str(), outputLenBeforeNul);
     reinterpret_cast<char *>(output)[outputLenBeforeNul] = '\0';
   }
