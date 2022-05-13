@@ -49,7 +49,7 @@ int IsAnsi(void)
 	return (NULL != strstr(get_test_dsn(), "_ansi"));
 }
 
-void
+bool
 test_connect_ext(char *extraparams)
 {
 	SQLRETURN ret;
@@ -92,43 +92,33 @@ test_connect_ext(char *extraparams)
 	ret = SQLDriverConnect(conn, NULL, (SQLCHAR*) dsn, SQL_NTS,
 						   str, sizeof(str), &strl,
 						   SQL_DRIVER_COMPLETE);
-	if (SQL_SUCCEEDED(ret)) {
-		printf("connected\n");
-	} else {
-		print_diag("SQLDriverConnect failed.", SQL_HANDLE_DBC, conn);
-		fflush(stdout);
-		exit(1);
-	}
+  return SQL_SUCCEEDED(ret);
 }
 
-void
+bool
 test_connect(void)
 {
-	test_connect_ext(NULL);
+  return test_connect_ext(NULL);
 }
 
-void
-test_disconnect(void)
+bool
+test_disconnect(std::string *err_msg)
 {
 	SQLRETURN rc;
-
-	printf("disconnecting\n");
 	rc = SQLDisconnect(conn);
 	if (!SQL_SUCCEEDED(rc))
 	{
-		print_diag("SQLDisconnect failed", SQL_HANDLE_DBC, conn);
-		fflush(stdout);
-		exit(1);
+    *err_msg = "SQLDisconnect failed";
+		return false;
 	}
 
 	rc = SQLFreeHandle(SQL_HANDLE_DBC, conn);
 	if (!SQL_SUCCEEDED(rc))
 	{
-		print_diag("SQLFreeHandle failed", SQL_HANDLE_DBC, conn);
-		fflush(stdout);
-		exit(1);
+    *err_msg = "SQLFreeHandle failed";
+    return false;
 	}
-	conn = NULL;
+	conn = nullptr;
 
 	rc = SQLFreeHandle(SQL_HANDLE_ENV, env);
 	if (!SQL_SUCCEEDED(rc))
@@ -137,7 +127,8 @@ test_disconnect(void)
 		fflush(stdout);
 		exit(1);
 	}
-	env = NULL;
+	env = nullptr;
+  return true;
 }
 
 const char *
@@ -296,13 +287,12 @@ invalidate_buf(char *buf, size_t len)
 /*
  * Print result only for the selected columns.
  */
-void
-print_result_series(HSTMT hstmt, SQLSMALLINT *colids, SQLSMALLINT numcols, SQLINTEGER rowcount)
+std::string
+get_result_series(HSTMT hstmt, SQLSMALLINT *colids, SQLSMALLINT numcols, SQLINTEGER rowcount)
 {
 	SQLRETURN rc;
 	SQLINTEGER	rowc = 0;
-
-	printf("Result set:\n");
+  std::string result_buf;
 	while (rowcount <0 || rowc < rowcount)
 	{
 		rc = SQLFetch(hstmt);
@@ -327,43 +317,52 @@ print_result_series(HSTMT hstmt, SQLSMALLINT *colids, SQLSMALLINT numcols, SQLIN
 				if (!SQL_SUCCEEDED(rc))
 				{
 					print_diag("SQLGetData failed", SQL_HANDLE_STMT, hstmt);
-					return;
+					return "";
 				}
 				if (ind == SQL_NULL_DATA)
-					strcpy(buf, "NULL");
-				printf("%s%s", (i > 0) ? "\t" : "", buf);
+					result_buf.append("NULL");
+
+        if (i>0){
+          result_buf.append("\t");
+          result_buf.append(buf);
+        }else{
+          result_buf.append(buf, strlen(buf));
+        }
 			}
-			printf("\n");
+			result_buf.append("\n");
 		}
 		else
 		{
 			print_diag("SQLFetch failed", SQL_HANDLE_STMT, hstmt);
 			fflush(stdout);
-			exit(1);
+      return "";
 		}
 	}
+  return result_buf;
 }
 
 /*
  * Print result on all the columns
  */
-void
-print_result(HSTMT hstmt)
+std::string
+get_result(HSTMT hstmt)
 {
 	SQLRETURN rc;
 	SQLSMALLINT numcols, i;
 	SQLSMALLINT *colids;
+  std::string result;
 
 	rc = SQLNumResultCols(hstmt, &numcols);
 	if (!SQL_SUCCEEDED(rc))
 	{
 		print_diag("SQLNumResultCols failed", SQL_HANDLE_STMT, hstmt);
-		return;
+		return nullptr;
 	}
 
 	colids = (SQLSMALLINT *) malloc(numcols * sizeof(SQLSMALLINT));
 	for (i = 0; i < numcols; i++)
 		colids[i] = i + 1;
-	print_result_series(hstmt, colids, numcols, -1);
+	result = get_result_series(hstmt, colids, numcols, -1);
 	free(colids);
+  return result;
 }
