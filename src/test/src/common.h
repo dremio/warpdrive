@@ -18,6 +18,7 @@
 #include <gtest/gtest.h>
 #include <sql.h>
 #include <sqlext.h>
+#include <gtest/gtest.h>
 
 #ifdef WIN32
 #define snprintf _snprintf
@@ -27,13 +28,7 @@ extern SQLHENV env;
 extern SQLHDBC conn;
 
 
-#define CHECK_CONN_RESULT(rc, msg, hconn)	\
-	if (!SQL_SUCCEEDED(rc)) \
-	{ \
-		print_diag(msg, SQL_HANDLE_DBC, hconn);	\
-		exit(1);									\
-    }
-
+#define CHECK_CONN_RESULT(rc, msg, hconn) ASSERT_TRUE(SQL_SUCCEEDED(rc)) << format_diagnostic(msg, SQL_HANDLE_DBC, hconn)
 
 #define CHECK_STMT_RESULT(rc, msg, hstmt) ASSERT_TRUE(SQL_SUCCEEDED(rc)) << format_diagnostic(msg, SQL_HANDLE_STMT, hstmt)
 
