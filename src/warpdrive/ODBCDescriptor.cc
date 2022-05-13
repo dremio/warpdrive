@@ -505,6 +505,7 @@ void ODBCDescriptor::BindCol(SQLSMALLINT recordNumber, SQLSMALLINT cType, SQLPOI
 
   record.m_type = cType;
   record.m_indicatorPtr = indicatorPtr;
+  record.m_length = bufferLength;
   SetDataPtrOnRecord(dataPtr, recordNumber);
 }
 

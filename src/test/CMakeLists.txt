@@ -43,12 +43,12 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-add_executable(warpdrive_test
+add_executable(hello_test
         src/common.cc
         src/hello_test.cc
-        src/hello_test2.cc)
-target_link_libraries(warpdrive_test gtest_main)
-add_test(NAME warpdrive-tests COMMAND warpdrive_test)
+        src/colattribute-test.cc)
+target_link_libraries(hello_test gtest_main)
+add_test(NAME example_test COMMAND hello_test)
 
 # Test executables
 # add_executable(alter src/alter-test.cc src/common.cc)
