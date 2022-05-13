@@ -10,9 +10,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef	__cplusplus
-extern "C" {
-#endif /* __cplusplus */
 /*	Internal flags for catalog functions */
 #define	PODBC_NOT_SEARCH_PATTERN	1L
 #define	PODBC_SEARCH_PUBLIC_SCHEMA	(1L << 1)
@@ -342,7 +339,4 @@ RETCODE SQL_API WD_DescError(SQLHDESC DescriptorHandle, SQLSMALLINT RecNumber,
 			SQLCHAR *MessageText, SQLSMALLINT BufferLength,
 			SQLSMALLINT *TextLength, UWORD flag);
 
-#ifdef	__cplusplus
-}
-#endif /* __cplusplus */
 #endif   /* define_WD_API_FUNC_H__ */

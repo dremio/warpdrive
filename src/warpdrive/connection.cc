@@ -115,6 +115,7 @@ getDSNinfo(ConnInfo *ci, const char *configDrvrname)
 {
 	;
 }
+}
 
 RETCODE		SQL_API
 WD_AllocConnect(HENV henv,
@@ -3587,6 +3588,4 @@ CC_set_transact(ConnectionClass *self, UInt4 isolation)
 	self->server_isolation = isolation;
 
 	return TRUE;
-}
-
 }
