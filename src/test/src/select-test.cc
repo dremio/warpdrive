@@ -1,49 +1,47 @@
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-
+/*--------
+ * Module:			select-test.cc
+ *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *--------
+ */
 #include "common.h"
 
-int main(int argc, char **argv)
+TEST(WarpDriveTest, SelectTest)
 {
 	int rc;
 	HSTMT hstmt = SQL_NULL_HSTMT;
-	char sql[100000];
-	char *sqlend;
-	int i;
 
-	test_connect();
+  EXPECT_TRUE(test_connect())<< "SQLDriverConnect failed.";
 
 	rc = SQLAllocHandle(SQL_HANDLE_STMT, conn, &hstmt);
-	if (!SQL_SUCCEEDED(rc))
-	{
-		print_diag("failed to allocate stmt handle", SQL_HANDLE_DBC, conn);
-		exit(1);
-	}
+  EXPECT_TRUE(SQL_SUCCEEDED(rc)) << "failed to allocate stmt handle";
 
 	rc = SQLExecDirect(hstmt, (SQLCHAR *) "SELECT 1 UNION ALL SELECT 2", SQL_NTS);
-	CHECK_STMT_RESULT(rc, "SQLExecDirect failed", hstmt);
-	print_result(hstmt);
+
+	EXPECT_TRUE(SQL_SUCCEEDED(rc))<<"SQLExecDirect failed";
+  auto exp_result1 = "1\n2\n";
+  EXPECT_EQ(exp_result1, get_result(hstmt));
 
 	rc = SQLFreeStmt(hstmt, SQL_CLOSE);
-	CHECK_STMT_RESULT(rc, "SQLFreeStmt failed", hstmt);
+  EXPECT_TRUE(SQL_SUCCEEDED(rc)) << "SQLFreeStmt failed";
 
 	/* Result set with 1600 cols */
-	strcpy(sql, "SELECT 1");
-	sqlend = &sql[strlen(sql)];
-	for (i = 2; i <= 1600; i++)
-	{
-		sprintf(sqlend, ",%d", i);
-		sqlend += strlen(sqlend);
-	}
-	*sqlend = '\0';
+  std::string exp_result2 = "1";
+  std::string sql = "SELECT 1";
 
-	rc = SQLExecDirect(hstmt, (SQLCHAR *) sql, SQL_NTS);
-	CHECK_STMT_RESULT(rc, "SQLExecDirect failed", hstmt);
-	print_result(hstmt);
+	for (int i = 2; i <= 1600; i++)
+	{
+    sql.append("," + std::to_string(+i));
+    exp_result2.append("\t" + std::to_string(+i));
+	}
+  exp_result2.append("\n");
+
+	rc = SQLExecDirect(hstmt, (SQLCHAR *) sql.c_str(), SQL_NTS);
+  EXPECT_TRUE(SQL_SUCCEEDED(rc)) << "SQLExecDirect failed";
+  EXPECT_EQ(exp_result2, get_result(hstmt));
+
 
 	/* Clean up */
-	test_disconnect();
-
-	return 0;
+  std::string *err_msg = nullptr;
+  EXPECT_TRUE(test_disconnect(err_msg))<<err_msg;
 }
