@@ -46,7 +46,8 @@ FetchContent_MakeAvailable(googletest)
 add_executable(warpdrive_test
         src/common.cc
         src/hello_test.cc
-        src/hello_test2.cc)
+        src/hello_test2.cc
+        src/colattribute-test.cc)
 target_link_libraries(warpdrive_test gtest_main)
 add_test(NAME warpdrive-tests COMMAND warpdrive_test)
 
@@ -57,7 +58,6 @@ add_executable(bindcol src/bindcol-test.cc src/common.cc)
 add_executable(bookmark src/bookmark-test.cc src/common.cc)
 add_executable(boolsaschar src/boolsaschar-test.cc src/common.cc)
 add_executable(catalogfunctions src/catalogfunctions-test.cc src/common.cc)
-add_executable(colattribute src/colattribute-test.cc src/common.cc)
 add_executable(commands src/commands-test.cc src/common.cc)
 add_executable(connect src/connect-test.cc src/common.cc)
 add_executable(cte src/cte-test.cc src/common.cc)

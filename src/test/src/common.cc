@@ -1,3 +1,5 @@
+#include <string>
+#include <sstream>
 #include "common.h"
 
 SQLHENV env;
@@ -29,6 +31,39 @@ print_diag(char *msg, SQLSMALLINT htype, SQLHANDLE handle)
 
 	if (ret == SQL_NO_DATA && recno == 1)
 		printf("No error information\n");
+}
+
+std::string get_diag_str(char *extra_message, SQLSMALLINT handle_type, SQLHANDLE handle) {
+    SQLCHAR     sqlstate[32];
+    SQLCHAR     message[1000];
+    SQLINTEGER	native_error;
+    SQLSMALLINT text_len;
+    SQLRETURN	sql_return;
+    SQLSMALLINT	rec_number = 0;
+
+    std::stringstream diag_str;
+
+    if (extra_message) diag_str << extra_message << "\n";
+
+    do {
+        rec_number++;
+
+        sql_return = SQLGetDiagRec(handle_type,
+                                   handle,
+                                   rec_number,
+                                   sqlstate,
+                                   &native_error,
+                                   message,
+                                   sizeof(message),
+                                   &text_len);
+
+        if (sql_return == SQL_INVALID_HANDLE) diag_str << "Invalid handle\n";
+        else if (SQL_SUCCEEDED(sql_return)) diag_str << sqlstate << "=" << message << "\n";
+    } while (sql_return == SQL_SUCCESS);
+
+    if (sql_return == SQL_NO_DATA && rec_number == 1) diag_str << "No error information\n";
+
+    return diag_str.str();
 }
 
 const char * const default_dsn = "Arrow";
