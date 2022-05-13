@@ -2,78 +2,85 @@
  * Test SQLColAttribute
  */
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
 
 #include "common.h"
+#include <gtest/gtest.h>
 
-static void
-runtest(char *extra_conn_options)
-{
-	int rc;
-	HSTMT hstmt = SQL_NULL_HSTMT;
-	SQLUSMALLINT i;
-	SQLSMALLINT numcols;
+class SQLColAttributeTest : public ::testing::TestWithParam<char *> {
+};
 
-	printf("Running tests with %s...\n", extra_conn_options);
+TEST_P(SQLColAttributeTest, ColAttributeTestWithExtraConnOptions) {
+    char *extra_conn_options = GetParam();
+    int row_count;
+    HSTMT handle_stmt = SQL_NULL_HSTMT;
+    SQLUSMALLINT i;
+    SQLSMALLINT num_cols;
 
-	/* The behavior of these tests depend on the UnknownSizes parameter */
-	test_connect_ext(extra_conn_options);
+    printf("Running tests with %s...\n", extra_conn_options);
 
-	rc = SQLAllocHandle(SQL_HANDLE_STMT, conn, &hstmt);
-	if (!SQL_SUCCEEDED(rc))
-	{
-		print_diag("failed to allocate stmt handle", SQL_HANDLE_DBC, conn);
-		exit(1);
-	}
+    /* The behavior of these tests depend on the UnknownSizes parameter */
+    test_connect_ext(extra_conn_options);
 
-	/*
-	 * Get column attributes of a simple query.
-	 */
-	printf("Testing SQLColAttribute...\n");
-	rc = SQLExecDirect(hstmt,
-			(SQLCHAR *) "SELECT '1'::int AS intcol, 'foobar'::text AS textcol, 'varchar string'::varchar as varcharcol, ''::varchar as empty_varchar_col, 'varchar-5-col'::varchar(5) as varchar5col, '5 days'::interval day to second",
-			SQL_NTS);
-	CHECK_STMT_RESULT(rc, "SQLExecDirect failed", hstmt);
+    row_count = SQLAllocHandle(SQL_HANDLE_STMT, conn, &handle_stmt);
+    CHECK_CONN_RESULT_2(row_count, "failed to allocate stmt handle", conn)
 
-	rc = SQLNumResultCols(hstmt, &numcols);
-	CHECK_STMT_RESULT(rc, "SQLNumResultCols failed", hstmt);
+    /*
+     * Get column attributes of a simple query.
+     */
+    printf("Testing SQLColAttribute...\n");
+    row_count = SQLExecDirect(handle_stmt,
+                              (SQLCHAR *) "SELECT '1'::int AS intcol, 'foobar'::text AS textcol, 'varchar string'::varchar as varcharcol, ''::varchar as empty_varchar_col, 'varchar-5-col'::varchar(5) as varchar5col, '5 days'::interval day to second",
+                              SQL_NTS);
+    CHECK_STMT_RESULT_2(row_count, "SQLExecDirect failed", handle_stmt)
 
-	for (i = 1 ; i <= numcols; i++)
-	{
-		char buffer[64];
-		SQLLEN number;
+    row_count = SQLNumResultCols(handle_stmt, &num_cols);
+    CHECK_STMT_RESULT_2(row_count, "SQLNumResultCols failed", handle_stmt)
 
-		rc = SQLColAttribute(hstmt, i, SQL_DESC_LABEL, buffer, sizeof(buffer), NULL, NULL);
-		CHECK_STMT_RESULT(rc, "SQLColAttribute failed", hstmt);
-		printf("\n-- Column %d: %s --\n", i, buffer);
+    for (i = 1; i <= num_cols; i++) {
+        char buffer[64];
+        SQLLEN number;
 
-		rc = SQLColAttribute(hstmt, i, SQL_DESC_OCTET_LENGTH, NULL, SQL_IS_INTEGER, NULL, &number);
-		CHECK_STMT_RESULT(rc, "SQLColAttribute failed", hstmt);
-		printf("SQL_DESC_OCTET_LENGTH: %d\n", (int) number);
+        row_count = SQLColAttribute(handle_stmt,
+                                    i,
+                                    SQL_DESC_LABEL,
+                                    buffer,
+                                    sizeof(buffer),
+                                    nullptr,
+                                    nullptr);
+        CHECK_STMT_RESULT_2(row_count, "SQLColAttribute failed", handle_stmt)
+        printf("\n-- Column %d: %s --\n", i, buffer);
 
-		rc = SQLColAttribute(hstmt, i, SQL_DESC_TYPE_NAME, buffer, sizeof(buffer), NULL, NULL);
-		CHECK_STMT_RESULT(rc, "SQLColAttribute failed", hstmt);
-		printf("SQL_DESC_TYPE_NAME: %s\n", buffer);
-	}
+        row_count = SQLColAttribute(handle_stmt,
+                                    i,
+                                    SQL_DESC_OCTET_LENGTH,
+                                    nullptr,
+                                    SQL_IS_INTEGER,
+                                    nullptr,
+                                    &number);
+        CHECK_STMT_RESULT_2(row_count, "SQLColAttribute failed", handle_stmt)
+        printf("SQL_DESC_OCTET_LENGTH: %d\n", (int) number);
 
-	/* Clean up */
-	test_disconnect();
+        row_count = SQLColAttribute(handle_stmt,
+                                    i,
+                                    SQL_DESC_TYPE_NAME,
+                                    buffer,
+                                    sizeof(buffer),
+                                    nullptr,
+                                    nullptr);
+        CHECK_STMT_RESULT_2(row_count, "SQLColAttribute failed", handle_stmt)
+        printf("SQL_DESC_TYPE_NAME: %s\n", buffer);
+    }
+
+    /* Clean up */
+    test_disconnect();
 }
 
-int main(int argc, char **argv)
-{
+INSTANTIATE_TEST_CASE_P
 
-	/*
-	 * The output of these tests depend on the UnknownSizes and
-	 * MaxVarcharSize parameters
-	 */
-	// runtest("UnknownSizes=-1;MaxVarcharSize=100"); meaningless
-	runtest("UnknownSizes=0;MaxVarcharSize=100");
-	runtest("UnknownSizes=1;MaxVarcharSize=100");
-	runtest("UnknownSizes=2;MaxVarcharSize=100");
-	// runtest("UnknownSizes=100;MaxVarcharSize=100"); meaningless
-
-	return 0;
-}
+(Test, SQLColAttributeTest,
+ ::testing::Values(
+         ((char *) "UnknownSizes=0;MaxVarcharSize=100"),
+         ((char *) "UnknownSizes=1;MaxVarcharSize=100"),
+         ((char *) "UnknownSizes=2;MaxVarcharSize=100"))
+);
