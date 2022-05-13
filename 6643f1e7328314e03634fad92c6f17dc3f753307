@@ -69,6 +69,24 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "011ead22_df885201",
+        "filename": "src/test/src/hello_test2.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000302
+      },
+      "writtenOn": "2022-05-13T16:24:09Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "dbae9be0_1e960c40",
+      "revId": "6643f1e7328314e03634fad92c6f17dc3f753307",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "6a6749b3_4b5722bd",
@@ -82,6 +100,24 @@
       "writtenOn": "2022-05-13T15:11:51Z",
       "side": 1,
       "message": "Can we add a TODO to delete these files when we start adding real tests?",
+      "revId": "6643f1e7328314e03634fad92c6f17dc3f753307",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "3b3fe153_cab9c5ab",
+        "filename": "src/test/src/hello_test2.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1000302
+      },
+      "writtenOn": "2022-05-13T16:24:09Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "6a6749b3_4b5722bd",
       "revId": "6643f1e7328314e03634fad92c6f17dc3f753307",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
