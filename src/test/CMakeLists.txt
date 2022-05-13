@@ -47,6 +47,7 @@ add_executable(hello_test
   src/common.cc
   src/hello_test.cc
   src/result-conversions-test.cc
+  src/colattribute-test.cc
 )
 target_link_libraries(hello_test gtest_main)
 add_test(NAME example_test COMMAND hello_test)
