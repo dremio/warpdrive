@@ -50,6 +50,40 @@
       "message": "+2 based on Windows working",
       "revId": "6643f1e7328314e03634fad92c6f17dc3f753307",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "dbae9be0_1e960c40",
+        "filename": "src/test/src/hello_test2.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-13T15:11:51Z",
+      "side": 1,
+      "message": "Please add a license header.",
+      "revId": "6643f1e7328314e03634fad92c6f17dc3f753307",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6a6749b3_4b5722bd",
+        "filename": "src/test/src/hello_test2.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-13T15:11:51Z",
+      "side": 1,
+      "message": "Can we add a TODO to delete these files when we start adding real tests?",
+      "revId": "6643f1e7328314e03634fad92c6f17dc3f753307",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
