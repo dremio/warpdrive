@@ -11,6 +11,7 @@
 
 #include <sql.h>
 #include <sqlext.h>
+#include <gtest/gtest.h>
 
 #ifdef WIN32
 #define snprintf _snprintf
@@ -27,12 +28,14 @@ extern SQLHDBC conn;
 		exit(1);									\
     }
 
+#define CHECK_STMT_RESULT_2(rc, msg, hstmt)	\
+	ASSERT_TRUE(SQL_SUCCEEDED(rc)) << get_diag_str(msg, SQL_HANDLE_STMT, hstmt);
 
-extern void CHECK_STMT_RESULT(SQLRETURN rc, char* msg, SQLHANDLE hstmt);
-extern std::string format_diagnostic(const std::string msg, SQLSMALLINT htype, SQLHANDLE handle);
-extern std::string get_diagnostic(SQLHANDLE handle, SQLSMALLINT htype);
+#define CHECK_CONN_RESULT_2(rc, msg, hconn)	\
+	ASSERT_TRUE(SQL_SUCCEEDED(rc)) << get_diag_str(msg, SQL_HANDLE_DBC, hconn);
+
 extern void print_diag(char *msg, SQLSMALLINT htype, SQLHANDLE handle);
-extern void print_diag(const std::string, SQLSMALLINT htype, SQLHANDLE handle);
+extern std::string get_diag_str(char *extra_message, SQLSMALLINT handle_type, SQLHANDLE handle);
 extern const char *get_test_dsn(void);
 extern int  IsAnsi(void);
 extern void test_connect_ext(char *extraparams);
