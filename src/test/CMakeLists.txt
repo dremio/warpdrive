@@ -44,10 +44,9 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_executable(hello_test
-  src/common.cc
-  src/hello_test.cc
-  src/result-conversions-test.cc
-)
+        src/common.cc
+        src/hello_test.cc
+        src/colattribute-test.cc)
 target_link_libraries(hello_test gtest_main)
 add_test(NAME example_test COMMAND hello_test)
 
