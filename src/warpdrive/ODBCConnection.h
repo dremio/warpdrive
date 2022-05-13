@@ -35,6 +35,7 @@ class ODBCConnection : public ODBCHandle<ODBCConnection> {
     
     driver::odbcabstraction::Diagnostics& GetDiagnostics_Impl();
 
+    const std::string& GetDSN() const;
     bool isConnected() const;
     void connect(std::string dsn, const driver::odbcabstraction::Connection::ConnPropertyMap &properties,
                        std::vector<std::string> &missing_properties);

@@ -48,7 +48,7 @@ WD_GetDiagRec(SQLSMALLINT HandleType, SQLHANDLE Handle,
 				 SQLINTEGER *NativeError, SQLCHAR *MessageText,
 				 SQLSMALLINT BufferLength, SQLSMALLINT *TextLength)
 {
-	RETCODE		ret;
+	RETCODE		ret = SQL_SUCCESS;
 
 	MYLOG(0, "entering type=%d rec=%d buffer=%d\n", HandleType, RecNumber, BufferLength);
         Diagnostics* diagnostics = nullptr;
@@ -184,8 +184,7 @@ WD_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 						ret = SQL_SUCCESS_WITH_INFO;
 					break;
 				case SQL_DIAG_SERVER_NAME:
-					ODBCConnection::of(Handle)->GetInfo(SQL_DATA_SOURCE_NAME, DiagInfoPtr, BufferLength, StringLengthPtr, false);
-					break;
+					return GetAttributeUTF8(ODBCConnection::of(Handle)->GetDSN(), DiagInfoPtr, BufferLength, StringLengthPtr);
 				case SQL_DIAG_MESSAGE_TEXT:
                                   if (RecNumber <= 0) {
                                     return SQL_ERROR;
@@ -245,9 +244,7 @@ WD_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 						ret = SQL_SUCCESS_WITH_INFO;
 					break;
 				case SQL_DIAG_SERVER_NAME:
-                                  ODBCStatement::of(Handle)->GetConnection().GetInfo(
-                                      SQL_DATA_SOURCE_NAME, DiagInfoPtr, BufferLength, StringLengthPtr, false);
-                                  break;
+					return GetAttributeUTF8(ODBCStatement::of(Handle)->GetConnection().GetDSN(), DiagInfoPtr, BufferLength, StringLengthPtr);
 				case SQL_DIAG_MESSAGE_TEXT:
                                   if (RecNumber <= 0) {
                                     return SQL_ERROR;
@@ -332,44 +329,42 @@ WD_GetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 						ret = SQL_SUCCESS_WITH_INFO;
 					break;
 				case SQL_DIAG_SERVER_NAME:
-                                  ODBCDescriptor::of(Handle)->GetConnection().GetInfo(
-                                      SQL_DATA_SOURCE_NAME, DiagInfoPtr, BufferLength, StringLengthPtr, false);
-                                  break;
-                                case SQL_DIAG_MESSAGE_TEXT:
-                                  if (RecNumber <= 0) {
-                                    return SQL_ERROR;
-                                  } else if (diagnostics->HasRecord(RecNumber-1)) {
-                                    return GetAttributeUTF8(diagnostics->GetMessageText(RecNumber-1),
-                                                            DiagInfoPtr, BufferLength, StringLengthPtr);
-                                  } else {
-                                    ret = SQL_ERROR;
-                                  }
-                                  break;
-                                case SQL_DIAG_NATIVE:
-                                  if (RecNumber <= 0) {
-                                    return SQL_ERROR;
-                                  } else if (diagnostics->HasRecord(RecNumber-1)) {
-                                    GetAttribute<SQLINTEGER>(static_cast<SQLINTEGER>(diagnostics->GetNativeError(RecNumber-1)),
-                                                             DiagInfoPtr, BufferLength, StringLengthPtr);
-                                    return SQL_SUCCESS;
-                                  } else {
-                                    ret = SQL_ERROR;
-                                  }
-                                  break;
-                                case SQL_DIAG_NUMBER:
-                                  GetAttribute<SQLINTEGER>(diagnostics->GetRecordCount(),
-                                                           DiagInfoPtr, BufferLength, StringLengthPtr);
-                                  return SQL_SUCCESS;
-                                case SQL_DIAG_SQLSTATE:
-                                  if (RecNumber <= 0) {
-                                    return SQL_ERROR;
-                                  } else if (diagnostics->HasRecord(RecNumber-1)) {
-                                    return GetAttributeUTF8(diagnostics->GetSQLState(RecNumber-1),
-                                                            DiagInfoPtr, BufferLength, StringLengthPtr);
-                                  } else {
-                                    ret = SQL_ERROR;
-                                  }
-                                  break;
+					return GetAttributeUTF8(ODBCDescriptor::of(Handle)->GetConnection().GetDSN(), DiagInfoPtr, BufferLength, StringLengthPtr);
+				case SQL_DIAG_MESSAGE_TEXT:
+                    if (RecNumber <= 0) {
+                    return SQL_ERROR;
+                    } else if (diagnostics->HasRecord(RecNumber-1)) {
+                    return GetAttributeUTF8(diagnostics->GetMessageText(RecNumber-1),
+                                            DiagInfoPtr, BufferLength, StringLengthPtr);
+                    } else {
+                    ret = SQL_ERROR;
+                    }
+                    break;
+                case SQL_DIAG_NATIVE:
+                    if (RecNumber <= 0) {
+                    return SQL_ERROR;
+                    } else if (diagnostics->HasRecord(RecNumber-1)) {
+                    GetAttribute<SQLINTEGER>(static_cast<SQLINTEGER>(diagnostics->GetNativeError(RecNumber-1)),
+                                                DiagInfoPtr, BufferLength, StringLengthPtr);
+                    return SQL_SUCCESS;
+                    } else {
+                    ret = SQL_ERROR;
+                    }
+                    break;
+                case SQL_DIAG_NUMBER:
+                    GetAttribute<SQLINTEGER>(diagnostics->GetRecordCount(),
+                                            DiagInfoPtr, BufferLength, StringLengthPtr);
+                    return SQL_SUCCESS;
+                case SQL_DIAG_SQLSTATE:
+                    if (RecNumber <= 0) {
+                    return SQL_ERROR;
+                    } else if (diagnostics->HasRecord(RecNumber-1)) {
+                    return GetAttributeUTF8(diagnostics->GetSQLState(RecNumber-1),
+                                            DiagInfoPtr, BufferLength, StringLengthPtr);
+                    } else {
+                    ret = SQL_ERROR;
+                    }
+                    break;
 				case SQL_DIAG_RETURNCODE: /* driver manager returns */
 					break;
 				case SQL_DIAG_CURSOR_ROW_COUNT:

@@ -44,7 +44,7 @@ inline SQLRETURN GetAttributeUTF8(const std::string &attributeValue,
     *outputLenPtr = static_cast<O>(attributeValue.size());
   }
 
-  if (outputSize < attributeValue.size() + 1) {
+  if (output && outputSize < attributeValue.size() + 1) {
     return SQL_SUCCESS_WITH_INFO;
   }
   return SQL_SUCCESS;
@@ -71,7 +71,7 @@ inline SQLRETURN GetAttributeSQLWCHAR(const std::string &attributeValue, bool is
     *outputLenPtr = static_cast<O>(isLengthInBytes ? result : result / sizeof(SQLWCHAR));
   }
 
-  if (outputSize < result + (isLengthInBytes ? sizeof(SQLWCHAR) : 1)) {
+  if (output && outputSize < result + (isLengthInBytes ? sizeof(SQLWCHAR) : 1)) {
     return SQL_SUCCESS_WITH_INFO;
   }
   return SQL_SUCCESS;

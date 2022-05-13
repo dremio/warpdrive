@@ -99,6 +99,10 @@ bool ODBCConnection::isConnected() const
   return m_isConnected;
 }
 
+const std::string& ODBCConnection::GetDSN() const {
+  return m_dsn;
+}
+
 void ODBCConnection::connect(std::string dsn, const Connection::ConnPropertyMap &properties,
   std::vector<std::string> &missing_properties)
 {
@@ -106,9 +110,9 @@ void ODBCConnection::connect(std::string dsn, const Connection::ConnPropertyMap 
     throw DriverException("Already connected.", "HY010");
   }
 
+  m_dsn = std::move(dsn);
   m_spiConnection->Connect(properties, missing_properties);
   m_isConnected = true;
-  m_dsn = std::move(dsn);
   std::shared_ptr<Statement> spiStatement = m_spiConnection->CreateStatement();
   m_attributeTrackingStatement = std::make_shared<ODBCStatement>(*this, spiStatement);
 }
