@@ -253,30 +253,20 @@ SQLFreeHandle(SQLSMALLINT HandleType, SQLHANDLE Handle)
 	RETCODE		ret;
 	MYLOG(0, "Entering\n");
 
-	switch (HandleType)
+    // Do not use ExecuteWithDiagnostics, since freeing handles destroys the diagnostics
+    // and ExecuteWithDiagnostics tries to check them after the lambda body.
+    switch (HandleType)
 	{
 		case SQL_HANDLE_ENV:
-                  return ODBCEnvironment::ExecuteWithDiagnostics(Handle, rc, [&]() -> SQLRETURN {
-                    return WD_FreeEnv(Handle);
-                                      });
-			break;
+            return WD_FreeEnv(Handle);
 		case SQL_HANDLE_DBC:
-                  return ODBCConnection::ExecuteWithDiagnostics(Handle, rc, [&]() -> SQLRETURN {
-                    return WD_FreeConnect(Handle);
-                                      });
-			break;
+            return WD_FreeConnect(Handle);
 		case SQL_HANDLE_STMT:
-                  return ODBCStatement::ExecuteWithDiagnostics(Handle, rc, [&]() -> SQLRETURN {
-                    return WD_FreeStmt(Handle, SQL_DROP);
-                                      });
-			break;
+            return WD_FreeStmt(Handle, SQL_DROP);
 		case SQL_HANDLE_DESC:
-                  return ODBCDescriptor::ExecuteWithDiagnostics(Handle, rc, [&]() -> SQLRETURN {
-                    return WD_FreeDesc(Handle);
-                                      });
-			break;
+            return WD_FreeDesc(Handle);
 		default:
-			ret = SQL_ERROR;
+            ret = SQL_INVALID_HANDLE;
 			break;
 	}
 	return ret;

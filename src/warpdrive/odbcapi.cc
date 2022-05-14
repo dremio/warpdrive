@@ -270,9 +270,14 @@ SQLFreeStmt(HSTMT StatementHandle,
   SQLRETURN rc = SQL_SUCCESS;
 	MYLOG(0, "Entering\n");
 
-        return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
-          return WD_FreeStmt(StatementHandle, Option);
-              });
+    // Special case for SQL_DROP. Can't inspect diagnostics if the handle is already deleted.
+    if (Option == SQL_DROP) {
+        return WD_FreeStmt(StatementHandle, Option);
+    }
+
+    return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+        return WD_FreeStmt(StatementHandle, Option);
+            });
 }
 
 

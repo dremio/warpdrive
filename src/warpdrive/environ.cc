@@ -119,17 +119,37 @@ WD_FreeEnv(HENV henv)
 
 	MYLOG(0, "entering env=%p\n", env);
 
-	if (env)
-	{
-		delete env;
-		MYLOG(0, "   ok\n");
-		goto cleanup;
-	}
+	try {
+		if (env)
+		{
+			env->GetDiagnostics().Clear();
+			delete env;
+			MYLOG(0, "   ok\n");
+			return SQL_SUCCESS;
+		}
 
-	ret = SQL_ERROR;
-	EN_log_error(func, "Error freeing environment", NULL);
-cleanup:
-	return ret;
+		EN_log_error(func, "Error freeing environment", NULL);
+		return SQL_ERROR;
+	}
+	catch (const driver::odbcabstraction::DriverException& ex) {
+		env->GetDiagnostics().AddError(ex);
+		return SQL_ERROR;
+	}
+	catch (const std::bad_alloc& ex) {
+		env->GetDiagnostics().AddError(
+			driver::odbcabstraction::DriverException("A memory allocation error occurred.", "HY001"));
+		return SQL_ERROR;
+	}
+	catch (const std::exception& ex) {
+		env->GetDiagnostics().AddError(
+			driver::odbcabstraction::DriverException(ex.what()));
+		return SQL_ERROR;
+	}
+	catch (...) {
+		env->GetDiagnostics().AddError(
+			driver::odbcabstraction::DriverException("An unknown error occurred."));
+		return SQL_ERROR;
+	}
 }
 
 #define	SIZEOF_SQLSTATE	6

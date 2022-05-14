@@ -218,7 +218,32 @@ WD_FreeStmt(HSTMT hstmt,
 	MYLOG(0, "entering...hstmt=%p, fOption=%hi\n", hstmt, fOption);
 
 	if (fOption == SQL_DROP) {
- 		stmt->releaseStatement();
+		// Special case. Can't use automated error handling because inspecting the diagnostics
+		// inspects an already destroyed diagnostics object.
+		try {
+			stmt->GetDiagnostics().Clear();
+			stmt->releaseStatement();
+			return SQL_SUCCESS;
+		}
+		catch (const driver::odbcabstraction::DriverException& ex) {
+			stmt->GetDiagnostics().AddError(ex);
+			return SQL_ERROR;
+		}
+		catch (const std::bad_alloc& ex) {
+			stmt->GetDiagnostics().AddError(
+				driver::odbcabstraction::DriverException("A memory allocation error occurred.", "HY001"));
+			return SQL_ERROR;
+		}
+		catch (const std::exception& ex) {
+			stmt->GetDiagnostics().AddError(
+				driver::odbcabstraction::DriverException(ex.what()));
+			return SQL_ERROR;
+		}
+		catch (...) {
+			stmt->GetDiagnostics().AddError(
+				driver::odbcabstraction::DriverException("An unknown error occurred."));
+			return SQL_ERROR;
+		}
 	}
 	else if (fOption == SQL_UNBIND) {
 		stmt->GetARD()->SetField(0, SQL_DESC_COUNT, reinterpret_cast<SQLPOINTER>(0), 0);

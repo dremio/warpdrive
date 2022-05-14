@@ -399,7 +399,30 @@ WD_FreeDesc(SQLHDESC DescriptorHandle)
 	RETCODE	ret = SQL_SUCCESS;
 
 	MYLOG(0, "entering...\n");
-	desc->ReleaseDescriptor();
+	try {
+		desc->GetDiagnostics().Clear();
+		desc->ReleaseDescriptor();
+		return SQL_SUCCESS;
+	}
+	catch (const driver::odbcabstraction::DriverException& ex) {
+		desc->GetDiagnostics().AddError(ex);
+		return SQL_ERROR;
+	}
+	catch (const std::bad_alloc& ex) {
+		desc->GetDiagnostics().AddError(
+			driver::odbcabstraction::DriverException("A memory allocation error occurred.", "HY001"));
+		return SQL_ERROR;
+	}
+	catch (const std::exception& ex) {
+		desc->GetDiagnostics().AddError(
+			driver::odbcabstraction::DriverException(ex.what()));
+		return SQL_ERROR;
+	}
+	catch (...) {
+		desc->GetDiagnostics().AddError(
+			driver::odbcabstraction::DriverException("An unknown error occurred."));
+		return SQL_ERROR;
+	}
 	return ret;
 }
 

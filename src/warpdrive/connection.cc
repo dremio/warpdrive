@@ -252,12 +252,34 @@ WD_FreeConnect(HDBC hdbc)
 
 	if (!hdbc)
 	{
-		CC_log_error(func, "", NULL);
 		return SQL_INVALID_HANDLE;
 	}
 
-	reinterpret_cast<ODBCConnection*>(hdbc)->releaseConnection();
-
+	ODBCConnection* conn = ODBCConnection::of(hdbc);
+	try {
+		conn->GetDiagnostics().Clear();
+		conn->releaseConnection();
+		return SQL_SUCCESS;
+	}
+	catch (const driver::odbcabstraction::DriverException& ex) {
+		conn->GetDiagnostics().AddError(ex);
+		return SQL_ERROR;
+	}
+	catch (const std::bad_alloc& ex) {
+		conn->GetDiagnostics().AddError(
+			driver::odbcabstraction::DriverException("A memory allocation error occurred.", "HY001"));
+		return SQL_ERROR;
+	}
+	catch (const std::exception& ex) {
+		conn->GetDiagnostics().AddError(
+			driver::odbcabstraction::DriverException(ex.what()));
+		return SQL_ERROR;
+	}
+	catch (...) {
+		conn->GetDiagnostics().AddError(
+			driver::odbcabstraction::DriverException("An unknown error occurred."));
+		return SQL_ERROR;
+	}
 	MYLOG(0, "leaving...\n");
 
 	return SQL_SUCCESS;
