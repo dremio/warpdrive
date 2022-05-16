@@ -20,7 +20,7 @@ project(ODBC_TESTS)
 cmake_minimum_required(VERSION 3.2)
 
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 
 # Packages
 if (APPLE)
@@ -46,6 +46,7 @@ FetchContent_MakeAvailable(googletest)
 add_executable(warpdrive_test
         src/common.cc
         src/select-test.cc
+        src/result-conversions-test.cc
         src/colattribute-test.cc
         src/bindcol-test.cc
         src/diagnostic-test.cc
