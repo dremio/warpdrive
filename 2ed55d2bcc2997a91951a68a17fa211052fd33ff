@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0445ae44_1d2d9de5",
+        "filename": "src/test/src/common.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000302
+      },
+      "writtenOn": "2022-05-16T17:59:46Z",
+      "side": 1,
+      "message": "Remove the semicolumn at the end, please",
+      "revId": "2ed55d2bcc2997a91951a68a17fa211052fd33ff",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
