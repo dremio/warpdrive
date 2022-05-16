@@ -13,7 +13,7 @@ SQLHDBC conn;
 
 std::string
 format_diagnostic(const std::string& msg, SQLSMALLINT htype, SQLHANDLE handle) {
-	return msg + get_diagnostic(handle, htype);
+	return msg + " " + get_diagnostic(handle, htype);
 }
 
 std::string
@@ -117,7 +117,7 @@ test_connect_ext(char *extraparams)
 	ret = SQLDriverConnect(conn, NULL, (SQLCHAR*) dsn, SQL_NTS,
 						   str, sizeof(str), &strl,
 						   SQL_DRIVER_COMPLETE);
-  return SQL_SUCCEEDED(ret);
+  	return SQL_SUCCEEDED(ret);
 }
 
 bool
