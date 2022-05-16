@@ -10,18 +10,26 @@
 
 class SQLColAttributeTest : public ::testing::TestWithParam<char *> {
     void SetUp() override {
-        ASSERT_TRUE(test_connect_ext(GetParam()));
+        connected_ = test_connect_ext(GetParam());
+        ASSERT_TRUE(connected_) << "Failed to connect in Setup";
 
         return_code_ = SQLAllocHandle(SQL_HANDLE_STMT, conn, &handle_stmt_);
-        ASSERT_TRUE(SQL_SUCCEEDED(return_code_));
+        ASSERT_TRUE(SQL_SUCCEEDED(return_code_)) << "Failed to allocate handle in setup";
     }
 
     void TearDown() override {
-        return_code_ = SQLFreeStmt(handle_stmt_, SQL_CLOSE);
-        CHECK_STMT_RESULT(return_code_, "SQLFreeStmt failed", handle_stmt_);
-        std::string *err_msg = nullptr;
-        ASSERT_TRUE(test_disconnect(err_msg));
+        if (handle_stmt_ != SQL_NULL_HSTMT) {
+            return_code_ = SQLFreeStmt(handle_stmt_, SQL_CLOSE);
+            CHECK_STMT_RESULT(return_code_, "SQLFreeStmt failed in TearDown", handle_stmt_);
+        }
+        if (connected_) {
+            std::string err_msg;
+            ASSERT_TRUE(test_disconnect(&err_msg)) << err_msg;
+        }
     }
+
+private:
+    bool connected_ {false};
 
 protected:
     int return_code_{};

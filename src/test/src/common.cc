@@ -13,7 +13,7 @@ SQLHDBC conn;
 
 std::string
 format_diagnostic(const std::string& msg, SQLSMALLINT htype, SQLHANDLE handle) {
-	return msg + get_diagnostic(handle, htype);
+	return msg + " " + get_diagnostic(handle, htype);
 }
 
 std::string
@@ -117,7 +117,7 @@ test_connect_ext(char *extraparams)
 	ret = SQLDriverConnect(conn, NULL, (SQLCHAR*) dsn, SQL_NTS,
 						   str, sizeof(str), &strl,
 						   SQL_DRIVER_COMPLETE);
-  return SQL_SUCCEEDED(ret);
+  	return SQL_SUCCEEDED(ret);
 }
 
 bool
@@ -130,27 +130,27 @@ bool
 test_disconnect(std::string *err_msg)
 {
 	SQLRETURN rc;
+
 	rc = SQLDisconnect(conn);
 	if (!SQL_SUCCEEDED(rc))
 	{
-    *err_msg = "SQLDisconnect failed";
+    	*err_msg = "SQLDisconnect failed";
 		return false;
 	}
 
 	rc = SQLFreeHandle(SQL_HANDLE_DBC, conn);
 	if (!SQL_SUCCEEDED(rc))
 	{
-    *err_msg = "SQLFreeHandle failed";
-    return false;
+    	*err_msg = "SQLFreeHandle failed";
+    	return false;
 	}
 	conn = nullptr;
 
 	rc = SQLFreeHandle(SQL_HANDLE_ENV, env);
 	if (!SQL_SUCCEEDED(rc))
 	{
-		print_diag("SQLFreeHandle failed", SQL_HANDLE_ENV, env);
-		fflush(stdout);
-		exit(1);
+		*err_msg = format_diagnostic("SQLFreeHandle failed", SQL_HANDLE_ENV, env);
+		return false;
 	}
 	env = nullptr;
   return true;
