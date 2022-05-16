@@ -14,5 +14,5 @@ cmake --build .
 
 ```bash
 # in the root of build
-ODBCINI=./odbc.ini DSN=ARROW ./build/%test_name%
+DSN=FlightSQL ./build/warpdrive_test
 ```
