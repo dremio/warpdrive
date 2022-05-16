@@ -42,6 +42,6 @@ TEST(WarpDriveTest, SelectTest)
 
 
 	/* Clean up */
-  std::string *err_msg = nullptr;
-  EXPECT_TRUE(test_disconnect(err_msg))<<err_msg;
+  std::string *err_msg;
+  EXPECT_TRUE(test_disconnect(err_msg)) << err_msg;
 }
