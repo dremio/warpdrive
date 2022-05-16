@@ -4,9 +4,10 @@
  * Comments:		See "readme.txt" for copyright and license information.
  *--------
  */
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <string>
 
 #ifdef WIN32
 #include <windows.h>
@@ -17,7 +18,6 @@
 #include <gtest/gtest.h>
 #include <sql.h>
 #include <sqlext.h>
-#include <string>
 
 #ifdef WIN32
 #define snprintf _snprintf
@@ -26,12 +26,6 @@
 extern SQLHENV env;
 extern SQLHDBC conn;
 
-#define CHECK_STMT_RESULT(rc, msg, hstmt)	\
-	if (!SQL_SUCCEEDED(rc)) \
-	{ \
-		print_diag(msg, SQL_HANDLE_STMT, hstmt);	\
-		exit(1);									\
-    }
 
 #define CHECK_CONN_RESULT(rc, msg, hconn)	\
 	if (!SQL_SUCCEEDED(rc)) \
@@ -40,7 +34,13 @@ extern SQLHDBC conn;
 		exit(1);									\
     }
 
+
+#define CHECK_STMT_RESULT(rc, msg, hstmt) ASSERT_TRUE(SQL_SUCCEEDED(rc)) << format_diagnostic(msg, SQL_HANDLE_STMT, hstmt)
+
+extern std::string format_diagnostic(const std::string& msg, SQLSMALLINT htype, SQLHANDLE handle);
+extern std::string get_diagnostic(SQLHANDLE handle, SQLSMALLINT htype);
 extern void print_diag(char *msg, SQLSMALLINT htype, SQLHANDLE handle);
+extern void print_diag(const std::string& , SQLSMALLINT htype, SQLHANDLE handle);
 extern const char *get_test_dsn(void);
 extern int  IsAnsi(void);
 extern bool test_connect_ext(char *extraparams);
