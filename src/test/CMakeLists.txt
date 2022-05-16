@@ -44,6 +44,7 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_executable(warpdrive_test
+        src/result-conversions-test.cc
         src/common.cc
 )
 target_link_libraries(warpdrive_test gtest_main)
