@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "baf4c1ff_2389aa21",
+        "filename": "src/test/src/common.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-16T15:16:17Z",
+      "side": 1,
+      "message": "This really seems like it should either be a macro (since it\u0027s in all caps) or be named to use lower case.",
+      "revId": "de8b7a617d247190697092490fcf924e2a874cb2",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "2ca4497e_cb1c4755",
+        "filename": "src/test/src/common.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-16T15:16:17Z",
+      "side": 1,
+      "message": "Pass in const references to strings rather than copies.",
+      "revId": "de8b7a617d247190697092490fcf924e2a874cb2",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
