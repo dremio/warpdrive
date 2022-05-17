@@ -43,8 +43,8 @@ extern void print_diag(char *msg, SQLSMALLINT htype, SQLHANDLE handle);
 extern void print_diag(const std::string& , SQLSMALLINT htype, SQLHANDLE handle);
 extern const char *get_test_dsn(void);
 extern int  IsAnsi(void);
-extern bool test_connect_ext(char *extraparams);
-extern bool test_connect();
+extern bool test_connect_ext(char *extraparams, std::string *err_msg);
+extern bool test_connect(std::string *err_msg);
 extern bool test_disconnect(std::string *err_msg);
 extern void print_result_meta_series(HSTMT hstmt,
 									 SQLSMALLINT *colids,
