@@ -9,7 +9,8 @@
 
 class SQLBindColTests : public ::testing::Test {
     void SetUp() override {
-        connected = test_connect();
+        std::string err_msg;
+        connected = test_connect(&err_msg);
         ASSERT_TRUE(connected);
 
         return_code_ = SQLAllocHandle(SQL_HANDLE_STMT, conn, &handle_stmt_);

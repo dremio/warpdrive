@@ -10,8 +10,8 @@ TEST(WarpDriveTest, SelectTest)
 {
 	int rc;
 	HSTMT hstmt = SQL_NULL_HSTMT;
-
-  EXPECT_TRUE(test_connect())<< "SQLDriverConnect failed.";
+  std::string err_msg;
+  EXPECT_TRUE(test_connect(&err_msg))<< "SQLDriverConnect failed.";
 
 	rc = SQLAllocHandle(SQL_HANDLE_STMT, conn, &hstmt);
   EXPECT_TRUE(SQL_SUCCEEDED(rc)) << "failed to allocate stmt handle";
@@ -20,7 +20,7 @@ TEST(WarpDriveTest, SelectTest)
 
 	EXPECT_TRUE(SQL_SUCCEEDED(rc))<<"SQLExecDirect failed";
   auto exp_result1 = "1\n2\n";
-  EXPECT_EQ(exp_result1, get_result(hstmt));
+  EXPECT_EQ(exp_result1, get_result(hstmt, &err_msg).value());
 
 	rc = SQLFreeStmt(hstmt, SQL_CLOSE);
   EXPECT_TRUE(SQL_SUCCEEDED(rc)) << "SQLFreeStmt failed";
@@ -38,10 +38,9 @@ TEST(WarpDriveTest, SelectTest)
 
 	rc = SQLExecDirect(hstmt, (SQLCHAR *) sql.c_str(), SQL_NTS);
   EXPECT_TRUE(SQL_SUCCEEDED(rc)) << "SQLExecDirect failed";
-  EXPECT_EQ(exp_result2, get_result(hstmt));
+  EXPECT_EQ(exp_result2, get_result(hstmt, &err_msg).value());
 
 
 	/* Clean up */
-  std::string *err_msg = nullptr;
-  EXPECT_TRUE(test_disconnect(err_msg))<<err_msg;
+  EXPECT_TRUE(test_disconnect(&err_msg))<<err_msg;
 }
