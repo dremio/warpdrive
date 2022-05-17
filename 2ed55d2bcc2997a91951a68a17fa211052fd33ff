@@ -3,6 +3,23 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "dbe2f0bf_f752cd39",
+        "filename": "src/test/src/common.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-17T17:20:43Z",
+      "side": 1,
+      "message": "Add an LGPL header",
+      "revId": "2ed55d2bcc2997a91951a68a17fa211052fd33ff",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "0445ae44_1d2d9de5",
         "filename": "src/test/src/common.h",
         "patchSetId": 6
