@@ -1,47 +1,49 @@
-/*--------
- * Module:			select-test.cc
- *
- * Comments:		See "readme.txt" for copyright and license information.
- *--------
- */
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "common.h"
 
-TEST(WarpDriveTest, SelectTest)
+int main(int argc, char **argv)
 {
 	int rc;
 	HSTMT hstmt = SQL_NULL_HSTMT;
+	char sql[100000];
+	char *sqlend;
+	int i;
 
-  EXPECT_TRUE(test_connect())<< "SQLDriverConnect failed.";
+	test_connect();
 
 	rc = SQLAllocHandle(SQL_HANDLE_STMT, conn, &hstmt);
-  EXPECT_TRUE(SQL_SUCCEEDED(rc)) << "failed to allocate stmt handle";
+	if (!SQL_SUCCEEDED(rc))
+	{
+		print_diag("failed to allocate stmt handle", SQL_HANDLE_DBC, conn);
+		exit(1);
+	}
 
 	rc = SQLExecDirect(hstmt, (SQLCHAR *) "SELECT 1 UNION ALL SELECT 2", SQL_NTS);
-
-	EXPECT_TRUE(SQL_SUCCEEDED(rc))<<"SQLExecDirect failed";
-  auto exp_result1 = "1\n2\n";
-  EXPECT_EQ(exp_result1, get_result(hstmt));
+	CHECK_STMT_RESULT(rc, "SQLExecDirect failed", hstmt);
+	print_result(hstmt);
 
 	rc = SQLFreeStmt(hstmt, SQL_CLOSE);
-  EXPECT_TRUE(SQL_SUCCEEDED(rc)) << "SQLFreeStmt failed";
+	CHECK_STMT_RESULT(rc, "SQLFreeStmt failed", hstmt);
 
 	/* Result set with 1600 cols */
-  std::string exp_result2 = "1";
-  std::string sql = "SELECT 1";
-
-	for (int i = 2; i <= 1600; i++)
+	strcpy(sql, "SELECT 1");
+	sqlend = &sql[strlen(sql)];
+	for (i = 2; i <= 1600; i++)
 	{
-    sql.append("," + std::to_string(+i));
-    exp_result2.append("\t" + std::to_string(+i));
+		sprintf(sqlend, ",%d", i);
+		sqlend += strlen(sqlend);
 	}
-  exp_result2.append("\n");
+	*sqlend = '\0';
 
-	rc = SQLExecDirect(hstmt, (SQLCHAR *) sql.c_str(), SQL_NTS);
-  EXPECT_TRUE(SQL_SUCCEEDED(rc)) << "SQLExecDirect failed";
-  EXPECT_EQ(exp_result2, get_result(hstmt));
-
+	rc = SQLExecDirect(hstmt, (SQLCHAR *) sql, SQL_NTS);
+	CHECK_STMT_RESULT(rc, "SQLExecDirect failed", hstmt);
+	print_result(hstmt);
 
 	/* Clean up */
-  std::string *err_msg = nullptr;
-  EXPECT_TRUE(test_disconnect(err_msg))<<err_msg;
+	test_disconnect();
+
+	return 0;
 }
