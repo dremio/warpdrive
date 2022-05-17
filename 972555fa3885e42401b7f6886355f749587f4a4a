@@ -95,6 +95,30 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "09d13a38_d6ddd779",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1000331
+      },
+      "writtenOn": "2022-05-17T17:53:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "226898f3_28b3175b",
+      "range": {
+        "startLine": 20,
+        "startChar": 3,
+        "endLine": 20,
+        "endChar": 61
+      },
+      "revId": "972555fa3885e42401b7f6886355f749587f4a4a",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "cba4fd72_96150c6b",
