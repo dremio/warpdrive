@@ -45,6 +45,7 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(warpdrive_test
         src/common.cc
+        src/catalogfunctions-test.cc
         src/select-test.cc
         src/colattribute-test.cc
         src/bindcol-test.cc
