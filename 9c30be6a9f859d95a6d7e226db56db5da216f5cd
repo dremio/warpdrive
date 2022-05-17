@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3a419e40_c667db04",
+        "filename": "src/test/src/incomplete/colattribute-test.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-17T17:02:10Z",
+      "side": 1,
+      "message": "move file to src/test/src/colattribute-test.cc. Apologizes if you were already.",
+      "range": {
+        "startLine": 2,
+        "startChar": 2,
+        "endLine": 2,
+        "endChar": 23
+      },
+      "revId": "9c30be6a9f859d95a6d7e226db56db5da216f5cd",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
