@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0b5ddea9_53e34769",
+        "filename": "src/test/CMakeLists.txt",
+        "patchSetId": 7
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1000331
+      },
+      "writtenOn": "2022-05-17T16:48:59Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we remove these too?",
+      "range": {
+        "startLine": 48,
+        "startChar": 8,
+        "endLine": 49,
+        "endChar": 27
+      },
+      "revId": "f591d69041e18c7b44602fe9a0a349858bbc7a4b",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
