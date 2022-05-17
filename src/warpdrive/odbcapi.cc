@@ -353,7 +353,7 @@ SQLGetTypeInfo(HSTMT StatementHandle,
 {
   SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLGetTypeInfo";
-        return ODBCConnection::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+        return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
           return WD_GetTypeInfo(StatementHandle, DataType);
               });
 }
