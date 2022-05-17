@@ -10,8 +10,8 @@ TEST(WarpDriveTest, SelectTest)
 {
 	int rc;
 	HSTMT hstmt = SQL_NULL_HSTMT;
-
-  EXPECT_TRUE(test_connect())<< "SQLDriverConnect failed.";
+  std::string err_msg;
+  EXPECT_TRUE(test_connect(&err_msg))<< "SQLDriverConnect failed.";
 
 	rc = SQLAllocHandle(SQL_HANDLE_STMT, conn, &hstmt);
   EXPECT_TRUE(SQL_SUCCEEDED(rc)) << "failed to allocate stmt handle";
