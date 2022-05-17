@@ -10,7 +10,8 @@
 
 class SQLColAttributeTest : public ::testing::TestWithParam<char *> {
     void SetUp() override {
-        ASSERT_TRUE(test_connect_ext(GetParam()));
+        std::string err_msg;
+        ASSERT_TRUE(test_connect_ext(GetParam(), &err_msg));
 
         return_code_ = SQLAllocHandle(SQL_HANDLE_STMT, conn, &handle_stmt_);
         ASSERT_TRUE(SQL_SUCCEEDED(return_code_));
