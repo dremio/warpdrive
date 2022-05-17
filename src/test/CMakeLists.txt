@@ -30,7 +30,7 @@ if (APPLE)
 else()
     find_package(ODBC REQUIRED)
 endif()
-include_directories(${ODBC_INCLUDE_DIRS})
+include_directories(${ODBC_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 link_libraries(${ODBC_LIBRARIES})
 
 include(FetchContent)
@@ -45,6 +45,7 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(warpdrive_test
         src/common.cc
+        src/catalogfunctions-test.cc
         src/select-test.cc
         src/colattribute-test.cc
         src/bindcol-test.cc

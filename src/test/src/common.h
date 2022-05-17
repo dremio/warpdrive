@@ -4,9 +4,12 @@
  * Comments:		See "readme.txt" for copyright and license information.
  *--------
  */
+#include <boost/optional.hpp>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <gtest/gtest.h>
+#include <ostream>
 #include <string>
 
 #ifdef WIN32
@@ -40,17 +43,19 @@ extern void print_diag(char *msg, SQLSMALLINT htype, SQLHANDLE handle);
 extern void print_diag(const std::string& , SQLSMALLINT htype, SQLHANDLE handle);
 extern const char *get_test_dsn(void);
 extern int  IsAnsi(void);
-extern bool test_connect_ext(char *extraparams);
-extern bool test_connect();
+extern bool test_connect_ext(char *extraparams, std::string *err_msg);
+extern bool test_connect(std::string *err_msg);
 extern bool test_disconnect(std::string *err_msg);
-extern void print_result_meta_series(HSTMT hstmt,
+extern boost::optional<std::string> print_result_meta_series(HSTMT hstmt,
 									 SQLSMALLINT *colids,
-									 SQLSMALLINT numcols);
-extern std::string get_result_series(HSTMT hstmt,
+									 SQLSMALLINT numcols,
+                   std::string *err_msg);
+extern boost::optional<std::string> get_result_series(HSTMT hstmt,
                                      SQLSMALLINT *colids,
                                      SQLSMALLINT numcols,
-                                     SQLINTEGER rowcount);
-extern void print_result_meta(HSTMT hstmt);
-extern std::string get_result(HSTMT hstmt);
+                                     SQLINTEGER rowcount,
+                                     std::string *err_msg);
+extern boost::optional<std::string> print_result_meta(HSTMT hstmt, std::string *err_msg);
+extern boost::optional<std::string> get_result(HSTMT hstmt, std::string *err_msg);
 extern const char *datatype_str(SQLSMALLINT datatype);
 extern const char *nullable_str(SQLSMALLINT nullable);
