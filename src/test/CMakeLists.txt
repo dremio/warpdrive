@@ -45,8 +45,7 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(warpdrive_test
         src/common.cc
-        src/hello_test.cc
-        src/hello_test2.cc)
+        src/catalogfunctions-test.cc)
 target_link_libraries(warpdrive_test gtest_main)
 add_test(NAME warpdrive-tests COMMAND warpdrive_test)
 
