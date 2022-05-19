@@ -627,6 +627,7 @@ void ODBCStatement::closeCursor(bool suppressErrors) {
   
   if (m_currenResult) {
     m_currenResult->Close();
+    m_currenResult = nullptr;
   }
 }
 
@@ -711,4 +712,8 @@ void ODBCStatement::GetTypeInfo(SQLSMALLINT dataType) {
 
   // Direct execution wipes out the prepared state.
   m_isPrepared = false;
+}
+
+void ODBCStatement::Cancel() {
+  m_spiStatement->Cancel();
 }
