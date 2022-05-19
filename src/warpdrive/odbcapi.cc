@@ -96,8 +96,7 @@ SQLCancel(HSTMT StatementHandle)
     MYLOG(0, "Entering\n");
     /* Not that neither ENTER_STMT_CS nor StartRollbackState is called */
     /* SC_clear_error((StatementClass *) StatementHandle); maybe this neither */
-    return SQL_SUCCESS; // Do nothing until this is implemented instead of throwing an error.
-//    return WD_Cancel(StatementHandle);
+    return WD_Cancel(StatementHandle);
         });
 }
 
