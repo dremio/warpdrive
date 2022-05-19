@@ -88,6 +88,7 @@ class ODBCStatement : public ODBCHandle<ODBCStatement> {
     void GetTables(const std::string* catalog, const std::string* schema, const std::string* table, const std::string* tableType);
     void GetColumns(const std::string* catalog, const std::string* schema, const std::string* table, const std::string* column);
     void GetTypeInfo(SQLSMALLINT dataType);
+    void Cancel();
 
   private:
     ODBCConnection& m_connection;

@@ -10,6 +10,7 @@
 #include "wdodbc.h"
 
 #include <functional>
+#include <mutex>
 
 /**
  * @brief An abstraction over a generic ODBC handle.
@@ -30,6 +31,8 @@ public:
 
   template <typename Function>
   inline SQLRETURN execute(SQLRETURN rc, Function function) {
+    const std::lock_guard<std::mutex> lock(mtx_);
+
     driver::odbcabstraction::Diagnostics& diagnostics = GetDiagnostics();
     try {
       diagnostics.Clear();
@@ -56,15 +59,28 @@ public:
   }
 
   template <typename Function>
+  inline SQLRETURN executeWithLock(SQLRETURN rc, Function function) {
+    const std::lock_guard<std::mutex> lock(mtx_);
+    return execute(rc, function);
+  }
+
+  template <typename Function>
   static inline SQLRETURN ExecuteWithDiagnostics(SQLHANDLE handle, SQLRETURN rc, Function func) {
     if (!handle) {
       return SQL_INVALID_HANDLE;
     }
-    return reinterpret_cast<Derived*>(handle)->execute(rc, func);
+    if (true) {
+      return reinterpret_cast<Derived*>(handle)->executeWithLock(rc, func);
+    } else {
+      return reinterpret_cast<Derived*>(handle)->execute(rc, func);
+    }
   }
 
   static Derived* of(SQLHANDLE handle) {
     return reinterpret_cast<Derived*>(handle);
   }
+
+private:
+  std::mutex mtx_;
 };
 }
