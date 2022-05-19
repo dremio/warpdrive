@@ -886,86 +886,10 @@ RETCODE		SQL_API
 WD_Cancel(HSTMT hstmt)		/* Statement to cancel. */
 {
 	CSTR func = "WD_Cancel";
-	StatementClass *stmt = (StatementClass *) hstmt, *estmt;
-	ConnectionClass *conn;
-	RETCODE		ret = SQL_SUCCESS;
-        throw driver::odbcabstraction::DriverException("Unsupported function", "HYC00");
+  ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
+  stmt->Cancel();
 
-
-	MYLOG(0, "entering...\n");
-
-	/* Check if this can handle canceling in the middle of a SQLPutData? */
-	if (!stmt)
-	{
-		SC_log_error(func, "", NULL);
-		return SQL_INVALID_HANDLE;
-	}
-	conn = SC_get_conn(stmt);
-
-	if (stmt->execute_delegate)
-		estmt = stmt->execute_delegate;
-	else
-		estmt = stmt;
-
-	/*
-	 * SQLCancel works differently depending on what the statement is
-	 * currently doing:
-	 *
-	 * 1. In the middle of SQLParamData / SQLPutData
-	 *    -> cancel the statement
-	 *
-	 * 2. Running a query asynchronously. (asynchronous mode is not supported
-	 *    by psqlODBC)
-	 *
-	 * 3. Busy running a function in another thread.
-	 *    -> Send a query cancel request to the server
-	 *
-	 * 4. Not doing anything.
-	 *    -> in ODBC version 2.0, same as SQLFreeStmt(SQL_CLOSE). In version
-	 *       3.5, it has no effect.
-	 *
-	 * XXX: Checking for these conditions is racy. For example, we might
-	 * see that the statement is waiting for SQLParamdata/SQLPutData, but
-	 * before we acquire the lock on the statement, another thread has
-	 * supplied the data and started executing. In that case, we'll block
-	 * on the lock until the execution finishes.
-	 */
-	if (estmt->data_at_exec >= 0)
-	{
-		/* Waiting for more data from SQLParamData/SQLPutData. Cancel that. */
-		/*
-		 * Note, any previous data-at-exec buffers will be freed
-		 * if they call SQLExecDirect or SQLExecute again.
-		 */
-
-		ENTER_STMT_CS(stmt);
-		SC_clear_error(stmt);
-		estmt->data_at_exec = -1;
-		estmt->current_exec_param = -1;
-		estmt->put_data = FALSE;
-		cancelNeedDataState(estmt);
-		LEAVE_STMT_CS(stmt);
-		return ret;
-	}
-	else if (estmt->status == STMT_EXECUTING)
-	{
-		/*
-		 * Busy executing in a different thread. Send a cancel request to
-		 * the server.
-		 */
-		if (!CC_send_cancel_request(conn))
-			return SQL_ERROR;
-		else
-			return SQL_SUCCESS;
-	}
-	else
-	{
-		/*
-		 * The statement is not executing, and it's not waiting for params
-		 * either. Looks like it's not doing anything.
-		 */
-		return SQL_SUCCESS;
-	}
+  return SQL_SUCCESS;
 }
 
 
