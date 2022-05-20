@@ -1,12 +1,12 @@
-/*
- * Test functions related to establishing a connection.
+/*--------
+ * Module:			connect-test.cc
+ *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *--------
  */
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "common.h"
 
-static void
+static bool
 test_SQLConnect()
 {
 	SQLRETURN ret;
@@ -25,15 +25,16 @@ test_SQLConnect()
 		printf("connected\n");
 	} else {
 		print_diag("SQLConnect failed.", SQL_HANDLE_DBC, conn);
-		return;
 	}
+
+	return SQL_SUCCEEDED(ret);
 }
 
 /*
  * Test that attributes can be set *before* establishing a connection. (We
  * used to have a bug where it got reset when the per-DSN options were read.)
  */
-static void
+static bool
 test_setting_attribute_before_connect()
 {
 	SQLRETURN	ret;
@@ -66,7 +67,7 @@ test_setting_attribute_before_connect()
 		printf("connected\n");
 	} else {
 		print_diag("SQLDriverConnect failed.", SQL_HANDLE_DBC, conn);
-		return;
+		return SQL_SUCCEEDED(ret);
 	}
 
 	/*** Test that SQLGetConnectAttr says that it's still disabled. ****/
@@ -95,7 +96,7 @@ test_setting_attribute_before_connect()
 	if (!SQL_SUCCEEDED(ret))
 	{
 		print_diag("failed to allocate stmt handle", SQL_HANDLE_DBC, conn);
-		return;
+		return SQL_SUCCEEDED(ret);
 	}
 
 	ret = SQLExecDirect(hstmt, (SQLCHAR *) "INSERT INTO testtab1 VALUES (10000, 'shouldn''t be here!')", SQL_NTS);
@@ -109,21 +110,34 @@ test_setting_attribute_before_connect()
 
 	ret = SQLExecDirect(hstmt, (SQLCHAR *) "SELECT * FROM testtab1 WHERE id = 10000", SQL_NTS);
 	CHECK_STMT_RESULT(ret, "SQLExecDirect failed", hstmt);
-	print_result(hstmt);
+	print_result_meta(hstmt);
 
-	test_disconnect();
+    return SQL_SUCCEEDED(ret);
 }
 
-int main(int argc, char **argv)
+TEST(ConnectTest, ConnectTest)
 {
-	/* the common test_connect() function uses SQLDriverConnect */
-	test_connect();
-	test_disconnect();
+  EXPECT_TRUE(test_connect())<< "SQLDriverConnect failed.";
 
-	test_SQLConnect();
-	test_disconnect();
+  /* Clean up */
+  std::string *err_msg = nullptr;
+  EXPECT_TRUE(test_disconnect(err_msg))<<err_msg;
+}
 
-	test_setting_attribute_before_connect();
+TEST(ConnectTest, SQLConnectTest)
+{
+  EXPECT_TRUE(test_SQLConnect())<< "SQLDriverConnect failed.";
 
-	return 0;
+  /* Clean up */
+  std::string *err_msg = nullptr;
+  EXPECT_TRUE(test_disconnect(err_msg))<<err_msg;
+}
+
+TEST(ConnectTest, SettingAttributeBeforeConnectTest)
+{
+  EXPECT_TRUE(test_setting_attribute_before_connect())<< "SQLDriverConnect failed.";
+
+	/* Clean up */
+  std::string *err_msg = nullptr;
+  EXPECT_TRUE(test_disconnect(err_msg))<<err_msg;
 }
