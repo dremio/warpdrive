@@ -1,40 +1,44 @@
-/*
- * Test functions related to establishing a connection.
+/*--------
+ * Module:			connect-test.cc
+ *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *--------
  */
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "common.h"
 
-static void
-test_SQLConnect()
+TEST(ConnectTest, ConnectTest)
 {
-	SQLRETURN ret;
-	SQLCHAR *dsn = (SQLCHAR *) get_test_dsn();
+  EXPECT_TRUE(test_connect())<< "SQLDriverConnect failed.";
 
-	SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env);
+  /* Clean up */
+  std::string *err_msg = nullptr;
+  EXPECT_TRUE(test_disconnect(err_msg))<<err_msg;
+}
 
-	SQLSetEnvAttr(env, SQL_ATTR_ODBC_VERSION, (void *) SQL_OV_ODBC3, 0);
+TEST(ConnectTest, SQLConnectTest)
+{
+  SQLRETURN ret;
+  SQLCHAR *dsn = (SQLCHAR *) get_test_dsn();
 
-	SQLAllocHandle(SQL_HANDLE_DBC, env, &conn);
+  SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env);
 
-	printf("Connecting with SQLConnect...");
+  SQLSetEnvAttr(env, SQL_ATTR_ODBC_VERSION, (void *) SQL_OV_ODBC3, 0);
 
-	ret = SQLConnect(conn, dsn, SQL_NTS, NULL, 0, NULL, 0);
-	if (SQL_SUCCEEDED(ret)) {
-		printf("connected\n");
-	} else {
-		print_diag("SQLConnect failed.", SQL_HANDLE_DBC, conn);
-		return;
-	}
+  SQLAllocHandle(SQL_HANDLE_DBC, env, &conn);
+
+  ret = SQLConnect(conn, dsn, SQL_NTS, NULL, 0, NULL, 0);
+  CHECK_CONN_RESULT(ret, "SQLTransact failed", conn);
+
+  /* Clean up */
+  std::string *err_msg = nullptr;
+  EXPECT_TRUE(test_disconnect(err_msg))<<err_msg;
 }
 
 /*
  * Test that attributes can be set *before* establishing a connection. (We
  * used to have a bug where it got reset when the per-DSN options were read.)
  */
-static void
-test_setting_attribute_before_connect()
+TEST(ConnectTest, SettingAttributeBeforeConnectTest)
 {
 	SQLRETURN	ret;
 	SQLCHAR		str[1024];
@@ -62,12 +66,8 @@ test_setting_attribute_before_connect()
 	ret = SQLDriverConnect(conn, NULL, dsn, SQL_NTS,
 						   str, sizeof(str), &strl,
 						   SQL_DRIVER_COMPLETE);
-	if (SQL_SUCCEEDED(ret)) {
-		printf("connected\n");
-	} else {
-		print_diag("SQLDriverConnect failed.", SQL_HANDLE_DBC, conn);
-		return;
-	}
+
+	CHECK_CONN_RESULT(ret, "SQLDriverConnect failed", conn);
 
 	/*** Test that SQLGetConnectAttr says that it's still disabled. ****/
 	value = 0;
@@ -92,11 +92,7 @@ test_setting_attribute_before_connect()
 	 * anymore.
 	 */
 	ret = SQLAllocHandle(SQL_HANDLE_STMT, conn, &hstmt);
-	if (!SQL_SUCCEEDED(ret))
-	{
-		print_diag("failed to allocate stmt handle", SQL_HANDLE_DBC, conn);
-		return;
-	}
+	CHECK_STMT_RESULT(ret, "failed to allocate stmt handle", hstmt);
 
 	ret = SQLExecDirect(hstmt, (SQLCHAR *) "INSERT INTO testtab1 VALUES (10000, 'shouldn''t be here!')", SQL_NTS);
 	CHECK_STMT_RESULT(ret, "SQLExecDirect failed", hstmt);
@@ -109,21 +105,9 @@ test_setting_attribute_before_connect()
 
 	ret = SQLExecDirect(hstmt, (SQLCHAR *) "SELECT * FROM testtab1 WHERE id = 10000", SQL_NTS);
 	CHECK_STMT_RESULT(ret, "SQLExecDirect failed", hstmt);
-	print_result(hstmt);
+	print_result_meta(hstmt);
 
-	test_disconnect();
-}
-
-int main(int argc, char **argv)
-{
-	/* the common test_connect() function uses SQLDriverConnect */
-	test_connect();
-	test_disconnect();
-
-	test_SQLConnect();
-	test_disconnect();
-
-	test_setting_attribute_before_connect();
-
-	return 0;
+	/* Clean up */
+  std::string *err_msg = nullptr;
+  EXPECT_TRUE(test_disconnect(err_msg))<<err_msg;
 }
