@@ -94,7 +94,7 @@ set(WARPDRIVE_SRCS
     psqlsetup.cc
     qresult.cc
     results.cc
-    setup.cc
+  #  setup.cc
     statement.cc
     tuple.cc
     wdapi30.cc
