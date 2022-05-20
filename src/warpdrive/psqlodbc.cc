@@ -19,7 +19,7 @@
 #endif /* _DEBUG */
 #endif /* WIN32 */
 #include "wdodbc.h"
-#include "dlg_specific.h"
+//#include "dlg_specific.h"
 #include "environ.h"
 #include "misc.h"
 #include <string.h>
@@ -107,7 +107,7 @@ static void finalize_global_cs(void)
 }
 
 #ifdef WIN32
-HINSTANCE s_hModule;		/* Saved module handle. */
+//HINSTANCE s_hModule;		/* Saved module handle. */
 /*	This is where the Driver Manager attaches to this Driver */
 #if 0
 BOOL		WINAPI
@@ -117,9 +117,8 @@ DllMain(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 
 	switch (ul_reason_for_call)
 	{
-		case DLL_PROCESS_ATTACH:
-			s_hModule = reinterpret_cast<HINSTANCE>(hInst);	/* Save for dialog boxes */
-
+		//case DLL_PROCESS_ATTACH:
+		//	s_hModule = reinterpret_cast<HINSTANCE>(hInst);	/* Save for dialog boxes */
 
 			if (stricmp(exename, "msaccess") == 0)
 				exepgm = 1;

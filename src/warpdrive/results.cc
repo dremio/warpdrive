@@ -21,7 +21,7 @@
 
 #include <string.h>
 #include "misc.h"
-#include "dlg_specific.h"
+//#include "dlg_specific.h"
 #include "environ.h"
 #include "connection.h"
 #include "statement.h"

@@ -2,8 +2,9 @@ LIBRARY psqlsetup
 EXPORTS
 
 DllMain @201
-ConfigDSN @202
-ConfigDriver @203
+;ConfigDSN @202
+;ConfigDriver @203
+
 
 SQLBindCol @4
 SQLCancel @5
