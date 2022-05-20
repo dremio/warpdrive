@@ -6,7 +6,7 @@
 #include	"loadlib.h"
 #include	"misc.h"
 
-HINSTANCE s_hModule;		/* Saved module handle. */
+//HINSTANCE s_hModule;		/* Saved module handle. */
 
 #include <stdio.h>
 #include <string.h>
@@ -70,7 +70,10 @@ DllMain(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 	switch (ul_reason_for_call)
 	{
 		case DLL_PROCESS_ATTACH:
-			s_hModule = reinterpret_cast<HINSTANCE>(hInst);	/* Save for dialog boxes */
+
+
+		//	s_hModule = reinterpret_cast<HINSTANCE>(hInst);	/* Save for dialog boxes */
+
 			initialize_global_cs();
 #ifdef	WD_BIN
 			if (s_hLModule = LoadLibraryEx(WD_BIN "\\libpq.dll", NULL, LOAD_WITH_ALTERED_SEARCH_PATH), s_hLModule == NULL)
