@@ -49,6 +49,10 @@ add_executable(warpdrive_test
 target_link_libraries(warpdrive_test gtest_main)
 add_test(NAME warpdrive-tests COMMAND warpdrive_test)
 
+add_executable(connect_test src/connect-test.cc src/common.cc)
+target_link_libraries(connect_test gtest_main)
+add_test(NAME connect_tests COMMAND connect_test)
+
 ## Test executables
 #add_executable(alter src/alter-test.cc src/common.cc)
 #add_executable(arraybinding src/arraybinding-test.cc src/common.cc)
