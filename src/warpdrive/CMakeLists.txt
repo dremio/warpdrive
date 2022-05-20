@@ -91,13 +91,17 @@ set(WARPDRIVE_SRCS
     options.cc
     parse.cc
     psqlodbc.cc
-    psqlsetup.cc
+  #  psqlsetup.cc
     qresult.cc
     results.cc
-    setup.cc
+<<<<<<< Updated upstream
+    #setup.cc
+=======
+  #  setup.cc
+>>>>>>> Stashed changes
     statement.cc
     tuple.cc
-    wdapi30.cc
+   # wdapi30.cc
     wdtypes.cc
     win_unicode.cc
     xalibname.cc

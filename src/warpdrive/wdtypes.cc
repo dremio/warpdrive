@@ -18,7 +18,7 @@
 
 #include "wdtypes.h"
 
-#include "dlg_specific.h"
+//#include "dlg_specific.h"
 #include "statement.h"
 #include "connection.h"
 #include "environ.h"
