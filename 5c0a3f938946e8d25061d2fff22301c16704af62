@@ -16,6 +16,40 @@
       "message": "Couple comments that should be changed.\n* We should move the test_SQLConnect body into the TEST body itself\n* Use asserts in the body of test_SQLConnect and print the diagnostic as the error message. Take a look at CHECK_CONN_RESULT in common.h for an example.\n\nGood job! :)",
       "revId": "5c0a3f938946e8d25061d2fff22301c16704af62",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "5a644883_4c831a43",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-20T16:36:07Z",
+      "side": 1,
+      "message": "Need to rebase this on master.",
+      "revId": "5c0a3f938946e8d25061d2fff22301c16704af62",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "e16e8e45_0803f4cc",
+        "filename": "src/test/src/connect-test.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-20T16:36:07Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be static? We don\u0027t need to expose this function to other modules.",
+      "revId": "5c0a3f938946e8d25061d2fff22301c16704af62",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
