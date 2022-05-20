@@ -101,27 +101,27 @@ static BOOL	loaded_psqlodbc = FALSE;
 /*
  *	Load a DLL based on psqlodbc path.
  */
-HMODULE MODULE_load_from_psqlodbc_path(const char *module_name)
-{
-	extern	HINSTANCE	s_hModule;
-	HMODULE	hmodule = NULL;
-	char	szFileName[MAX_PATH];
-
-	if (GetModuleFileName(s_hModule, szFileName, sizeof(szFileName)) > 0)
-	{
-		char drive[_MAX_DRIVE], dir[_MAX_DIR], sysdir[MAX_PATH];
-
-		_splitpath(szFileName, drive, dir, NULL, NULL);
-		GetSystemDirectory(sysdir, MAX_PATH);
-		SPRINTF_FIXED(szFileName, "%s%s%s.dll", drive, dir, module_name);
-		if (_strnicmp(szFileName, sysdir, strlen(sysdir)) != 0)
-		{
-			hmodule = LoadLibraryEx(szFileName, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
-			MYLOG(0, "psqlodbc path based %s loaded module=%p\n", module_name, hmodule);
-		}
-	}
-	return hmodule;
-}
+//HMODULE MODULE_load_from_psqlodbc_path(const char *module_name)
+//{
+//	extern	HINSTANCE	s_hModule;
+//	HMODULE	hmodule = NULL;
+//	char	szFileName[MAX_PATH];
+//
+//	if (GetModuleFileName(s_hModule, szFileName, sizeof(szFileName)) > 0)
+//	{
+//		char drive[_MAX_DRIVE], dir[_MAX_DIR], sysdir[MAX_PATH];
+//
+//		_splitpath(szFileName, drive, dir, NULL, NULL);
+//		GetSystemDirectory(sysdir, MAX_PATH);
+//		SPRINTF_FIXED(szFileName, "%s%s%s.dll", drive, dir, module_name);
+//		if (_strnicmp(szFileName, sysdir, strlen(sysdir)) != 0)
+//		{
+//			hmodule = LoadLibraryEx(szFileName, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+//			MYLOG(0, "psqlodbc path based %s loaded module=%p\n", module_name, hmodule);
+//		}
+//	}
+//	return hmodule;
+//}
 
 
 static FARPROC WINAPI
