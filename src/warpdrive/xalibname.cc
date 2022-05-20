@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-extern HMODULE	s_hModule;
+//extern HMODULE	s_hModule;
 
 static char	xalibpath[_MAX_PATH] = "";
 static char	xalibname[_MAX_FNAME] = "";
@@ -60,7 +60,7 @@ const char *GetXaLibName(void)
 		size_t	pgmflen = strlen(PGMFILESX86);
 		char	*ptr;
 
-		GetModuleFileName(s_hModule, dllpath, sizeof(dllpath));
+		//GetModuleFileName(s_hModule, dllpath, sizeof(dllpath));
 		/* In Windows XP SP2, the dllname should be specified */
 		/* instead of the dll path name, because it looks up */
 		/* the HKLM\Microfost\MSDTC\XADLL\(dllname) registry */
