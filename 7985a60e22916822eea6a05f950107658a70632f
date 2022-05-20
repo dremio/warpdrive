@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "1a508b32_65cb14e4",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 18
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-20T16:00:58Z",
+      "side": 1,
+      "message": "If you could fix that one change and do a rebase I will +2",
+      "revId": "7985a60e22916822eea6a05f950107658a70632f",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "00db7d1f_4f032cdf",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 18
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-20T16:00:58Z",
+      "side": 1,
+      "message": "Not a complaint but we should look to make this standardized or a base class in the future.",
+      "range": {
+        "startLine": 9,
+        "startChar": 4,
+        "endLine": 23,
+        "endChar": 5
+      },
+      "revId": "7985a60e22916822eea6a05f950107658a70632f",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "56a6d931_11e98728",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 18
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-20T16:00:58Z",
+      "side": 1,
+      "message": "INSTANTIATE_TEST_CASE_P is deprecated. Please use INSTANTIATE_TEST_SUITE_P.",
+      "range": {
+        "startLine": 91,
+        "startChar": 0,
+        "endLine": 91,
+        "endChar": 23
+      },
+      "revId": "7985a60e22916822eea6a05f950107658a70632f",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
