@@ -78,6 +78,8 @@ SQLBulkOperations @100
 ;DllMain @201
 ;ConfigDSN @202
 ;ConfigDriver @203
+ConfigDSN @9002
+ConfigDriver @9003
 
 SQLColAttributeW	@101
 SQLColumnPrivilegesW	@102
