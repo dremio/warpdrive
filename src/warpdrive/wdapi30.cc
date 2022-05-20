@@ -29,7 +29,7 @@
 #include "qresult.h"
 #include "wdapifunc.h"
 #include "loadlib.h"
-#include "dlg_specific.h"
+//#include "dlg_specific.h"
 
 #include "AttributeUtils.h"
 #include "ODBCEnvironment.h"
