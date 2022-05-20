@@ -75,7 +75,7 @@ static BOOL dconn_get_connect_attributes(const char *connect_string, ConnInfo *c
 LRESULT CALLBACK dconn_FDriverConnectProc(HWND hdlg, UINT wMsg, WPARAM wParam, LPARAM lParam);
 RETCODE		dconn_DoDialog(HWND hwnd, ConnInfo *ci);
 
-extern HINSTANCE s_hModule;	/* Saved module handle. */
+//extern HINSTANCE s_hModule;	/* Saved module handle. */
 #endif
 
 #define	PASSWORD_IS_REQUIRED	1
@@ -356,31 +356,31 @@ MYLOG(DETAIL_LOG_LEVEL, "before CC_connect\n");
 #endif
 
 #ifdef WIN32
-RETCODE
-dconn_DoDialog(HWND hwnd, ConnInfo *ci)
-{
-	LRESULT			dialog_result;
-
-	MYLOG(0, "entering ci = %p\n", ci);
-
-	if (hwnd)
-	{
-		dialog_result = DialogBoxParam(s_hModule, MAKEINTRESOURCE(DLG_CONFIG),
-				hwnd, dconn_FDriverConnectProc, (LPARAM) ci);
-		if (-1 == dialog_result)
-		{
-			int errc = GetLastError();
-			MYLOG(0, " LastError=%d\n", errc);
-		}
-		if (!dialog_result || (dialog_result == -1))
-			return SQL_NO_DATA_FOUND;
-		else
-			return SQL_SUCCESS;
-	}
-
-	MYLOG(0, " No window specified\n");
-	return SQL_ERROR;
-}
+//RETCODE
+//dconn_DoDialog(HWND hwnd, ConnInfo *ci)
+//{
+//	LRESULT			dialog_result;
+//
+//	MYLOG(0, "entering ci = %p\n", ci);
+//
+//	if (hwnd)
+//	{
+//		dialog_result = DialogBoxParam(s_hModule, MAKEINTRESOURCE(DLG_CONFIG),
+//				hwnd, dconn_FDriverConnectProc, (LPARAM) ci);
+//		if (-1 == dialog_result)
+//		{
+//			int errc = GetLastError();
+//			MYLOG(0, " LastError=%d\n", errc);
+//		}
+//		if (!dialog_result || (dialog_result == -1))
+//			return SQL_NO_DATA_FOUND;
+//		else
+//			return SQL_SUCCESS;
+//	}
+//
+//	MYLOG(0, " No window specified\n");
+//	return SQL_ERROR;
+//}
 
 
 LRESULT CALLBACK
@@ -401,7 +401,7 @@ dconn_FDriverConnectProc(
 			/* Change the caption for the setup dialog */
 			SetWindowText(hdlg, "PostgreSQL Connection");
 
-			LoadString(s_hModule, IDS_ADVANCE_CONNECTION, strbuf, sizeof(strbuf));
+		//	LoadString(s_hModule, IDS_ADVANCE_CONNECTION, strbuf, sizeof(strbuf));
 			SetWindowText(GetDlgItem(hdlg, IDC_DATASOURCE), strbuf);
 
 			/* Hide the DSN and description fields */
@@ -456,7 +456,7 @@ dconn_FDriverConnectProc(
 
 				case IDC_DATASOURCE:
 					ci = (ConnInfo *) GetWindowLongPtr(hdlg, DWLP_USER);
-					DialogBoxParam(s_hModule, MAKEINTRESOURCE(DLG_OPTIONS_DRV),
+			//		DialogBoxParam(s_hModule, MAKEINTRESOURCE(DLG_OPTIONS_DRV),
 								   hdlg, ds_options1Proc, (LPARAM) ci);
 					break;
 			}
