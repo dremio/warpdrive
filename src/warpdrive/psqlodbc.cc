@@ -118,7 +118,7 @@ DllMain(HANDLE hInst, ULONG ul_reason_for_call, LPVOID lpReserved)
 	switch (ul_reason_for_call)
 	{
 		case DLL_PROCESS_ATTACH:
-			s_hModule = reinterpret_cast<HINSTANCE>(hInst);	/* Save for dialog boxes */
+			//s_hModule = reinterpret_cast<HINSTANCE>(hInst);	/* Save for dialog boxes */
 
 
 			if (stricmp(exename, "msaccess") == 0)
