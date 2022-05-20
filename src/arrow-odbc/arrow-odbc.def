@@ -76,8 +76,8 @@ SQLBulkOperations @100
 ;SQLDummyOrdinal @199
 ;dconn_FDriverConnectProc @200
 ;DllMain @201
-;ConfigDSN @202
-;ConfigDriver @203
+ConfigDSN @9001
+ConfigDriver @9005
 
 SQLColAttributeW	@101
 SQLColumnPrivilegesW	@102
