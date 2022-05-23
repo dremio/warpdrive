@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3f04d112_ae1070e6",
+        "filename": "src/warpdrive/ODBCHandle.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-23T18:17:27Z",
+      "side": 1,
+      "message": "Both executeWithLock() and execute() lock...",
+      "revId": "c1b3bf757197f495b096759fe01bd031f30ee8fc",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "48b7e5b1_2a185c4f",
+        "filename": "src/warpdrive/ODBCHandle.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-23T18:17:27Z",
+      "side": 1,
+      "message": "Assume this should be a template parameter (eg template \u003ctypename Function, bool SHOULD_LOCK\u003e",
+      "revId": "c1b3bf757197f495b096759fe01bd031f30ee8fc",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "252c86d8_61f392db",
+        "filename": "src/warpdrive/ODBCStatement.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-23T18:17:27Z",
+      "side": 1,
+      "message": "This needs to be expanded a bit. If nothing is running on the statement, and Cancel() is called, and the statement has a cursor, this should have the same effect as SQLFreeStmt(SQL_CLOSE) -- synchronously closing the cursor.",
+      "revId": "c1b3bf757197f495b096759fe01bd031f30ee8fc",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
