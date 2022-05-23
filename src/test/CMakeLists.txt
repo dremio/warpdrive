@@ -45,6 +45,7 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(warpdrive_test
         src/common.cc
+        src/select-test.cc
         src/colattribute-test.cc
 )
 target_link_libraries(warpdrive_test gtest_main)
