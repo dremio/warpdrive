@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9e8a642a_7868ac2c",
+        "filename": "src/test/src/catalogfunctions-test.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-24T17:02:31Z",
+      "side": 1,
+      "message": "Store the result of test_connect in a variable.",
+      "range": {
+        "startLine": 25,
+        "startChar": 4,
+        "endLine": 25,
+        "endChar": 50
+      },
+      "revId": "ffec4e1b4f014b42776cb3d32d6ac31397edc5ea",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "bf0d74c4_bdeed693",
+        "filename": "src/test/src/catalogfunctions-test.cc",
+        "patchSetId": 7
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-24T17:02:31Z",
+      "side": 1,
+      "message": "This needs the changes we discussed to avoid deallocating and disconnecting when not connected.",
+      "range": {
+        "startLine": 30,
+        "startChar": 2,
+        "endLine": 34,
+        "endChar": 42
+      },
+      "revId": "ffec4e1b4f014b42776cb3d32d6ac31397edc5ea",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
