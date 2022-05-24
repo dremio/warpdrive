@@ -39,6 +39,29 @@
       },
       "revId": "989448bc2cc35444e0f4b8ae90275e0b084ce65b",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c77fd892_44369220",
+        "filename": "src/test/src/connect-test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-24T17:45:16Z",
+      "side": 1,
+      "message": "Should go in the body of the test and not use printf. Instead assert with error messages.",
+      "range": {
+        "startLine": 12,
+        "startChar": 1,
+        "endLine": 30,
+        "endChar": 27
+      },
+      "revId": "989448bc2cc35444e0f4b8ae90275e0b084ce65b",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
