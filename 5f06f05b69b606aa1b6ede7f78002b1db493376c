@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "97eae200_d13d3e07",
+        "filename": "src/test/src/catalogfunctions-test.cc",
+        "patchSetId": 8
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-24T22:01:38Z",
+      "side": 1,
+      "message": "Why not EXPECT_EQ with std::string?",
+      "range": {
+        "startLine": 193,
+        "startChar": 2,
+        "endLine": 193,
+        "endChar": 84
+      },
+      "revId": "5f06f05b69b606aa1b6ede7f78002b1db493376c",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
