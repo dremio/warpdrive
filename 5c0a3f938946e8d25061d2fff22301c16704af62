@@ -50,6 +50,24 @@
       "message": "Shouldn\u0027t this be static? We don\u0027t need to expose this function to other modules.",
       "revId": "5c0a3f938946e8d25061d2fff22301c16704af62",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "87eaf59e_e14850f8",
+        "filename": "src/test/src/connect-test.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1000380
+      },
+      "writtenOn": "2022-05-24T07:13:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e16e8e45_0803f4cc",
+      "revId": "5c0a3f938946e8d25061d2fff22301c16704af62",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
