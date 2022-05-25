@@ -462,8 +462,9 @@ src/arrow-odbc/ApacheArrow-prefix/src/ApacheArrow-stamp/ApacheArrow-gitinfo.txt
 *ninja_deps*
 *ninja_log*
 src/arrow-odbc/arrow-odbcConfig.cmake
-src/warpdrive/WarpdriveOptions.cmake
 
 # CLion
 .idea
 cscope.files
+_deps/
+vcpkg_installed/
