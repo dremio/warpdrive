@@ -3,6 +3,29 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "41d3b7c5_4da46c36",
+        "filename": "src/test/src/common.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-25T18:07:04Z",
+      "side": 1,
+      "message": "Should this include the diagnositc?",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 81
+      },
+      "revId": "5c6e38b95f7ef70bf14f302cde8ec9909e04810e",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "fc3f955b_0dfcea89",
         "filename": "src/test/src/diagnostic-test.cc",
         "patchSetId": 2
