@@ -32,6 +32,8 @@ extern SQLHDBC conn;
 
 #define CHECK_STMT_RESULT(rc, msg, hstmt) ASSERT_TRUE(SQL_SUCCEEDED(rc)) << format_diagnostic(msg, SQL_HANDLE_STMT, hstmt)
 
+#define CHECK_INVALID_STMT_RESULT(rc, msg) ASSERT_FALSE(SQL_SUCCEEDED(rc)) << msg
+
 extern std::string format_diagnostic(const std::string& msg, SQLSMALLINT htype, SQLHANDLE handle);
 extern std::string get_diagnostic(SQLHANDLE handle, SQLSMALLINT htype);
 extern void print_diag(char *msg, SQLSMALLINT htype, SQLHANDLE handle);
