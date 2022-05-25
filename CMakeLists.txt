@@ -55,6 +55,10 @@ set(WARPDRIVE_VERSION "0.0.1-SNAPSHOT")
 
 string(REGEX MATCH "^[0-9]+\\.[0-9]+\\.[0-9]+" WARPDRIVE_BASE_VERSION "${WARPDRIVE_VERSION}")
 
+if (DEFINED CMAKE_TOOLCHAIN_FILE)
+  include(${CMAKE_TOOLCHAIN_FILE})
+endif()
+
 # if no build build type is specified, default to release builds
 if(NOT DEFINED CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE
@@ -558,7 +562,7 @@ endif()
 # May need to set OPENSSL_ROOT_DIR first. On Mac if using brew:
 # brew install openssl@1.1
 # add to the cmake line -DOPENSSL_ROOT_DIR=/usr/local/Cellar/openssl@1.1/1.1.1m
-if (NOT DEFINED OPENSSL_ROOT_DIR AND DEFINED APPLE)
+if (NOT DEFINED OPENSSL_ROOT_DIR AND DEFINED APPLE AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   set(OPENSSL_ROOT_DIR /usr/local/Cellar/openssl@1.1/1.1.1m)
 endif()
 if (NOT DEFINED MSVC)
@@ -615,6 +619,14 @@ else()
     -DARROW_GIT_TAG=${ARROW_GIT_TAG} \
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
   )
+
+  if (DEFINED CMAKE_TOOLCHAIN_FILE)
+    list(APPEND ODBCABSTRACTION_CMAKE_ARGS
+      -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+      -DVCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}
+      -DVCPKG_MANIFEST_MODE=OFF
+    )
+  endif()
 
   ExternalProject_Add(ODBCAbstraction
     GIT_REPOSITORY ${ODBCABSTRACTION_REPO}
