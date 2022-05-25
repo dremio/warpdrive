@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d1df2db8_41084d4b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-25T19:00:14Z",
+      "side": 1,
+      "message": "As long as this have been built in the Docker container I am fine with it going in.",
+      "revId": "0d7b1400096b336e03e7a4c12e3573f3fba34c35",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
