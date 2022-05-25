@@ -9,16 +9,25 @@
 
 class SQLBindColTests : public ::testing::Test {
     void SetUp() override {
-        ASSERT_TRUE(test_connect());
+        connected = test_connect();
+        ASSERT_TRUE(connected);
+
+        return_code_ = SQLAllocHandle(SQL_HANDLE_STMT, conn, &handle_stmt_);
+        CHECK_CONN_RESULT(return_code_, "Failed to allocate stmt handle in SetUp:\n", conn);
     }
 
     void TearDown() override {
-        return_code_ = SQLFreeStmt(handle_stmt_, SQL_CLOSE);
-        CHECK_STMT_RESULT(return_code_, "SQLFreeStmt failed", handle_stmt_);
-        ASSERT_TRUE(test_disconnect(nullptr));
+        if (handle_stmt_ != SQL_NULL_HSTMT) {
+            return_code_ = SQLFreeStmt(handle_stmt_, SQL_CLOSE);
+            CHECK_STMT_RESULT(return_code_, "SQLFreeStmt failed in TearDown:\n", handle_stmt_);
+        }
+        if (connected) {
+            ASSERT_TRUE(test_disconnect(nullptr));
+        }
     }
 
 protected:
+    bool connected{false};
     int return_code_{};
     HSTMT handle_stmt_ = SQL_NULL_HSTMT;
 };
