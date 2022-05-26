@@ -30,12 +30,11 @@ public:
 
   template <typename Function>
   inline SQLRETURN execute(SQLRETURN rc, Function function) {
-    driver::odbcabstraction::Diagnostics& diagnostics = GetDiagnostics();
     try {
-      diagnostics.Clear();
+      GetDiagnostics().Clear();
       rc = function();
     } catch (const driver::odbcabstraction::DriverException& ex) {
-      diagnostics.AddError(ex);
+      GetDiagnostics().AddError(ex);
     } catch (const std::bad_alloc& ex) {
       GetDiagnostics().AddError(
         driver::odbcabstraction::DriverException("A memory allocation error occurred.", "HY001"));
@@ -47,9 +46,9 @@ public:
         driver::odbcabstraction::DriverException("An unknown error occurred."));
     }
 
-    if (diagnostics.HasError()) {
+    if (GetDiagnostics().HasError()) {
       return SQL_ERROR;
-    } if (SQL_SUCCEEDED(rc) && diagnostics.HasWarning()) {
+    } if (SQL_SUCCEEDED(rc) && GetDiagnostics().HasWarning()) {
       return SQL_SUCCESS_WITH_INFO;
     }
     return rc;
