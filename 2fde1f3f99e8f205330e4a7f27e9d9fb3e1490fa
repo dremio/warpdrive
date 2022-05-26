@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "fc2d8c01_2a0b1447",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-26T22:10:40Z",
+      "side": 1,
+      "message": "This fixes the Windows build after the ODBC handle hierarchy clean-up.",
+      "revId": "2fde1f3f99e8f205330e4a7f27e9d9fb3e1490fa",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
