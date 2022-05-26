@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "23f93da6_0c9ddb26",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-26T22:54:43Z",
+      "side": 1,
+      "message": "This should be initialized.",
+      "revId": "984428219f2e0322f235bb5186d763383e4de6dc",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9810ce27_9469379b",
+        "filename": "src/test/src/result-conversions-test.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-26T22:54:43Z",
+      "side": 1,
+      "message": "Can we add a comment on this field? It\u0027s not really clear what this represents.\nPerhaps we should use named classes instead of std::pair or tuples?",
+      "revId": "984428219f2e0322f235bb5186d763383e4de6dc",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "149b2946_02ec9152",
+        "filename": "src/test/src/result-conversions-test.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-05-26T22:54:43Z",
+      "side": 1,
+      "message": "sqltype should be C type right?\nAnd type should be Dremio / Arrow type?\n\nNote that SQL type is a separate concept. It\u0027s the type the driver is exposing whereas C type is the type the application is requesting the data be returned in.",
+      "revId": "984428219f2e0322f235bb5186d763383e4de6dc",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
