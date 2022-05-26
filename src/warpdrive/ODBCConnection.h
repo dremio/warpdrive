@@ -5,13 +5,13 @@
  */
 #pragma once
 
-#include "wdodbc.h"
+#include "ODBCHandle.h"
+
 #include <sql.h>
 #include <memory>
 #include <vector>
 #include <map>
 #include <odbcabstraction/connection.h>
-#include "ODBCHandle.h"
 
 namespace ODBC
 {

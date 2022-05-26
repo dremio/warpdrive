@@ -6,9 +6,10 @@
 
 #pragma once
 
+#include <odbcabstraction/platform.h>
 #include <odbcabstraction/diagnostics.h>
-#include "wdodbc.h"
-
+#include <sql.h>
+#include <sqltypes.h>
 #include <functional>
 
 /**

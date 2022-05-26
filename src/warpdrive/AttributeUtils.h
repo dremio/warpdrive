@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <odbcabstraction/platform.h>
 #include <sql.h>
 #include <sqlext.h>
 #include <algorithm>
@@ -35,7 +36,7 @@ inline SQLRETURN GetAttributeUTF8(const std::string &attributeValue,
                              SQLPOINTER output, O outputSize, O *outputLenPtr) {
   if (output) {
     size_t outputLenBeforeNul =
-        WD_MIN(static_cast<O>(attributeValue.size()), static_cast<O>(outputSize - 1));
+        std::min(static_cast<O>(attributeValue.size()), static_cast<O>(outputSize - 1));
     memcpy(output, attributeValue.c_str(), outputLenBeforeNul);
     reinterpret_cast<char *>(output)[outputLenBeforeNul] = '\0';
   }

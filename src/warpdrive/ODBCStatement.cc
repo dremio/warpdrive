@@ -5,13 +5,13 @@
  */
 #include "ODBCStatement.h"
 
-#include "wdodbc.h"
+#include "ODBCDescriptor.h"
 #include "AttributeUtils.h"
 #include "ODBCConnection.h"
 #include "ODBCDescriptor.h"
-#include "sql.h"
-#include "sqlext.h"
-#include "sqltypes.h"
+#include <sql.h>
+#include <sqlext.h>
+#include <sqltypes.h>
 #include <odbcabstraction/statement.h>
 #include <odbcabstraction/exceptions.h>
 #include <odbcabstraction/result_set.h>
@@ -282,7 +282,7 @@ bool ODBCStatement::Fetch(size_t rows) {
   }
 
   if (m_maxRows) {
-    rows = WD_MIN(rows, m_maxRows - m_rowNumber);
+    rows = std::min(rows, m_maxRows - m_rowNumber);
   }
 
   if (m_currentArd->HaveBindingsChanged()) {

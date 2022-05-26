@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "wdodbc.h"
+#include <odbcabstraction/platform.h>
 #include <sql.h>
 #include <sqlext.h>
 #include <algorithm>
@@ -15,12 +15,6 @@
 #include <memory>
 #include <string>
 #include <cstring>
-
-#ifdef _WIN32
-#define WD_MIN min
-#else
-#define WD_MIN std::min
-#endif
 
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 
@@ -41,7 +35,7 @@ namespace ODBC {
     SQLLEN valueLengthInBytes = wstr.size() * sizeof(SqlWChar);
 
     if (buffer) {
-      memcpy(buffer, wstr.data(), WD_MIN(static_cast<SQLLEN>(wstr.size() * sizeof(SqlWChar)), bufferSizeInBytes));
+      memcpy(buffer, wstr.data(), std::min(static_cast<SQLLEN>(wstr.size() * sizeof(SqlWChar)), bufferSizeInBytes));
 
       // Write a NUL terminator
       if (bufferSizeInBytes > valueLengthInBytes + sizeof(SqlWChar)) {
@@ -76,7 +70,7 @@ namespace ODBC {
 
     std::string converted = CharToWStrConverter().to_bytes(wstr.c_str());
     if (buffer) {
-      memcpy(buffer, converted.c_str(), WD_MIN(bufferSizeInBytes, static_cast<SQLLEN>(converted.size())));
+      memcpy(buffer, converted.c_str(), std::min(bufferSizeInBytes, static_cast<SQLLEN>(converted.size())));
       if (bufferSizeInBytes > converted.size() + 1) {
         buffer[bufferSizeInBytes] = '\0';   
       } else {
