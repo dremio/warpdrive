@@ -5,14 +5,13 @@
  */
 #include "ODBCConnection.h"
 
-#include "wdodbc.h"
 #include "ODBCDescriptor.h"
 #include "ODBCEnvironment.h"
 #include "ODBCStatement.h"
 #include "AttributeUtils.h"
 #include "odbcinst.h"
-#include "sql.h"
-#include "sqlext.h"
+#include <sql.h>
+#include <sqlext.h>
 #include <iterator>
 #include <memory>
 #include <odbcabstraction/connection.h>
