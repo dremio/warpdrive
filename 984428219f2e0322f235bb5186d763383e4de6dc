@@ -18,6 +18,24 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "d038acb1_f0176448",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-27T19:17:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "23f93da6_0c9ddb26",
+      "revId": "984428219f2e0322f235bb5186d763383e4de6dc",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "9810ce27_9469379b",
@@ -37,6 +55,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "a567dc79_16f20de5",
+        "filename": "src/test/src/result-conversions-test.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-27T19:17:57Z",
+      "side": 1,
+      "message": "I had added a comment regarding its purpose. The reason for using both a string and the int is because only having the integer makes the tests very hard to parse. ie. when trying to figure out what test is failing it would only show the parameters as (value, type, -2) for a test converting to SQL_C_BINARY.\n\nUsing std::pair is mainly for convenience as gTest knows how to format it as output.",
+      "parentUuid": "9810ce27_9469379b",
+      "revId": "984428219f2e0322f235bb5186d763383e4de6dc",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "149b2946_02ec9152",
         "filename": "src/test/src/result-conversions-test.cc",
         "patchSetId": 16
@@ -48,6 +84,24 @@
       "writtenOn": "2022-05-26T22:54:43Z",
       "side": 1,
       "message": "sqltype should be C type right?\nAnd type should be Dremio / Arrow type?\n\nNote that SQL type is a separate concept. It\u0027s the type the driver is exposing whereas C type is the type the application is requesting the data be returned in.",
+      "revId": "984428219f2e0322f235bb5186d763383e4de6dc",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "387c516d_f72e93c3",
+        "filename": "src/test/src/result-conversions-test.cc",
+        "patchSetId": 16
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-27T19:17:57Z",
+      "side": 1,
+      "message": "I have changed the name to odbc_sql_c_type. This seems to align with how the documentation for odbc refers to the types but I would be happy to change it to odbc_c_types if you prefer.",
+      "parentUuid": "149b2946_02ec9152",
       "revId": "984428219f2e0322f235bb5186d763383e4de6dc",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
