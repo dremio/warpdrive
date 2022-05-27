@@ -39,6 +39,7 @@ add_executable(warpdrive_test
         src/colattribute-test.cc
         src/bindcol-test.cc
         src/diagnostic-test.cc
+        src/wchar-char-test-utf8.cc
         src/statement-functions-test.cc
 )
 target_link_libraries(warpdrive_test gtest_main)
