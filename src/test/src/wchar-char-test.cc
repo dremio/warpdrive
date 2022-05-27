@@ -35,9 +35,9 @@ print_utf16_le(const SQLWCHAR *wdt)
 	fflush(stdout);
 }
 
-#include	"wchar-char-test-sjis.c"
-#include	"wchar-char-test-utf8.c"
-#include	"wchar-char-test-eucjp.c"
+#include  "test/src/unneeded/wchar-char-test-sjis.cc"
+#include	"wchar-char-test-utf8.cc"
+#include  "test/src/unneeded/wchar-char-test-eucjp.cc"
 
 enum {
 	SJIS_TEST
