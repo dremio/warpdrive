@@ -93,6 +93,30 @@
       },
       "revId": "ae175ef6728c78d26ff253e841fcb4a552447e60",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8c7d1235_113b336d",
+        "filename": "src/test/src/common.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-27T16:20:11Z",
+      "side": 1,
+      "message": "How do we determine that this failed if we return a valid string? We could use std::optional or document that \"\" is an error result\n.",
+      "parentUuid": "817e778a_71a02c81",
+      "range": {
+        "startLine": 387,
+        "startChar": 4,
+        "endLine": 388,
+        "endChar": 14
+      },
+      "revId": "ae175ef6728c78d26ff253e841fcb4a552447e60",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
