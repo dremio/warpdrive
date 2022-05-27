@@ -24,6 +24,30 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "1e3a3a80_f6648748",
+        "filename": "src/test/src/common.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1000302
+      },
+      "writtenOn": "2022-05-27T13:36:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fd435cb6_189fc669",
+      "range": {
+        "startLine": 156,
+        "startChar": 4,
+        "endLine": 156,
+        "endChar": 60
+      },
+      "revId": "ae175ef6728c78d26ff253e841fcb4a552447e60",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "e330fbd3_3dd0c01b",
@@ -37,6 +61,30 @@
       "writtenOn": "2022-05-26T00:46:12Z",
       "side": 1,
       "message": "optional?",
+      "range": {
+        "startLine": 387,
+        "startChar": 4,
+        "endLine": 388,
+        "endChar": 14
+      },
+      "revId": "ae175ef6728c78d26ff253e841fcb4a552447e60",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "817e778a_71a02c81",
+        "filename": "src/test/src/common.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1000302
+      },
+      "writtenOn": "2022-05-27T13:36:18Z",
+      "side": 1,
+      "message": "I\u0027m sorry, but what do you mean? Should just return the err_msg?",
+      "parentUuid": "e330fbd3_3dd0c01b",
       "range": {
         "startLine": 387,
         "startChar": 4,
