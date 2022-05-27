@@ -86,6 +86,19 @@ TEST_F(CatalogFunctionsTest, GetTablesTest){
   EXPECT_EQ(exp_result, get_result(hstmt_, &err_msg));
 }
 
+TEST_F(CatalogFunctionsTest, GetTablesTest_AllSchemas){
+  rc_ = SQLTables(hstmt_, (SQLCHAR *) "", 0,
+                  (SQLCHAR *) "%", 1,
+                  (SQLCHAR *) "", 0,
+                  (SQLCHAR *) "", 0);
+  CHECK_STMT_RESULT(rc_, "SQLTables failed", hstmt_);
+  std::string err_msg;
+  std::string exp_result_meta = "TABLE_CAT: VARCHAR(1024) digits: 0, nullable\nTABLE_SCHEM: VARCHAR(1024) digits: 0, nullable\nTABLE_NAME: VARCHAR(1024) digits: 0, nullable\nTABLE_TYPE: VARCHAR(1024) digits: 0, nullable\nREMARKS: VARCHAR(1024) digits: 0, nullable\n";
+  std::string exp_result = "NULLXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxX\tpostgres.tpch\tlineitem\tTABLENULL\tXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxXxX\n";
+  EXPECT_EQ(exp_result_meta, print_result_meta(hstmt_, &err_msg));
+  EXPECT_EQ(exp_result, get_result(hstmt_, &err_msg));
+}
+
 TEST_F(CatalogFunctionsTest, GetColumnsTest){
   SQLSMALLINT sql_column_ids[6] = {1, 2, 3, 4, 5, 6};
 
