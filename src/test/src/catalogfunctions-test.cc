@@ -86,6 +86,20 @@ TEST_F(CatalogFunctionsTest, GetTablesTest){
   EXPECT_EQ(exp_result, get_result(hstmt_, &err_msg).value())<<err_msg;
 }
 
+TEST_F(CatalogFunctionsTest, GetTablesTest_AllSchemas){
+  rc_ = SQLTables(hstmt_, (SQLCHAR *) "", 0,
+                  (SQLCHAR *) "%", 1,
+                  (SQLCHAR *) "", 0,
+                  (SQLCHAR *) "", 0);
+  CHECK_STMT_RESULT(rc_, "SQLTables failed", hstmt_);
+  std::string err_msg;
+
+  const std::string &results = get_result(hstmt_, &err_msg).value();
+
+  // Expect that result comes with all columns NULL except for the second one (schema name)
+  EXPECT_TRUE(results.find("\tNULL\t$scratch\tNULL\tNULL\tNULL") != std::string::npos);
+}
+
 TEST_F(CatalogFunctionsTest, GetColumnsTest){
   SQLSMALLINT sql_column_ids[6] = {1, 2, 3, 4, 5, 6};
 

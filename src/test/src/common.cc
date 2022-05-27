@@ -349,13 +349,12 @@ get_result_series(HSTMT hstmt, SQLSMALLINT *colids, SQLSMALLINT numcols, SQLINTE
           *err_msg = format_diagnostic("SQLGetData failed", SQL_HANDLE_STMT, hstmt);
           return boost::none;
         }
+        result_buf.append("\t");
         if (ind == SQL_NULL_DATA)
           result_buf.append("NULL");
-
-        if (i>0){
-          result_buf.append("\t");
+        else if (i > 0) {
           result_buf.append(buf);
-        }else{
+        } else {
           result_buf.append(buf, strlen(buf));
         }
       }
