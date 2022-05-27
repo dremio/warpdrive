@@ -40,7 +40,9 @@ add_executable(warpdrive_test
         src/diagnostic-test.cc
         src/result-conversions-test.cc
         src/select-test.cc
-        src/statement-functions-test.cc)
+        src/statement-functions-test.cc
+        src/wchar-char-test-utf8.cc
+)
 
 target_link_libraries(warpdrive_test gtest_main)
 add_test(NAME warpdrive-tests COMMAND warpdrive_test)
