@@ -122,6 +122,24 @@
       "parentUuid": "b3902a2e_64c12c97",
       "revId": "c1b3bf757197f495b096759fe01bd031f30ee8fc",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "24e40c00_8057fe6d",
+        "filename": "src/warpdrive/ODBCStatement.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-05-27T17:32:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "94b89683_03edd73f",
+      "revId": "c1b3bf757197f495b096759fe01bd031f30ee8fc",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
