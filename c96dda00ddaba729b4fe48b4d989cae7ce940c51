@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "931697de_847927fd",
+        "filename": "src/test/src/connect-test.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-31T15:59:55Z",
+      "side": 1,
+      "message": "Error prone use std::string err_msg; and \u0026err_msg.",
+      "range": {
+        "startLine": 14,
+        "startChar": 22,
+        "endLine": 14,
+        "endChar": 32
+      },
+      "revId": "c96dda00ddaba729b4fe48b4d989cae7ce940c51",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "bd8d0398_3e103ab2",
+        "filename": "src/test/src/connect-test.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-31T15:59:55Z",
+      "side": 1,
+      "message": "Same thing",
+      "range": {
+        "startLine": 33,
+        "startChar": 14,
+        "endLine": 33,
+        "endChar": 32
+      },
+      "revId": "c96dda00ddaba729b4fe48b4d989cae7ce940c51",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "d97fd897_327fdda2",
+        "filename": "src/test/src/connect-test.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-31T15:59:55Z",
+      "side": 1,
+      "message": "Same thing",
+      "range": {
+        "startLine": 111,
+        "startChar": 14,
+        "endLine": 111,
+        "endChar": 33
+      },
+      "revId": "c96dda00ddaba729b4fe48b4d989cae7ce940c51",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
