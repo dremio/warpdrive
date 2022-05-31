@@ -41,6 +41,30 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "20060aec_d02558db",
+        "filename": "src/test/CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-31T17:48:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1bbad08f_3afee533",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 49
+      },
+      "revId": "989448bc2cc35444e0f4b8ae90275e0b084ce65b",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "c77fd892_44369220",
@@ -54,6 +78,30 @@
       "writtenOn": "2022-05-24T17:45:16Z",
       "side": 1,
       "message": "Should go in the body of the test and not use printf. Instead assert with error messages.",
+      "range": {
+        "startLine": 12,
+        "startChar": 1,
+        "endLine": 30,
+        "endChar": 27
+      },
+      "revId": "989448bc2cc35444e0f4b8ae90275e0b084ce65b",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "4453353f_93cb5043",
+        "filename": "src/test/src/connect-test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-05-31T17:48:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c77fd892_44369220",
       "range": {
         "startLine": 12,
         "startChar": 1,
