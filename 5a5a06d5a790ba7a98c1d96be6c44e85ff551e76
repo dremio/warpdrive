@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d5a0f284_7b5d3a73",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 4
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000509
+      },
+      "writtenOn": "2022-06-01T16:59:15Z",
+      "side": 1,
+      "message": "I did a reset on the verification build because it was not erroring out when compiling the tests",
+      "revId": "5a5a06d5a790ba7a98c1d96be6c44e85ff551e76",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
