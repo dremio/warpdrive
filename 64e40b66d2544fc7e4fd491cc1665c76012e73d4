@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "72947c26_fab38e4f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 8
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-01T15:58:26Z",
+      "side": 1,
+      "message": "Please change the commit message to remove the reference to the JIRA ticket.",
+      "revId": "64e40b66d2544fc7e4fd491cc1665c76012e73d4",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
