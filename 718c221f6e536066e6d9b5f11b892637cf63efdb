@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "c735542c_d128a0e9",
+        "filename": "src/test/src/select-test.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-01T16:20:24Z",
+      "side": 1,
+      "message": "Include the error message",
+      "range": {
+        "startLine": 14,
+        "startChar": 40,
+        "endLine": 14,
+        "endChar": 67
+      },
+      "revId": "718c221f6e536066e6d9b5f11b892637cf63efdb",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}

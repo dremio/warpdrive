@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a808c12b_1914c3df",
+        "filename": "src/test/src/bindcol-test.cc",
+        "patchSetId": 12
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-01T16:20:24Z",
+      "side": 1,
+      "message": "Lets use this error message.",
+      "range": {
+        "startLine": 26,
+        "startChar": 24,
+        "endLine": 26,
+        "endChar": 48
+      },
+      "revId": "f1486d54f5ca27dc26ad4cd95b2b3454814405c9",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
