@@ -161,6 +161,7 @@ WD_DescribeCol(HSTMT hstmt,
   }
   GetAttribute<SQLSMALLINT, size_t>(record.m_type, pfSqlType, sizeof(SQLUSMALLINT), nullptr);
   GetAttribute<SQLUINTEGER, size_t>(record.m_length, pcbColDef, sizeof(SQLULEN), nullptr);
+  GetAttribute<SQLSMALLINT, size_t>(record.m_scale, pibScale, sizeof(SQLSMALLINT), nullptr);
   GetAttribute<SQLSMALLINT, size_t>(record.m_nullable, pfNullable, sizeof(SQLSMALLINT), nullptr);
   
   return ret;
