@@ -419,7 +419,7 @@ void ODBCConnection::SetConnectAttr(SQLINTEGER attribute, SQLPOINTER value, SQLI
   case SQL_ATTR_AUTO_IPD:
     throw DriverException("Cannot set read-only attribute", "HY092");
   case SQL_ATTR_AUTOCOMMIT:
-    CheckIfAttributeIsSetToOnlyValidValue(value, static_cast<SQLUINTEGER>(SQL_AUTOCOMMIT_OFF));
+    CheckIfAttributeIsSetToOnlyValidValue(value, static_cast<SQLUINTEGER>(SQL_AUTOCOMMIT_ON));
     return;
   case SQL_ATTR_CONNECTION_DEAD:
     throw DriverException("Cannot set read-only attribute", "HY092");
