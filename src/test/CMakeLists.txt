@@ -49,6 +49,7 @@ add_executable(warpdrive_test
         src/colattribute-test.cc
         src/bindcol-test.cc
         src/diagnostic-test.cc
+        src/connect-test.cc
 )
 target_link_libraries(warpdrive_test gtest_main)
 add_test(NAME warpdrive-tests COMMAND warpdrive_test)
