@@ -213,32 +213,6 @@ SQLFetchScroll(HSTMT StatementHandle,
       throw DriverException("Fetch type unsupported", "HY106");
     }
 
-    struct ARDArraySizeTracker {
-      ARDArraySizeTracker(ODBCDescriptor *ard, SQLLEN newSize)
-          : m_ard(ard), m_newSize(newSize), m_oldSize(ard->GetArraySize()) {
-        if (m_newSize != m_oldSize) {
-          m_ard->SetHeaderField(SQL_DESC_ARRAY_SIZE,
-                                reinterpret_cast<SQLPOINTER>(m_newSize), 0);
-        }
-      }
-
-      ~ARDArraySizeTracker() {
-        if (m_newSize != m_oldSize) {
-          m_ard->SetHeaderField(SQL_DESC_ARRAY_SIZE,
-                                reinterpret_cast<SQLPOINTER>(m_oldSize), 0);
-        }
-      }
-
-      ODBCDescriptor *m_ard;
-      SQLLEN m_newSize;
-      SQLLEN m_oldSize;
-    };
-
-    ODBCStatement *stmt = ODBCStatement::of(StatementHandle);
-    ODBCDescriptor *ard = stmt->GetARD();
-
-    ARDArraySizeTracker tracker(ard, FetchOffset);
-
     RETCODE result = WD_Fetch(StatementHandle);
     return result;
   });
