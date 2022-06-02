@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "18d2fd9a_9f92317f",
+        "filename": "src/test/src/unneeded/wchar-char-test-eucjp.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-02T20:35:05Z",
+      "side": 1,
+      "message": "This isn\u0027t right is it?",
+      "range": {
+        "startLine": 37,
+        "startChar": 25,
+        "endLine": 37,
+        "endChar": 29
+      },
+      "revId": "23d5d746e69a8f0ed659cb27d233b7b92f8207e0",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "967ffbc8_b59d3cf1",
+        "filename": "src/test/src/unneeded/wchar-char-test-sjis.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-02T20:35:05Z",
+      "side": 1,
+      "message": "Same here.",
+      "range": {
+        "startLine": 13,
+        "startChar": 56,
+        "endLine": 13,
+        "endChar": 68
+      },
+      "revId": "23d5d746e69a8f0ed659cb27d233b7b92f8207e0",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "bec1ae22_3f2891c0",
+        "filename": "src/test/src/wchar-char-test-utf8.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-02T20:35:05Z",
+      "side": 1,
+      "message": "We are missing the if for checking that the statement has been allocated.",
+      "range": {
+        "startLine": 12,
+        "startChar": 4,
+        "endLine": 13,
+        "endChar": 72
+      },
+      "revId": "23d5d746e69a8f0ed659cb27d233b7b92f8207e0",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7bcd7608_8339ea28",
+        "filename": "src/test/src/wchar-char-test.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-02T20:35:05Z",
+      "side": 1,
+      "message": "Why are these unneeded?",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 54
+      },
+      "revId": "23d5d746e69a8f0ed659cb27d233b7b92f8207e0",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
