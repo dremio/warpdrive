@@ -111,6 +111,12 @@ namespace ODBC
         return m_arraySize;
       }
 
+      inline void SetRowsProcessed(SQLULEN rows) {
+        if (m_rowsProccessedPtr) {
+          *m_rowsProccessedPtr = rows;
+        }
+      }
+
       void NotifyBindingsHavePropagated() {
         m_hasBindingsChanged = false;
       }

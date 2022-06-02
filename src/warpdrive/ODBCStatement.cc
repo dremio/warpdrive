@@ -278,6 +278,7 @@ void ODBCStatement::ExecuteDirect(const std::string& query) {
 
 bool ODBCStatement::Fetch(size_t rows) {
   if (m_hasReachedEndOfResult) {
+    m_ird->SetRowsProcessed(0);
     return false;
   }
 
@@ -308,6 +309,8 @@ bool ODBCStatement::Fetch(size_t rows) {
   }
 
   size_t rowsFetched = m_currenResult->Move(rows);
+  m_ird->SetRowsProcessed(static_cast<SQLULEN>(rowsFetched));
+
   m_rowNumber += rowsFetched;
   m_hasReachedEndOfResult = rowsFetched != rows;
   return rowsFetched != 0;
