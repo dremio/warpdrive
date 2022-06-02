@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "724a1575_cbe63656",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 7
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-02T17:37:12Z",
+      "side": 1,
+      "message": "Can we write a comment on what these tests are doing? I am not all that familiar with catalog functions so it may just be confusing for me.",
+      "revId": "caaf30c273d01249f23c0c1da485b63d1f0836ca",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
