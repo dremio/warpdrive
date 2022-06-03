@@ -38,7 +38,7 @@ namespace ODBC {
       memcpy(buffer, wstr.data(), std::min(static_cast<SQLLEN>(wstr.size() * sizeof(SqlWChar)), bufferSizeInBytes));
 
       // Write a NUL terminator
-      if (bufferSizeInBytes > valueLengthInBytes + sizeof(SqlWChar)) {
+      if (bufferSizeInBytes >= valueLengthInBytes + sizeof(SqlWChar)) {
         reinterpret_cast<SqlWChar*>(buffer)[wstr.size()] = '\0';
       } else {
         SQLLEN numCharsWritten = bufferSizeInBytes / sizeof(SqlWChar);
@@ -71,10 +71,10 @@ namespace ODBC {
     std::string converted = CharToWStrConverter().to_bytes(wstr.c_str());
     if (buffer) {
       memcpy(buffer, converted.c_str(), std::min(bufferSizeInBytes, static_cast<SQLLEN>(converted.size())));
-      if (bufferSizeInBytes > converted.size() + 1) {
-        buffer[bufferSizeInBytes] = '\0';   
-      } else {
+      if (bufferSizeInBytes >= converted.size() + 1) {
         buffer[converted.size()] = '\0';
+      } else if (bufferSizeInBytes > 0){
+        buffer[bufferSizeInBytes - 1] = '\0';
       }
     }
     return converted.size();
