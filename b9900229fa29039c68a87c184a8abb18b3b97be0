@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "ea237d84_91af6816",
+        "filename": "src/warpdrive/ODBCStatement.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-04T00:56:44Z",
+      "side": 1,
+      "message": "This is good, but do we also need to fill up the row status array?",
+      "revId": "b9900229fa29039c68a87c184a8abb18b3b97be0",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f71eaa4e_20ce95aa",
+        "filename": "src/warpdrive/odbcapi30.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-04T00:56:44Z",
+      "side": 1,
+      "message": "Was there no way to get TurboODBC to avoid calling SQLEndTran?",
+      "revId": "b9900229fa29039c68a87c184a8abb18b3b97be0",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
