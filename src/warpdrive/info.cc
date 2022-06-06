@@ -40,13 +40,10 @@
 #include "wdapifunc.h"
 #include "multibyte.h"
 #include "catfunc.h"
-#include "ODBCConnection.h"
-
-using namespace ODBC;
-
+#include <odbcabstraction/odbc_impl/ODBCConnection.h>
+#include <odbcabstraction/odbc_impl/ODBCStatement.h>
 #include <string>
 
-#include "ODBCStatement.h"
 
 using namespace ODBC;
 

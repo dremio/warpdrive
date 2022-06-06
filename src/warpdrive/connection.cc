@@ -45,9 +45,9 @@
 
 #include "wdapifunc.h"
 
-#include "ODBCEnvironment.h"
-#include "ODBCConnection.h"
-#include <odbcabstraction/connection.h>
+#include <odbcabstraction/odbc_impl/ODBCEnvironment.h>
+#include <odbcabstraction/odbc_impl/ODBCConnection.h>
+#include <odbcabstraction/spi/connection.h>
 #include <string>
 
 #define	SAFE_STR(s)	(NULL != (s) ? (s) : "(null)")

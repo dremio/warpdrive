@@ -40,9 +40,9 @@
 #include "loadlib.h"
 
 #include <odbcabstraction/exceptions.h>
-#include "ODBCDescriptor.h"
-#include "ODBCConnection.h"
-#include "ODBCStatement.h"
+#include <odbcabstraction/odbc_impl/ODBCDescriptor.h>
+#include <odbcabstraction/odbc_impl/ODBCConnection.h>
+#include <odbcabstraction/odbc_impl/ODBCStatement.h>
 
 using namespace ODBC;
 using namespace driver::odbcabstraction;

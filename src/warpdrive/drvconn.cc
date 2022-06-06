@@ -37,8 +37,8 @@
 
 #include "dlg_specific.h"
 #include <string>
-#include "ODBCConnection.h"
-#include <odbcabstraction/connection.h>
+#include <odbcabstraction/odbc_impl/ODBCConnection.h>
+#include <odbcabstraction/spi/connection.h>
 
 #define	FORCE_PASSWORD_DISPLAY
 #define	NULL_IF_NULL(a) (a ? a : "(NULL)")

@@ -24,8 +24,8 @@
 
 #include "wdapifunc.h"
 
-#include "ODBCConnection.h"
-#include "ODBCDescriptor.h"
+#include <odbcabstraction/odbc_impl/ODBCConnection.h>
+#include <odbcabstraction/odbc_impl/ODBCDescriptor.h>
 
 using namespace ODBC;
 

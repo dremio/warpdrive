@@ -32,8 +32,8 @@
 #include "wdtypes.h"
 #include "lobj.h"
 #include "wdapifunc.h"
-#include "ODBCStatement.h"
-#include "ODBCConnection.h"
+#include <odbcabstraction/odbc_impl/ODBCStatement.h>
+#include <odbcabstraction/odbc_impl/ODBCConnection.h>
 #include <string>
 
 using namespace ODBC;

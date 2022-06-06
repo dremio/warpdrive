@@ -29,7 +29,7 @@
 #endif /* WIN32 */
 #include "loadlib.h"
 #include "new_driver.h"
-#include "ODBCEnvironment.h"
+#include <odbcabstraction/odbc_impl/ODBCEnvironment.h>
 
 
 /* The one instance of the handles */

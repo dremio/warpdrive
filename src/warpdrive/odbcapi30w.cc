@@ -23,10 +23,10 @@
 #include "statement.h"
 #include "misc.h"
 
-#include "ODBCConnection.h"
-#include "ODBCDescriptor.h"
-#include "ODBCEnvironment.h"
-#include "ODBCStatement.h"
+#include <odbcabstraction/odbc_impl/ODBCConnection.h>
+#include <odbcabstraction/odbc_impl/ODBCDescriptor.h>
+#include <odbcabstraction/odbc_impl/ODBCEnvironment.h>
+#include <odbcabstraction/odbc_impl/ODBCStatement.h>
 #include "c_ptr.h"
 
 using namespace ODBC;

@@ -35,9 +35,9 @@
 
 #include "wdapifunc.h"
 
-#include "AttributeUtils.h"
-#include "ODBCStatement.h"
-#include "ODBCDescriptor.h"
+#include <odbcabstraction/odbc_impl/AttributeUtils.h>
+#include <odbcabstraction/odbc_impl/ODBCStatement.h>
+#include <odbcabstraction/odbc_impl/ODBCDescriptor.h>
 #include <odbcabstraction/exceptions.h>
 
 using namespace ODBC;

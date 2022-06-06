@@ -26,9 +26,9 @@
 #include "connection.h"
 #include "statement.h"
 
-#include "ODBCConnection.h"
-#include "ODBCStatement.h"
-#include "ODBCDescriptor.h"
+#include <odbcabstraction/odbc_impl/ODBCConnection.h>
+#include <odbcabstraction/odbc_impl/ODBCStatement.h>
+#include <odbcabstraction/odbc_impl/ODBCDescriptor.h>
 #include "c_ptr.h"
 
 using namespace ODBC;

@@ -28,8 +28,8 @@
 #include "multibyte.h"
 
 #include "wdapifunc.h"
-#include "ODBCDescriptor.h"
-#include "ODBCStatement.h"
+#include <odbcabstraction/odbc_impl/ODBCDescriptor.h>
+#include <odbcabstraction/odbc_impl/ODBCStatement.h>
 
 using namespace ODBC;
 
