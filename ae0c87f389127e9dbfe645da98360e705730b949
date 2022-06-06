@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "71d21751_8e185dcc",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-06T10:31:27Z",
+      "side": 1,
+      "message": "Note that this patch requires the corresponding flightsql-odbc patch (https://gerrit.drem.io/gerrit/c/flightsql-odbc/+/38558/1) to be merged before it can build.",
+      "revId": "ae0c87f389127e9dbfe645da98360e705730b949",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
