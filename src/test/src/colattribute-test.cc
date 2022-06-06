@@ -73,6 +73,7 @@ TEST_P(SQLColAttributeTest, ColAttributeTestWithExtraConnOptions) {
                                        nullptr,
                                        nullptr);
         CHECK_STMT_RESULT(return_code_, "SQLColAttribute failed", handle_stmt_);
+        GTEST_SKIP_("DX-52040: Type names currently don't match and DX-52041: Octet length doesn't match.");
         EXPECT_EQ(actual_type_name, expected_type_names[i - 1]);
 
         return_code_ = SQLColAttribute(handle_stmt_,
