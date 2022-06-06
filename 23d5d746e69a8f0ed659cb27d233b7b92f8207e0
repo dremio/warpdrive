@@ -48,6 +48,30 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "3c0d9dc3_7ce56380",
+        "filename": "src/test/src/unneeded/wchar-char-test-eucjp.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-06T15:44:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bf73377f_62f7e924",
+      "range": {
+        "startLine": 37,
+        "startChar": 25,
+        "endLine": 37,
+        "endChar": 29
+      },
+      "revId": "23d5d746e69a8f0ed659cb27d233b7b92f8207e0",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "967ffbc8_b59d3cf1",
@@ -85,6 +109,30 @@
       "side": 1,
       "message": "These chars are in a different encoding, so gerrit couldn\u0027t identify it, this is why it is so strange.",
       "parentUuid": "967ffbc8_b59d3cf1",
+      "range": {
+        "startLine": 13,
+        "startChar": 56,
+        "endLine": 13,
+        "endChar": 68
+      },
+      "revId": "23d5d746e69a8f0ed659cb27d233b7b92f8207e0",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "cdf115a0_3466e239",
+        "filename": "src/test/src/unneeded/wchar-char-test-sjis.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-06T15:44:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f3144b90_899a6144",
       "range": {
         "startLine": 13,
         "startChar": 56,
@@ -179,6 +227,30 @@
       "side": 1,
       "message": "Because the utf8 test runs standalone, this file is unneeded. As I said in a previous meeting I chose to only port the utf8 encoding test as it is the most usual.",
       "parentUuid": "7bcd7608_8339ea28",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 54
+      },
+      "revId": "23d5d746e69a8f0ed659cb27d233b7b92f8207e0",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "aad7cdaf_5d3e0095",
+        "filename": "src/test/src/wchar-char-test.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-06T15:44:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7b14b95f_08812a5a",
       "range": {
         "startLine": 37,
         "startChar": 0,
