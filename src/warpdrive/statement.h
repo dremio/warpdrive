@@ -1,8 +1,9 @@
-/* File:			statement.hPD
+/* File:			statement.h
  *
  * Description:		See "statement.c"
  *
  * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *
  */
 

@@ -1,5 +1,5 @@
 /*------
- * Module:			connection.c
+ * Module:			connection.cc
  *
  * Description:		This module contains routines related to
  *					connecting to and disconnecting from the Postgres DBMS.
@@ -10,6 +10,7 @@
  *					SQLBrowseConnect(NI)
  *
  * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *-------
  */
 /* Multibyte support	Eiji Tokuya 2001-03-15 */

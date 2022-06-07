@@ -1,5 +1,5 @@
 /*------
- * Module:			statement.c
+ * Module:			statement.cc
  *
  * Description:		This module contains functions related to creating
  *					and manipulating a statement.
@@ -9,6 +9,7 @@
  * API functions:	SQLAllocStmt, SQLFreeStmt
  *
  * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *-------
  */
 

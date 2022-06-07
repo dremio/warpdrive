@@ -1,10 +1,10 @@
 /* File:			catfunc.h
  *
- * Description:		See "info.c"
+ * Description:		See "info.cc"
  *
  * Comments:		See "readme.txt" for copyright and license information.
- *
- */
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
+  */
 
 #ifndef __CATFUNC_H__
 #define __CATFUNC_H__

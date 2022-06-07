@@ -1,3 +1,9 @@
+/* File:			cursor-block-delete-test.cc
+ *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
+ */
+
 /*
  * Test deleting tuples all with scrolling block cursors BOF ->
  * EOF -> BOF -> ...

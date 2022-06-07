@@ -14,6 +14,9 @@
 			SQLProceduresW, SQLSetCursorNameW,
 			SQLSpecialColumnsW, SQLStatisticsW, SQLTablesW,
 			SQLTablePrivilegesW, SQLGetTypeInfoW
+ *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *-------
  */
 

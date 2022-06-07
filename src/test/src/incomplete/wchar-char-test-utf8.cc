@@ -1,3 +1,8 @@
+/* File:			wchar-char-test-utf8.cc
+ *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
+ */
 
 static int utf8_test_one(HSTMT hstmt)
 {

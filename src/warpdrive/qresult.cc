@@ -1,5 +1,5 @@
 /*---------
- * Module:			qresult.c
+ * Module:			qresult.cc
  *
  * Description:		This module contains functions related to
  *			managing result information (i.e, fetching rows
@@ -13,6 +13,7 @@
  * API functions:	none
  *
  * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *---------
  */
 

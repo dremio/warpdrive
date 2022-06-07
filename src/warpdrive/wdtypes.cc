@@ -1,5 +1,5 @@
 /*--------
- * Module:			wdtypes.c
+ * Module:			wdtypes.cc
  *
  * Description:		This module contains routines for getting information
  *					about the supported Postgres data types.  Only the
@@ -13,6 +13,7 @@
  * API functions:	none
  *
  * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *--------
  */
 

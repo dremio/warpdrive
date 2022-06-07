@@ -1,3 +1,9 @@
+/* File:			declare-fetch-block-test.cc
+ *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
+ */
+
 /*
  * Test what happens when using block cursors, scrolling next and prior, or 
  * fetching a row "behind" the rowset by "fetch absolute".

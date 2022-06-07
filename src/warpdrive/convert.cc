@@ -1,5 +1,5 @@
 /*-------
- * Module:				 convert.c
+ * Module:				 convert.cc
  *
  * Description:    This module contains routines related to
  *				   converting parameters and columns into requested data types.
@@ -12,7 +12,8 @@
  *
  * API functions:  none
  *
- * Comments:	   See "readme.txt" for copyright and license information.
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *-------
  */
 /* Multibyte support  Eiji Tokuya	2001-03-15	*/
