@@ -1,5 +1,5 @@
 /*-------
- * Module:			misc.c
+ * Module:			misc.cc
  *
  * Description:		This module contains miscellaneous routines
  *					such as for debugging/logging and string functions.
@@ -9,6 +9,7 @@
  * API functions:	none
  *
  * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *-------
  */
 

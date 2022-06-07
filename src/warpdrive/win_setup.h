@@ -1,3 +1,9 @@
+/* File:			win_setup.h
+ *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
+ *
+ */
 #ifndef	_WIN_SETUP_H__
 #define	_WIN_SETUP_H__
 

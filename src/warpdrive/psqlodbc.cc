@@ -1,5 +1,5 @@
 /*--------
- * Module:			psqlodbc.c
+ * Module:			psqlodbc.cc
  *
  * Description:		This module contains the main entry point (DllMain)
  *					for the library.  It also contains functions to get
@@ -10,6 +10,7 @@
  * API functions:	none
  *
  * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *--------
  */
 

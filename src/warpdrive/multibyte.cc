@@ -3,6 +3,9 @@
  *
  * Description:		New Multibyte related additional function.
  *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
+ *
  *					Create 2001-03-03 Eiji Tokuya
  *					New Create 2001-09-16 Eiji Tokuya
  *--------

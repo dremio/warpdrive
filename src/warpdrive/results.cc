@@ -1,5 +1,5 @@
 /*
- * Module:			results.c
+ * Module:			results.cc
  *
  * Description:		This module contains functions related to
  *					retrieving result information through the ODBC API.
@@ -12,6 +12,7 @@
  *					SQLSetCursorName, SQLGetCursorName
  *
  * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *-------
  */
 

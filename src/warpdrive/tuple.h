@@ -1,13 +1,13 @@
 /* File:			tuple.h
  *
- * Description:		See "tuple.c"
+ * Description:		See "tuple.cc"
  *
  * Important NOTE:	The TupleField structure is used both to hold backend
 			data and manual result set data. The "set_" functions
 			are only used for manual result sets by info routines.
  *
  * Comments:		See "readme.txt" for copyright and license information.
- *
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  */
 
 #ifndef __TUPLE_H__

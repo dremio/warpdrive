@@ -1,9 +1,11 @@
 /*-------
- * Module:			win_unicode.c
+ * Module:			win_unicode.cc
  *
  * Description:		This module contains utf8 <-> ucs2 conversion routines
  *					under WIndows
  *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *-------
  */
 

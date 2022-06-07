@@ -1,8 +1,11 @@
-/* File:			ODBCEnvironment.h
-*
-* Comments:		See "notice.txt" for copyright and license information.
-*
-*/
+///
+/// Copyright (C) 2020-2022 Dremio Corporation
+///
+/// See “license.txt” for license information.
+///
+/// Module:			c_ptr.h
+///
+/// Description:		Helper class for managing memory allocated using malloc and realloc.
 #pragma once
 
 #include "wdodbc.h"

@@ -1,9 +1,10 @@
-/* File:			wdodbc.h
+/* File:			unicode_support.h
  *
  * Description:		This file contains defines and declarations that are related to
  *					the entire driver.
  *
  * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  */
 
 #ifndef __UNICODE_SUPPORT_H__
