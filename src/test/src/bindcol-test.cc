@@ -61,7 +61,16 @@ TEST_F(SQLBindColTests, SQLBindColTest) {
 
     // NOTE: Original query was: "SELECT id, 'foo' || id FROM generate_series(1, 10) id"
     return_code_ = SQLExecDirect(handle_stmt_, (SQLCHAR *)
-                                         "SELECT id, CONCAT('foo', id) FROM TABLE(postgres.external_query('SELECT generate_series(1, 10) AS id'))",
+                                         "SELECT 1, 'foo1' UNION ALL "
+                                         "SELECT 2, 'foo2' UNION ALL "
+                                         "SELECT 3, 'foo3' UNION ALL "
+                                         "SELECT 4, 'foo4' UNION ALL "
+                                         "SELECT 5, 'foo5' UNION ALL "
+                                         "SELECT 6, 'foo6' UNION ALL "
+                                         "SELECT 7, 'foo7' UNION ALL "
+                                         "SELECT 8, 'foo8' UNION ALL "
+                                         "SELECT 9, 'foo9' UNION ALL "
+                                         "SELECT 10, 'foo10'",
                                  SQL_NTS);
     CHECK_STMT_RESULT(return_code_, "SQLExecDirect failed", handle_stmt_);
 
@@ -96,4 +105,27 @@ TEST_F(SQLBindColTests, SQLBindColTest) {
             CHECK_STMT_RESULT(return_code_, "SQLBindCol failed", handle_stmt_);
         }
     }
+}
+
+TEST_F(SQLBindColTests, SQLBindColTest_Multiple_Batches_Single_Fetch) {
+  SQLINTEGER long_value[3];
+  SQLLEN index_long_value;
+
+  return_code_ = SQLAllocHandle(SQL_HANDLE_STMT, conn, &handle_stmt_);
+  CHECK_CONN_RESULT(return_code_, "failed to allocate stmt handle", conn);
+
+  return_code_ = SQLSetStmtAttr(handle_stmt_, SQL_ATTR_ROW_ARRAY_SIZE, (SQLPOINTER) 3, 0);
+  CHECK_CONN_RESULT(return_code_, "failed set SQL_ATTR_ROW_ARRAY_SIZE", conn);
+
+  return_code_ = SQLBindCol(handle_stmt_, 1, SQL_C_LONG, &long_value, 0, &index_long_value);
+  CHECK_STMT_RESULT(return_code_, "SQLBindCol failed", handle_stmt_);
+
+  return_code_ = SQLExecDirect(handle_stmt_, (SQLCHAR *) "SELECT 100 UNION ALL SELECT 200 UNION ALL SELECT 300",
+                               SQL_NTS);
+  CHECK_STMT_RESULT(return_code_, "SQLExecDirect failed", handle_stmt_);
+
+  return_code_ = SQLFetch(handle_stmt_);
+  EXPECT_EQ(long_value[0], 100);
+  EXPECT_EQ(long_value[1], 200);
+  EXPECT_EQ(long_value[2], 300);
 }
