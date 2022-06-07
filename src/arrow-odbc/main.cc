@@ -1,12 +1,13 @@
+///
+/// Copyright (C) 2020-2022 Dremio Corporation
+///
+/// See “license.txt” for license information.
+///
+/// Module:			main.cc
+///
+/// Description:		This module contains routines for building the Arrow Flight SQL Driver.
+
 #include <memory>
-/*-------
- * Module:			main.cc
- *
- * Description:		This module contains routines for building the Arrow Flight SQL Driver.
- *
- * Comments:		See "readme.txt" for copyright and license information.
- *-------
- */
 #include <flight_sql/flight_sql_driver.h>
 
 /**

@@ -1,6 +1,8 @@
 /*-------
- * Module:			pgapifunc.h
+ * Module:			wdapifunc.h
  *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *-------
  */
 #ifndef _WD_API_FUNC_H__

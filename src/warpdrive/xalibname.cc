@@ -1,9 +1,11 @@
 /*------
- * Module:			xalibname.c
+ * Module:			xalibname.cc
  *
  * Description:
  *		This module gets the (path) name of xalib.
  *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *-------
  */
 

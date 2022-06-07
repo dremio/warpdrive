@@ -1,5 +1,5 @@
 /*-------
-  Module:			drvconn.c
+  Module:			drvconn.cc
  *
  * Description:		This module contains only routines related to
  *					implementing SQLDriverConnect.
@@ -9,6 +9,7 @@
  * API functions:	SQLDriverConnect
  *
  * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *-------
  */
 

@@ -1,5 +1,5 @@
 /*-------
- * Module:			odbcapi30w.c
+ * Module:			odbcapi30w.cc
  *
  * Description:		This module contains UNICODE routines
  *
@@ -9,6 +9,9 @@
 			SQLSetConnectAttrW, SQLGetConnectAttrW,
 			SQLGetDescFieldW, SQLGetDescRecW, SQLGetDiagFieldW,
 			SQLGetDiagRecW,
+ *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *-------
  */
 

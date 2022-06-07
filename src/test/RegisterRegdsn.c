@@ -1,3 +1,11 @@
+/*--------
+ * Module:			ReregisterRegdsn.c
+ *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
+ *--------
+ */
+
 #include <Windows.h>
 #include <odbcinst.h>
 #include <sqlext.h>

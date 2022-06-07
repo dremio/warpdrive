@@ -1,3 +1,8 @@
+/* File:			wchar-char-test-eucjp.cc
+ *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
+ */
 
 static int eucjp_test(HSTMT hstmt)
 {
@@ -10,7 +15,7 @@ static int eucjp_test(HSTMT hstmt)
 	SQLWCHAR	wchar[100];
 	SQLCHAR		str[100];
 	SQLCHAR		chardt[100];
-	SQLTCHAR	query[200] = _T("select '»ä¤Ï' || ?::text || '¤Ç¤¹¡£µ®Êý¤Ï' || ?::text || '¤µ¤ó¤Ç¤¹¤Í¡©'");
+	SQLTCHAR	query[200] = _T("select 'ï¿½ï¿½ï¿½' || ?::text || 'ï¿½Ç¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½' || ?::text || 'ï¿½ï¿½ï¿½ï¿½Ç¤ï¿½ï¿½Í¡ï¿½'");
 
 	rc = SQLBindCol(hstmt, 1, SQL_C_CHAR, (SQLPOINTER) chardt, sizeof(chardt), &ind);
 	CHECK_STMT_RESULT(rc, "SQLBindCol to SQL_C_CHAR failed", hstmt);
@@ -28,13 +33,13 @@ static int eucjp_test(HSTMT hstmt)
 		&cbParam	/* StrLen_or_IndPtr */);
 	CHECK_STMT_RESULT(rc, "SQLBindParameter 1 failed", hstmt);
 	// cbParam2 = SQL_NTS;
-	strncpy((char *) str, "ÀÆÆ£¹À", sizeof(str));
+	strncpy((char *) str, "ï¿½ï¿½Æ£ï¿½ï¿½", sizeof(str));
 	cbParam2 = strlen(str);
-	strcat((char *) str, "¿®¸¼");
+	strcat((char *) str, "ï¿½ï¿½ï¿½ï¿½");
 	rc = SQLBindParameter(hstmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, sizeof(str), 0, str, sizeof(str), &cbParam2);
 	CHECK_STMT_RESULT(rc, "SQLBindParameter 2 failed", hstmt);
 	cbQueryLen = (SQLINTEGER) strlen(query);
-	strcat((char *) query, "¿®¸¼");
+	strcat((char *) query, "ï¿½ï¿½ï¿½ï¿½");
 	rc = SQLExecDirect(hstmt, query, cbQueryLen);
 	CHECK_STMT_RESULT(rc, "SQLExecDirect failed to return SQL_C_CHAR", hstmt);
 	while (SQL_SUCCEEDED(SQLFetch(hstmt)))

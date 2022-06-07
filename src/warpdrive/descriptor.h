@@ -4,6 +4,7 @@
  *					the entire driver.
  *
  * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  */
 
 #ifndef __DESCRIPTOR_H__

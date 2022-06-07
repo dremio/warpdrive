@@ -1,3 +1,8 @@
+/* File:			wchar-char-test-sjis.cc
+ *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
+ */
 
 static int sjis_test(HSTMT hstmt)
 {
@@ -10,7 +15,7 @@ static int sjis_test(HSTMT hstmt)
 	SQLWCHAR	wchar[100];
 	SQLCHAR		str[100];
 	SQLCHAR		chardt[100];
-	SQLTCHAR	query[200] = _T("select '„‚Í' || ?::text || '‚Å‚·B‹M•û‚Í' || ?::text || '‚³‚ñ‚Å‚·‚ËH'");
+	SQLTCHAR	query[200] = _T("select 'ï¿½ï¿½ï¿½ï¿½' || ?::text || 'ï¿½Å‚ï¿½ï¿½Bï¿½Mï¿½ï¿½ï¿½ï¿½' || ?::text || 'ï¿½ï¿½ï¿½ï¿½Å‚ï¿½ï¿½ËH'");
 
 	rc = SQLBindCol(hstmt, 1, SQL_C_CHAR, (SQLPOINTER) chardt, sizeof(chardt), &ind);
 	CHECK_STMT_RESULT(rc, "SQLBindCol to SQL_C_CHAR failed", hstmt);
@@ -28,13 +33,13 @@ static int sjis_test(HSTMT hstmt)
 		&cbParam	/* StrLen_or_IndPtr */);
 		CHECK_STMT_RESULT(rc, "SQLBindParameter 1 failed", hstmt);
 	// cbParam2 = SQL_NTS; 
-	strncpy((char *) str, "Ä“¡_", sizeof(str));
+	strncpy((char *) str, "ï¿½Ä“ï¿½ï¿½_", sizeof(str));
 	cbParam2 = strlen(str);
-	strcat((char *) str, "M’·");
+	strcat((char *) str, "ï¿½Mï¿½ï¿½");
 	rc = SQLBindParameter(hstmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, sizeof(str), 0, str, sizeof(str), &cbParam2);
 	CHECK_STMT_RESULT(rc, "SQLBindParameter 2 failed", hstmt);
 	cbQueryLen = (SQLINTEGER) strlen(query);
-	strcat((char *) query, "‚¾‚æ[‚ñ");
+	strcat((char *) query, "ï¿½ï¿½ï¿½ï¿½[ï¿½ï¿½");
 	rc = SQLExecDirect(hstmt, query, cbQueryLen);
 	CHECK_STMT_RESULT(rc, "SQLExecDirect failed to return SQL_C_CHAR", hstmt);
 	while (SQL_SUCCEEDED(SQLFetch(hstmt)))

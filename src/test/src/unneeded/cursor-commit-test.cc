@@ -1,3 +1,9 @@
+/* File:			cursor-commit-test.cc
+ *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
+ */
+
 /*
  * This test case tests for a bug in result set caching, with
  * UseDeclareFetch=1, that was fixed. The bug occurred when a cursor was
