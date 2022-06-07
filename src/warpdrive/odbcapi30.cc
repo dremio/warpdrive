@@ -1,5 +1,5 @@
 /*-------
- * Module:			odbcapi30.c
+ * Module:			odbcapi30.cc
  *
  * Description:		This module contains routines related to ODBC 3.0
  *			most of their implementations are temporary
@@ -15,6 +15,9 @@
 			SQLGetEnvAttr, SQLGetConnectAttr, SQLGetStmtAttr,
 			SQLSetConnectAttr, SQLSetDescField, SQLSetDescRec,
 			SQLSetEnvAttr, SQLSetStmtAttr, SQLBulkOperations
+ *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *-------
  */
 

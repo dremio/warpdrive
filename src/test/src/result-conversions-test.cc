@@ -1,3 +1,11 @@
+/*--------
+ * Module:			result-conversions-test.cc
+ *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
+ *--------
+ */
+
 /*
  * Test conversion of values received from server to SQL datatypes.
  *

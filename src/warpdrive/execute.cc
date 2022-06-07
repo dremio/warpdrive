@@ -1,5 +1,5 @@
 /*-------
- * Module:			execute.c
+ * Module:			execute.cc
  *
  * Description:		This module contains routines related to
  *					preparing and executing an SQL statement.
@@ -10,6 +10,7 @@
  *					SQLCancel, SQLNativeSql, SQLParamData, SQLPutData
  *
  * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *-------
  */
 

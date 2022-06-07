@@ -1,5 +1,5 @@
 /*-------
- * Module:			wdapi30.c
+ * Module:			wdapi30.cc
  *
  * Description:		This module contains routines related to ODBC 3.0
  *			most of their implementations are temporary
@@ -11,6 +11,9 @@
  * API functions:	WD_ColAttribute, WD_GetDiagRec,
 			WD_GetConnectAttr, WD_GetStmtAttr,
 			WD_SetConnectAttr, WD_SetStmtAttr
+ *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
  *-------
  */
 

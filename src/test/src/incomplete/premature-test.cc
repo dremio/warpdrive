@@ -1,3 +1,9 @@
+/* File:			premature-test.cc
+ *
+ * Comments:		See "readme.txt" for copyright and license information.
+ *                      Modifications to this file by Dremio Corporation, (C) 2020-2022.
+ */
+
 /*
  * This test case tests the case that a query needs to be described before
  * executing it. That happens when an application calls e.h. SQLDescribeCol()
