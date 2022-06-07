@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "967360a8_58ee0ddc",
+        "filename": "src/test/src/connect-test.cc",
+        "patchSetId": 11
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-07T16:23:46Z",
+      "side": 1,
+      "message": "Why does this mention SQLTransact?",
+      "revId": "28536ce79f51199313c2112033bfd6fddfc7018a",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
