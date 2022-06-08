@@ -16,6 +16,24 @@
       "message": "This should set these parameters using -DARROW_GIT_REPOSITORY\u003d$ARROW_GIT_REPOSITORY and -DARROW_GIT_TAG\u003d$ARROW_GIT_TAG like on Windows.",
       "revId": "b9220af0c10c918564f2cea5fad0ee9948f1b3ba",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "1455ed79_b3ffb5bc",
+        "filename": "build.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-08T19:17:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "54b15660_c9514503",
+      "revId": "b9220af0c10c918564f2cea5fad0ee9948f1b3ba",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
