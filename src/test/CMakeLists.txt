@@ -33,14 +33,19 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(warpdrive_test
         src/common.cc
-        src/catalogfunctions-test.cc
-        src/select-test.cc
-        src/result-conversions-test.cc
-        src/colattribute-test.cc
         src/bindcol-test.cc
         src/diagnostic-test.cc
+<<<<<<< HEAD
         src/statement-functions-test.cc
 )
+=======
+        src/catalogfunctions-test.cc
+        src/colattribute-test.cc
+        src/connect-test.cc
+        src/result-conversions-test.cc
+        src/select-test.cc)
+
+>>>>>>> 62dee57 (Build connection tests)
 target_link_libraries(warpdrive_test gtest_main)
 add_test(NAME warpdrive-tests COMMAND warpdrive_test)
 
