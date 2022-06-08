@@ -120,7 +120,7 @@ WD_NumResultCols(HSTMT hstmt,
 					SQLSMALLINT * pccol)
 {
   CSTR func = "WD_NumResultCols";
-  const ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
+  ODBCStatement* stmt = reinterpret_cast<ODBCStatement*>(hstmt);
   const std::vector<DescriptorRecord>& records = stmt->GetIRD()->GetRecords();
 
   GetAttribute<SQLSMALLINT,size_t>(static_cast<SQLSMALLINT>(records.size()), pccol, sizeof(SQLSMALLINT), nullptr);
