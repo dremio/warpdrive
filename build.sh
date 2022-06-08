@@ -26,7 +26,6 @@ mkdir -p _build
 cd _build
 
 export ARROW_GIT_REPOSITORY=/opt/arrow
-export ARROW_GIT_TAG=master
 
 cmake \
   -GNinja \
