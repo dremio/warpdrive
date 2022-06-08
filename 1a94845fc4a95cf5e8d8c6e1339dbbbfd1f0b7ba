@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3f7c52de_2f95ed3f",
+        "filename": "src/test/src/statement-functions-test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1000331
+      },
+      "writtenOn": "2022-06-08T19:28:17Z",
+      "side": 1,
+      "message": "Can we use \"GTEST_SKIP_\" with a description explaining why this is disabled instead? We shouldn\u0027t leak internal ticket numbers here. (For all disabled)",
+      "range": {
+        "startLine": 90,
+        "startChar": 34,
+        "endLine": 90,
+        "endChar": 57
+      },
+      "revId": "1a94845fc4a95cf5e8d8c6e1339dbbbfd1f0b7ba",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
