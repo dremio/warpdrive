@@ -20,6 +20,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "74c9bb28_b24a0b18",
+        "filename": "readme.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-08T20:50:59Z",
+      "side": 1,
+      "message": "No",
+      "parentUuid": "659b18aa_e549e9f4",
+      "revId": "a5c04bb3a75dc748f1be0c9b85ca7305c2c6c935",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "c4bd5c04_a2620f8b",
         "filename": "src/arrow-odbc/main.cc",
         "patchSetId": 1
@@ -31,6 +49,24 @@
       "writtenOn": "2022-06-08T20:38:34Z",
       "side": 1,
       "message": "Are we 100% sure this main.cc was not taken from postgres given the old header information suggests it was?",
+      "revId": "a5c04bb3a75dc748f1be0c9b85ca7305c2c6c935",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "9645bfa7_30230332",
+        "filename": "src/arrow-odbc/main.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-08T20:50:59Z",
+      "side": 1,
+      "message": "Yes, I wrote this myself.",
+      "parentUuid": "c4bd5c04_a2620f8b",
       "revId": "a5c04bb3a75dc748f1be0c9b85ca7305c2c6c935",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
@@ -54,6 +90,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "14c38981_e61a5bd6",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-08T20:50:59Z",
+      "side": 1,
+      "message": "I can remove this but will need a separate patch since I merged this already.",
+      "parentUuid": "6bae6bf8_06b24179",
+      "revId": "a5c04bb3a75dc748f1be0c9b85ca7305c2c6c935",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "790feb25_ba38612e",
         "filename": "src/warpdrive/c_ptr.h",
         "patchSetId": 1
@@ -65,6 +119,24 @@
       "writtenOn": "2022-06-08T20:38:34Z",
       "side": 1,
       "message": "Why the different commenting style? Are we sure this wasn\u0027t originally from Postgres given the original header?",
+      "revId": "a5c04bb3a75dc748f1be0c9b85ca7305c2c6c935",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3016d30c_e697bea5",
+        "filename": "src/warpdrive/c_ptr.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-08T20:50:59Z",
+      "side": 1,
+      "message": "Yes, I wrote this file directly. This is a C++ style header block. Can change if it matters. I used this format for code that I wrote myself.",
+      "parentUuid": "790feb25_ba38612e",
       "revId": "a5c04bb3a75dc748f1be0c9b85ca7305c2c6c935",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
