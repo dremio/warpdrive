@@ -729,60 +729,47 @@ SQLExtendedFetch(HSTMT hstmt,
       throw DriverException("Fetch type unsupported", "HY016");
     }
 
-    struct ARDFieldTracker {
-      ARDFieldTracker(ODBCDescriptor *ard, SQLLEN newSize,
-                      SQLPOINTER newRowsFetched, SQLPOINTER newRowStatus)
-          : m_ard(ard), m_newRowsFetched(newRowsFetched),
+    struct IRDFieldTracker {
+      IRDFieldTracker(ODBCDescriptor* ird, SQLPOINTER newRowsFetched, SQLPOINTER newRowStatus)
+          : m_ird(ird), m_newRowsFetched(newRowsFetched),
             m_oldRowsFetched(nullptr), m_newRowStatus(newRowStatus),
-            m_oldRowStatus(nullptr), m_newSize(newSize),
-            m_oldSize(ard->GetArraySize()) {
-        ard->GetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, &m_oldRowsFetched, 0,
+            m_oldRowStatus(nullptr) {
+        ird->GetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, &m_oldRowsFetched, 0,
                             nullptr);
-        ard->GetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, &m_oldRowStatus, 0,
+        ird->GetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, &m_oldRowStatus, 0,
                             nullptr);
-        if (m_newSize != m_oldSize) {
-          m_ard->SetHeaderField(SQL_DESC_ARRAY_SIZE,
-                                reinterpret_cast<SQLPOINTER>(m_newSize), 0);
-        }
 
         if (m_newRowsFetched != m_oldRowsFetched) {
-          m_ard->SetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, m_newRowsFetched,
+          m_ird->SetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, m_newRowsFetched,
                                 0);
         }
 
         if (m_newRowStatus != m_oldRowStatus) {
-          m_ard->SetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, m_newRowStatus, 0);
+          m_ird->SetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, m_newRowStatus, 0);
         }
       }
 
-      ~ARDFieldTracker() {
-        if (m_newSize != m_oldSize) {
-          m_ard->SetHeaderField(SQL_DESC_ARRAY_SIZE,
-                                reinterpret_cast<SQLPOINTER>(m_oldSize), 0);
-        }
-
+      ~IRDFieldTracker() {
         if (m_newRowsFetched != m_oldRowsFetched) {
-          m_ard->SetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, m_oldRowsFetched,
+          m_ird->SetHeaderField(SQL_DESC_ROWS_PROCESSED_PTR, m_oldRowsFetched,
                                 0);
         }
 
         if (m_newRowStatus != m_oldRowStatus) {
-          m_ard->SetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, m_oldRowStatus, 0);
+          m_ird->SetHeaderField(SQL_DESC_ARRAY_STATUS_PTR, m_oldRowStatus, 0);
         }
       }
 
-      ODBCDescriptor *m_ard;
+      ODBCDescriptor* m_ird;
       SQLPOINTER m_newRowsFetched;
       SQLPOINTER m_oldRowsFetched;
       SQLPOINTER m_newRowStatus;
       SQLPOINTER m_oldRowStatus;
-      SQLLEN m_newSize;
-      SQLLEN m_oldSize;
     };
 
-    ODBCStatement *stmt = ODBCStatement::of(hstmt);
-    ODBCDescriptor *ard = stmt->GetARD();
-    ARDFieldTracker tracker(ard,stmt->GetRowsetSize(), pcrow, rgfRowStatus);
+    ODBCStatement* stmt = ODBCStatement::of(hstmt);
+    ODBCDescriptor* ird = stmt->GetIRD();
+    IRDFieldTracker irdTracker(ird, pcrow, rgfRowStatus);
     RETCODE result = WD_Fetch(hstmt);
     return result;
   });
