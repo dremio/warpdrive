@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "659b18aa_e549e9f4",
+        "filename": "readme.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000132
+      },
+      "writtenOn": "2022-06-08T20:38:34Z",
+      "side": 1,
+      "message": "Was the one in src/warpdrive removed?",
+      "revId": "a5c04bb3a75dc748f1be0c9b85ca7305c2c6c935",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c4bd5c04_a2620f8b",
+        "filename": "src/arrow-odbc/main.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000132
+      },
+      "writtenOn": "2022-06-08T20:38:34Z",
+      "side": 1,
+      "message": "Are we 100% sure this main.cc was not taken from postgres given the old header information suggests it was?",
+      "revId": "a5c04bb3a75dc748f1be0c9b85ca7305c2c6c935",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6bae6bf8_06b24179",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1000132
+      },
+      "writtenOn": "2022-06-08T20:38:34Z",
+      "side": 1,
+      "message": "Funny character at the start of this line.",
+      "revId": "a5c04bb3a75dc748f1be0c9b85ca7305c2c6c935",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "790feb25_ba38612e",
+        "filename": "src/warpdrive/c_ptr.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000132
+      },
+      "writtenOn": "2022-06-08T20:38:34Z",
+      "side": 1,
+      "message": "Why the different commenting style? Are we sure this wasn\u0027t originally from Postgres given the original header?",
+      "revId": "a5c04bb3a75dc748f1be0c9b85ca7305c2c6c935",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
