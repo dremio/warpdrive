@@ -28,11 +28,3 @@ docker run -it \
 3. To build Warpdrive inside of this container, simply run `./build.sh`.
 
 The build will generate a binary `/opt/warpdrive/_build/release/libarrow-odbc.so.` which is the driver to be loaded on ODBC tools such as odbcinst and iodbc.
-
-4. To run the ODBC Integration tests (in the container)
-
-```
-export DSN=FlightSQL
-
-./_build/release/warpdrive_tests > tests.log
-```

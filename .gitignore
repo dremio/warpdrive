@@ -468,6 +468,3 @@ src/arrow-odbc/arrow-odbcConfig.cmake
 cscope.files
 _deps/
 vcpkg_installed/
-
-# VSCode
-**/**/.vscode
