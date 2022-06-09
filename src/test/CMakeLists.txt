@@ -7,7 +7,7 @@ project(ODBC_TESTS)
 cmake_minimum_required(VERSION 3.2)
 
 set(CMAKE_C_STANDARD 99)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 
 # Packages
 if (APPLE)
@@ -34,6 +34,10 @@ FetchContent_MakeAvailable(googletest)
 add_executable(warpdrive_test
         src/bindcol-test.cc
         src/catalogfunctions-test.cc
+<<<<<<< HEAD
+=======
+        src/select-test.cc
+>>>>>>> cfecb45 (Revert "Port Result Conversion tests")
         src/colattribute-test.cc
         src/common.cc
         src/connect-test.cc

@@ -12,7 +12,7 @@ SQLHDBC conn;
 
 std::string
 format_diagnostic(const std::string& msg, SQLSMALLINT htype, SQLHANDLE handle) {
-	return msg + " " + get_diagnostic(handle, htype);
+	return msg + get_diagnostic(handle, htype);
 }
 
 std::string
