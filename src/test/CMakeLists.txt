@@ -38,9 +38,10 @@ add_executable(warpdrive_test
         src/common.cc
         src/connect-test.cc
         src/diagnostic-test.cc
+        src/statement-functions-test.cc
+        src/result-set-metadata-test.cc
         src/result-conversions-test.cc
         src/select-test.cc
-        src/statement-functions-test.cc
         src/wchar-char-test-utf8.cc
 )
 
