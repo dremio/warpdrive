@@ -16,6 +16,24 @@
       "message": "In this patch, I changed the base class to take the test in SQLBindColTest, give it a templated fetch function parameter, and repeat the same test for SQLFetch, SQLFetchScroll, and SQLExtendedFetch.\nhttps://gerrit.drem.io/gerrit/c/warpdrive/+/38725/2/src/test/src/bindcol-test.cc\n\nIt\u0027d be great if we did the same for this test case.",
       "revId": "ab926bda01da15226a0caa063a294e0c6856241d",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "bd3d7346_010fa344",
+        "filename": "src/test/src/bindcol-test.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1000318
+      },
+      "writtenOn": "2022-06-09T17:10:38Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6d3a7a0a_9adb68e2",
+      "revId": "ab926bda01da15226a0caa063a294e0c6856241d",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
