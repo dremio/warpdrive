@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c41bd1bf_886a2648",
+        "filename": "src/test/CMakeLists.txt",
+        "patchSetId": 19
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-09T17:58:59Z",
+      "side": 1,
+      "message": "Please resolve the conflict!",
+      "revId": "f3130674fc634067d23c4e24b77892620d107524",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
