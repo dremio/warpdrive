@@ -773,7 +773,7 @@ std::string double_to_string(double d)
 std::string sql_c_type_to_string(int sql_c_type, void *buf, SQLLEN strlen_or_ind, int use_time)
 {
 	size_t length = 500; // choosen because the buf is only set to 500 in the test_conversion function 
-	char output_buffer[length];
+	char output_buffer[500];
 	memset(output_buffer, '\0', sizeof(output_buffer));
 
 	switch (sql_c_type)
