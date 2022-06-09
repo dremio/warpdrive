@@ -42,5 +42,5 @@ TEST(WarpDriveTest, SelectTest)
 
 
 	/* Clean up */
-  EXPECT_TRUE(test_disconnect(&err_msg)) << err_msg;
+  EXPECT_TRUE(test_disconnect(&err_msg))<<err_msg;
 }
