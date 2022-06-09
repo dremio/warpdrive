@@ -773,7 +773,7 @@ std::string double_to_string(double d)
 std::string sql_c_type_to_string(int sql_c_type, void *buf, SQLLEN strlen_or_ind, int use_time)
 {
 	size_t length = 500; // choosen because the buf is only set to 500 in the test_conversion function 
-	char output_buffer[length];
+	char output_buffer[500];
 	memset(output_buffer, '\0', sizeof(output_buffer));
 
 	switch (sql_c_type)
@@ -887,7 +887,7 @@ std::string sql_c_type_to_string(int sql_c_type, void *buf, SQLLEN strlen_or_ind
 	{
 		// we write into a local buffer then memcopy to the other buffer 
 		size_t prefix_len = 500;
-		char prefix[prefix_len];
+		char prefix[500];
 		SQL_NUMERIC_STRUCT *ns = (SQL_NUMERIC_STRUCT *)buf;
 		int i;
 		snprintf(prefix, prefix_len, "precision: %u scale: %d sign: %d val: ",
@@ -929,7 +929,7 @@ std::string sql_c_type_to_string(int sql_c_type, void *buf, SQLLEN strlen_or_ind
 		SQL_INTERVAL_STRUCT *s = (SQL_INTERVAL_STRUCT *)buf;
 
 		size_t temp_length = 500;
-		char temp[temp_length];
+		char temp[500];
 		memset(temp, '\0', sizeof(temp));
 
 		snprintf(temp, temp_length, "interval sign: %u ", s->interval_sign);
@@ -1224,7 +1224,7 @@ void test_conversion(const char *pgtype, const char *pgvalue, int sqltype, const
 	/* Check that the driver didn't write past the buffer */
 
 	int msg_len = 500;
-	char msg[msg_len];
+	char msg[500];
 	snprintf(msg, msg_len, "For %s Driver wrote byte %02X past result buffer of size %d!\n", sql, (unsigned char)resultbuf[buflen], buflen);
 	ASSERT_FALSE((unsigned char)resultbuf[buflen] != 0xFF) << std::string(msg);
 
