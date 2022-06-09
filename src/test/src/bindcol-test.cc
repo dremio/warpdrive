@@ -57,7 +57,16 @@ class SQLBindColTests : public ::testing::Test {
 
       // NOTE: Original query was: "SELECT id, 'foo' || id FROM generate_series(1, 10) id"
       return_code_ = SQLExecDirect(handle_stmt_, (SQLCHAR *)
-                                                     "SELECT id, CONCAT('foo', id) FROM TABLE(postgres.external_query('SELECT generate_series(1, 10) AS id'))",
+                                           "SELECT 1, 'foo1' UNION ALL "
+                                           "SELECT 2, 'foo2' UNION ALL "
+                                           "SELECT 3, 'foo3' UNION ALL "
+                                           "SELECT 4, 'foo4' UNION ALL "
+                                           "SELECT 5, 'foo5' UNION ALL "
+                                           "SELECT 6, 'foo6' UNION ALL "
+                                           "SELECT 7, 'foo7' UNION ALL "
+                                           "SELECT 8, 'foo8' UNION ALL "
+                                           "SELECT 9, 'foo9' UNION ALL "
+                                           "SELECT 10, 'foo10'",
                                    SQL_NTS);
       CHECK_STMT_RESULT(return_code_, "SQLExecDirect failed", handle_stmt_);
 
@@ -94,6 +103,30 @@ class SQLBindColTests : public ::testing::Test {
       }
     }
 
+    template <typename Function>
+    void ExecuteFetchTest_Multiple_Batches_Single_Fetch(Function fetch_and_validate_function) {
+      SQLINTEGER long_value[3];
+      SQLLEN index_long_value;
+
+      return_code_ = SQLAllocHandle(SQL_HANDLE_STMT, conn, &handle_stmt_);
+      CHECK_CONN_RESULT(return_code_, "failed to allocate stmt handle", conn);
+
+      return_code_ = SQLSetStmtAttr(handle_stmt_, SQL_ATTR_ROW_ARRAY_SIZE, (SQLPOINTER) 3, 0);
+      CHECK_CONN_RESULT(return_code_, "failed set SQL_ATTR_ROW_ARRAY_SIZE", conn);
+
+      return_code_ = SQLBindCol(handle_stmt_, 1, SQL_C_LONG, &long_value, 0, &index_long_value);
+      CHECK_STMT_RESULT(return_code_, "SQLBindCol failed", handle_stmt_);
+
+      return_code_ = SQLExecDirect(handle_stmt_, (SQLCHAR *) "SELECT 100 UNION ALL SELECT 200 UNION ALL SELECT 300",
+                                   SQL_NTS);
+      CHECK_STMT_RESULT(return_code_, "SQLExecDirect failed", handle_stmt_);
+
+      return_code_ = fetch_and_validate_function(handle_stmt_);
+      EXPECT_EQ(long_value[0], 100);
+      EXPECT_EQ(long_value[1], 200);
+      EXPECT_EQ(long_value[2], 300);
+    }
+
     bool connected{false};
     int return_code_{};
     HSTMT handle_stmt_ = SQL_NULL_HSTMT;
@@ -121,6 +154,33 @@ TEST_F(SQLBindColTests, SQLBindColExtendedFetchTest) {
 
 TEST_F(SQLBindColTests, SQLBindColetchScrollTest) {
   ExecuteFetchTest([](HSTMT stmt) -> SQLRETURN {
+    SQLRETURN result = SQLFetchScroll(stmt, SQL_FETCH_NEXT, 0);
+    return result;
+  });
+}
+
+TEST_F(SQLBindColTests, SQLBindColFetchTest_Multiple_Batches_Single_Fetch) {
+  ExecuteFetchTest_Multiple_Batches_Single_Fetch([](HSTMT stmt) -> SQLRETURN {
+    return SQLFetch(stmt);
+  });
+}
+
+TEST_F(SQLBindColTests, SQLBindColExtendedFetchTest_Multiple_Batches_Single_Fetch) {
+  ExecuteFetchTest_Multiple_Batches_Single_Fetch([](HSTMT stmt) -> SQLRETURN {
+    SQLULEN rows_fetched = 0;
+    SQLUSMALLINT row_status = 0;
+    SQLRETURN result = SQLExtendedFetch(stmt, SQL_FETCH_NEXT, 0, &rows_fetched, &row_status);
+    if (SQL_SUCCEEDED(result)) {
+      EXPECT_EQ(1, rows_fetched);
+    } else if (result == SQL_NO_DATA) {
+      EXPECT_EQ(0, rows_fetched);
+    }
+    return result;
+  });
+}
+
+TEST_F(SQLBindColTests, SQLBindColetchScrollTest_Multiple_Batches_Single_Fetch) {
+  ExecuteFetchTest_Multiple_Batches_Single_Fetch([](HSTMT stmt) -> SQLRETURN {
     SQLRETURN result = SQLFetchScroll(stmt, SQL_FETCH_NEXT, 0);
     return result;
   });
