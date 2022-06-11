@@ -158,51 +158,49 @@ WD_Connect(HDBC hdbc,
 			  const SQLCHAR * szAuthStr,
 			  SQLSMALLINT cbAuthStr)
 {
-	CSTR func = "WD_Connect";
-	RETCODE	ret = SQL_SUCCESS;
+  CSTR func = "WD_Connect";
+  RETCODE	ret = SQL_SUCCESS;
 
-	MYLOG(0, "entering..cbDSN=%hi.\n", cbDSN);
+  MYLOG(0, "entering..cbDSN=%hi.\n", cbDSN);
 
-	if (!hdbc)
-	{
-		CC_log_error(func, "", NULL);
-		return SQL_INVALID_HANDLE;
-	}
+  if (!hdbc)
+  {
+          CC_log_error(func, "", NULL);
+          return SQL_INVALID_HANDLE;
+  }
+  ODBCConnection *conn = reinterpret_cast<ODBCConnection*>(hdbc);
 
-	ODBCConnection *conn = reinterpret_cast<ODBCConnection*>(hdbc);
+  std::string connStr("DSN=");
+  if (szDSN) {
+    if (SQL_NTS == cbDSN) {
+      connStr += std::string(reinterpret_cast<const char*>(szDSN));
+    } else {
+      connStr += std::string(reinterpret_cast<const char*>(szDSN), cbDSN);
+    }
+  } else {
+    return SQL_ERROR;
+  }
 
-	std::string connStr("DSN=");
-	if (szDSN) {
-      if (SQL_NTS == cbDSN) {
-		  connStr += std::string(reinterpret_cast<const char*>(szDSN));
-	  } else {
-		  connStr += std::string(reinterpret_cast<const char*>(szDSN), cbDSN);
-	  }
-	} else {
-      return SQL_ERROR;
-	}
+  if (szUID) {
+    size_t uidLen = cbUID == SQL_NTS ? strlen(reinterpret_cast<const char*>(szUID)) : cbUID;
+    if (uidLen) {
+      connStr += ";UID=";
+      connStr += std::string(reinterpret_cast<const char*>(szUID), uidLen);
+    }
+  }
 
-	if (szUID) {
-		size_t uidLen = cbUID == SQL_NTS ? strlen(reinterpret_cast<const char*>(szUID)) : uidLen;
-		if (uidLen) {
-			connStr += ";UID=";
-			connStr += std::string(reinterpret_cast<const char*>(szUID), uidLen);
-		}
-	}
-
-	if (szAuthStr) {
-		size_t authLen = cbAuthStr == SQL_NTS ? strlen(reinterpret_cast<const char*>(szAuthStr)) : cbAuthStr;
-		if (authLen) {
-			connStr += ";PWD=";
-			connStr += std::string(reinterpret_cast<const char*>(szAuthStr), authLen);
-		}
-	}
-	Connection::ConnPropertyMap properties;
-	std::vector<std::string> missing_properties;
-	std::string dsn = ODBCConnection::getPropertiesFromConnString(connStr, properties);
-	conn->connect(dsn, properties, missing_properties);
-
-	return ret;
+  if (szAuthStr) {
+    size_t authLen = cbAuthStr == SQL_NTS ? strlen(reinterpret_cast<const char*>(szAuthStr)) : cbAuthStr;
+    if (authLen) {
+      connStr += ";PWD=";
+      connStr += std::string(reinterpret_cast<const char*>(szAuthStr), authLen);
+    }
+  }
+  Connection::ConnPropertyMap properties;
+  std::vector<std::string> missing_properties;
+  std::string dsn = ODBCConnection::getPropertiesFromConnString(connStr, properties);
+  conn->connect(dsn, properties, missing_properties);
+  return ret;
 }
 
 
@@ -2611,19 +2609,7 @@ CC_initialize_WD_version(ConnectionClass *self)
 void
 CC_log_error(const char *func, const char *desc, const ConnectionClass *self)
 {
-#define NULLCHECK(a) (a ? a : "(NULL)")
-
-	if (self)
-	{
-		MYLOG(0, "CONN ERROR: func=%s, desc='%s', errnum=%d, errmsg='%s'\n", func, desc, self->__error_number, NULLCHECK(self->__error_message));
-		MYLOG(DETAIL_LOG_LEVEL, "            ------------------------------------------------------------\n");
-		MYLOG(DETAIL_LOG_LEVEL, "            henv=%p, conn=%p, status=%u, num_stmts=%d\n", self->henv, self, self->status, self->num_stmts);
-		MYLOG(DETAIL_LOG_LEVEL, "            pqconn=%p, stmts=%p, lobj_type=%d\n", self->pqconn, self->stmts, self->lobj_type);
-	}
-	else
-	{
-		MYLOG(0, "INVALID CONNECTION HANDLE ERROR: func=%s, desc='%s'\n", func, desc);
-	}
+  // Do nothing. ConnectionClass is an invalid type for warpdrive.
 }
 
 /*
