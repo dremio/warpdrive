@@ -101,7 +101,14 @@ if(CXX_LINKER_SUPPORTS_VERSION_SCRIPT)
   set(WARPDRIVE_SHARED_LINK_FLAGS ${WARPDRIVE_VERSION_SCRIPT_FLAGS})
 endif()
 
-set(WARPDRIVE_ALL_SRCS ${WARPDRIVE_SRCS} ${WARPDRIVE_C_SRCS})
+
+# Add version info resources
+# More info at: https://docs.microsoft.com/en-us/windows/win32/menurc/versioninfo-resource
+
+configure_file(version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/version.rc @ONLY)
+string(REPLACE "." ","  WARPDRIVE_RC_FILEVERSION "${WARPDRIVE_VERSION}")
+
+set(WARPDRIVE_ALL_SRCS ${WARPDRIVE_SRCS} ${WARPDRIVE_C_SRCS} ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
 set(WARPDRIVE_BUILD_STATIC ON)
 set(WARPDRIVE_BUILD_SHARED OFF)
 
@@ -169,6 +176,7 @@ if(WARPDRIVE_TESTING)
                 warpdrive-testing
                 SOURCES
                 ${WARPDRIVE_TESTING_SRCS}
+                ${CMAKE_CURRENT_BINARY_DIR}/version.rc
                 OUTPUTS
                 WARPDRIVE_TESTING_LIBRARIES
                 PRECOMPILED_HEADERS
