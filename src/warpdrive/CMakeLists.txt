@@ -169,6 +169,7 @@ if(WARPDRIVE_TESTING)
                 warpdrive-testing
                 SOURCES
                 ${WARPDRIVE_TESTING_SRCS}
+                ${CMAKE_CURRENT_BINARY_DIR}/version.rc
                 OUTPUTS
                 WARPDRIVE_TESTING_LIBRARIES
                 PRECOMPILED_HEADERS
