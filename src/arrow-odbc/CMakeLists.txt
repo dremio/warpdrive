@@ -73,8 +73,14 @@ if (MSVC)
     legacy_stdio_definitions)
 endif()
 
+# Add version info resources
+# More info at: https://docs.microsoft.com/en-us/windows/win32/menurc/versioninfo-resource
+set(WARPDRIVE_RC_FILEVERSION "${WARPDRIVE_VERSION_MAJOR},${WARPDRIVE_VERSION_MINOR},${WARPDRIVE_VERSION_PATCH}")
+configure_file(version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/version.rc @ONLY)
+
 set(ARROW_ODBC_SOURCES
   main.cc
+  ${CMAKE_CURRENT_BINARY_DIR}/version.rc
 )
 
 if (MSVC)
