@@ -71,6 +71,7 @@ host            = host.docker.internal \n\
 port            = 32010 \n\
 user            = dremio \n\
 password        = dremio123 \n\
+useEncryption   = 0 \n\
 ' > /root/.odbc.ini
 
 # Enabled gcc 9 as default on bash
