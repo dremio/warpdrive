@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "3f307c5b_29a56d70",
+        "filename": "src/warpdrive/version.rc.in",
+        "patchSetId": 3
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1000132
+      },
+      "writtenOn": "2022-06-14T21:55:27Z",
+      "side": 1,
+      "message": "This is not correct for License. Please remove.",
+      "revId": "048e755a1b302bf1522b73d1da617f3ce84efc83",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "8a5d8152_c50e7f3b",
+        "filename": "src/warpdrive/version.rc.in",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1000132
+      },
+      "writtenOn": "2022-06-14T21:55:27Z",
+      "side": 1,
+      "message": "Remove this as this could change.",
+      "revId": "048e755a1b302bf1522b73d1da617f3ce84efc83",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
