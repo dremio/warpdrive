@@ -50,6 +50,23 @@
       "message": "Remove iostream useage.",
       "revId": "bf3ac13bf5c2bc27a38dd278f44cb9a3157fe8d6",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7e46cf06_21298b53",
+        "filename": "src/warpdrive/results.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-14T21:06:45Z",
+      "side": 1,
+      "message": "The first template parameter is wrong. It should be SQLLEN instead of SQLINTEGER. Since the NumericAttributePtr is a SQLLEN, and recordNumericValue is also a SQLLEN.",
+      "revId": "bf3ac13bf5c2bc27a38dd278f44cb9a3157fe8d6",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
