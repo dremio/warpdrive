@@ -182,27 +182,7 @@ RETCODE		SQL_API
 SQLEndTran(SQLSMALLINT HandleType, SQLHANDLE Handle,
 		   SQLSMALLINT CompletionType)
 {
-  SQLRETURN rc = SQL_SUCCESS;
-	RETCODE	ret;
-
-	MYLOG(0, "Entering\n");
-	switch (HandleType)
-	{
-		case SQL_HANDLE_ENV:
-                  return ODBCEnvironment::ExecuteWithDiagnostics(Handle, rc, [&]() -> SQLRETURN {
-                    throw DriverException("Unsupported function", "HYC00");
-                    return WD_Transact(Handle, SQL_NULL_HDBC, CompletionType);
-                                      });
-		case SQL_HANDLE_DBC:
-                  return ODBCConnection::ExecuteWithDiagnostics(Handle, rc, [&]() -> SQLRETURN {
-                    throw DriverException("Unsupported function", "HYC00");
-                    return WD_Transact(SQL_NULL_HENV, Handle, CompletionType);
-                                      });
-		default:
-			return SQL_ERROR;
-			break;
-	}
-	return ret;
+  return SQL_SUCCESS;
 }
 
 WD_EXPORT_SYMBOL
