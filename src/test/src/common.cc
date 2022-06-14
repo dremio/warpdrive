@@ -74,7 +74,7 @@ int IsAnsi(void)
 }
 
 bool
-test_connect_ext(char *extraparams, std::string *err_msg)
+test_connect_ext(const char *extraparams, std::string *err_msg, const uint32_t odbc_version)
 {
 	SQLRETURN ret;
 	SQLCHAR str[1024];
@@ -110,7 +110,7 @@ test_connect_ext(char *extraparams, std::string *err_msg)
 
 	SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env);
 
-	SQLSetEnvAttr(env, SQL_ATTR_ODBC_VERSION, (void *) SQL_OV_ODBC3, 0);
+	SQLSetEnvAttr(env, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)odbc_version, 0);
 
 	SQLAllocHandle(SQL_HANDLE_DBC, env, &conn);
 	ret = SQLDriverConnect(conn, NULL, (SQLCHAR*) dsn, SQL_NTS,

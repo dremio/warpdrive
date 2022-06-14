@@ -46,7 +46,7 @@ extern void print_diag(char *msg, SQLSMALLINT htype, SQLHANDLE handle);
 extern void print_diag(const std::string& , SQLSMALLINT htype, SQLHANDLE handle);
 extern const char *get_test_dsn(void);
 extern int  IsAnsi(void);
-extern bool test_connect_ext(char *extraparams, std::string *err_msg);
+extern bool test_connect_ext(const char *extraparams, std::string *err_msg, const uint32_t odbc_version = SQL_OV_ODBC3);
 extern bool test_connect(std::string *err_msg);
 extern bool test_disconnect(std::string *err_msg);
 extern boost::optional<std::string> print_result_meta_series(HSTMT hstmt,

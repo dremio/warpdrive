@@ -161,7 +161,7 @@ WD_DescribeCol(HSTMT hstmt,
     *pcbColName = totalColumnNameLen;
   }
   GetAttribute<SQLSMALLINT, size_t>(record.m_type, pfSqlType, sizeof(SQLUSMALLINT), nullptr);
-  GetAttribute<SQLUINTEGER, size_t>(record.m_length, pcbColDef, sizeof(SQLULEN), nullptr);
+  GetAttribute<SQLULEN, size_t>(record.m_length, pcbColDef, sizeof(SQLULEN), nullptr);
   GetAttribute<SQLSMALLINT, size_t>(record.m_scale, pibScale, sizeof(SQLSMALLINT), nullptr);
   GetAttribute<SQLSMALLINT, size_t>(record.m_nullable, pfNullable, sizeof(SQLSMALLINT), nullptr);
   
@@ -305,7 +305,7 @@ WD_ColAttributes(HSTMT hstmt,
   }
 
   // Numeric attribute.
-  GetAttribute<SQLINTEGER, size_t>(recordNumericValue, pfDesc, sizeof(SQLLEN), nullptr);
+  GetAttribute<SQLLEN, size_t>(recordNumericValue, pfDesc, sizeof(SQLLEN), nullptr);
   return SQL_SUCCESS;
 }
 
