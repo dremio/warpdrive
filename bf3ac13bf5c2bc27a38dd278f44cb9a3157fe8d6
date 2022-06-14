@@ -35,6 +35,24 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "7c33c082_491ab5cf",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-14T22:54:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "89b62a69_813afccd",
+      "revId": "bf3ac13bf5c2bc27a38dd278f44cb9a3157fe8d6",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "f569f4e2_0428abad",
@@ -52,6 +70,42 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "3518ad85_155a93ee",
+        "filename": "src/warpdrive/results.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-14T22:54:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f569f4e2_0428abad",
+      "revId": "bf3ac13bf5c2bc27a38dd278f44cb9a3157fe8d6",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ef25c85f_984058d4",
+        "filename": "src/warpdrive/results.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-14T22:54:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f569f4e2_0428abad",
+      "revId": "bf3ac13bf5c2bc27a38dd278f44cb9a3157fe8d6",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "7e46cf06_21298b53",
@@ -65,6 +119,42 @@
       "writtenOn": "2022-06-14T21:06:45Z",
       "side": 1,
       "message": "The first template parameter is wrong. It should be SQLLEN instead of SQLINTEGER. Since the NumericAttributePtr is a SQLLEN, and recordNumericValue is also a SQLLEN.",
+      "revId": "bf3ac13bf5c2bc27a38dd278f44cb9a3157fe8d6",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "2be6ba49_ad3ef993",
+        "filename": "src/warpdrive/results.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-14T22:54:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7e46cf06_21298b53",
+      "revId": "bf3ac13bf5c2bc27a38dd278f44cb9a3157fe8d6",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7eb92a91_aa0dac8f",
+        "filename": "src/warpdrive/results.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-14T22:54:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7e46cf06_21298b53",
       "revId": "bf3ac13bf5c2bc27a38dd278f44cb9a3157fe8d6",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
