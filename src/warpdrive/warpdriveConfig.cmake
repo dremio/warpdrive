@@ -54,7 +54,7 @@ endmacro()
 
 ####################################################################################
 
-set(WARPDRIVE_VERSION "0.0.1-SNAPSHOT")
+set(WARPDRIVE_VERSION "0.9.0-SNAPSHOT")
 set(WARPDRIVE_SO_VERSION "")
 set(WARPDRIVE_FULL_SO_VERSION "")
 

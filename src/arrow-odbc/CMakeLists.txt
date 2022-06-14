@@ -79,7 +79,22 @@ set(ARROW_ODBC_SOURCES
 
 if (MSVC)
   list(APPEND ARROW_ODBC_SOURCES arrow-odbc.def)
-endif()  
+
+  # Configure Resource Compiler
+  enable_language(RC)
+  # use English language (0x409) in resource compiler
+  set(rc_flags "/l0x409")
+  # fix rc.exe invocations because of usage of add_definitions()
+  set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${rc_flags} <DEFINES> /fo<OBJECT> <SOURCE>")
+
+  # Add version info resources
+  # More info at: https://docs.microsoft.com/en-us/windows/win32/menurc/versioninfo-resource
+  set(WARPDRIVE_RC_FILEVERSION "${WARPDRIVE_VERSION_MAJOR},${WARPDRIVE_VERSION_MINOR},${WARPDRIVE_VERSION_PATCH},0")
+  string(REPLACE "," "." WARPDRIVE_RC_PRODUCTVERSION "${WARPDRIVE_RC_FILEVERSION}")
+  configure_file(version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/version.rc @ONLY)
+
+  list(APPEND ARROW_ODBC_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
+endif()
 
 # Add symbols file
 if(APPLE)
