@@ -765,7 +765,7 @@ list(APPEND WARPDRIVE_STATIC_INSTALL_INTERFACE_LIBS ${WARPDRIVE_SYSTEM_LINK_LIBS
 
 add_subdirectory(src/warpdrive)
 add_subdirectory(src/arrow-odbc)
-add_subdirectory(src/test)
+# add_subdirectory(src/test)
 
 #
 # Validate and print out Warpdrive configuration options
