@@ -305,33 +305,12 @@ WD_NumParams(HSTMT hstmt,
 		return SQL_INVALID_HANDLE;
 	}
 
-	if (pcpar)
+	if (pcpar) {
 		*pcpar = 0;
-	else
-	{
-		SC_set_error(stmt, STMT_EXEC_ERROR, "parameter count address is null", func);
-		return SQL_ERROR;
+    } else {
+        throw driver::odbcabstraction::DriverException("Parameter count address is null");
 	}
-MYLOG(DETAIL_LOG_LEVEL, "num_params=%d,%d\n", stmt->num_params, stmt->proc_return);
-	if (stmt->num_params >= 0)
-		*pcpar = stmt->num_params;
-	else if (!stmt->statement)
-	{
-		/* no statement has been allocated */
-		SC_set_error(stmt, STMT_SEQUENCE_ERROR, "WD_NumParams called with no statement ready.", func);
-		return SQL_ERROR;
-	}
-	else
-	{
-		po_ind_t multi = FALSE, proc_return = 0;
 
-		stmt->proc_return = 0;
-		SC_scanQueryAndCountParams(stmt->statement, SC_get_conn(stmt), NULL, pcpar, &multi, &proc_return);
-		stmt->num_params = *pcpar;
-		stmt->proc_return = proc_return;
-		stmt->multi_statement = multi;
-	}
-MYLOG(DETAIL_LOG_LEVEL, "num_params=%d,%d\n", stmt->num_params, stmt->proc_return);
 	return SQL_SUCCESS;
 }
 
