@@ -41,6 +41,9 @@
 #include <odbcabstraction/odbc_impl/ODBCDescriptor.h>
 #include <odbcabstraction/exceptions.h>
 
+#include <iostream>
+#include <string>
+
 using namespace ODBC;
 using namespace driver::odbcabstraction;
 
@@ -160,7 +163,7 @@ WD_DescribeCol(HSTMT hstmt,
   if (pcbColName) {
     *pcbColName = totalColumnNameLen;
   }
-  GetAttribute<SQLSMALLINT, size_t>(record.m_type, pfSqlType, sizeof(SQLUSMALLINT), nullptr);
+  GetAttribute<SQLSMALLINT, size_t>(record.m_conciseType, pfSqlType, sizeof(SQLUSMALLINT), nullptr);
   GetAttribute<SQLUINTEGER, size_t>(record.m_length, pcbColDef, sizeof(SQLULEN), nullptr);
   GetAttribute<SQLSMALLINT, size_t>(record.m_scale, pibScale, sizeof(SQLSMALLINT), nullptr);
   GetAttribute<SQLSMALLINT, size_t>(record.m_nullable, pfNullable, sizeof(SQLSMALLINT), nullptr);
@@ -305,6 +308,7 @@ WD_ColAttributes(HSTMT hstmt,
   }
 
   // Numeric attribute.
+  std::cout << "recordNumericValue " + std::to_string(recordNumericValue) << std::endl;
   GetAttribute<SQLINTEGER, size_t>(recordNumericValue, pfDesc, sizeof(SQLLEN), nullptr);
   return SQL_SUCCESS;
 }

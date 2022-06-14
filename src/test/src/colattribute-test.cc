@@ -8,6 +8,8 @@
 
 #include "common.h"
 #include <gtest/gtest.h>
+#include <iostream>
+#include <string>
 
 class SQLColAttributeTest : public ::testing::TestWithParam<char *> {
     void SetUp() override {
@@ -47,23 +49,27 @@ TEST_P(SQLColAttributeTest, ColAttributeTestWithExtraConnOptions) {
     // Get column attributes of a simple query.
 
     // NOTE: Original query was: "SELECT '1'::int AS intcol, 'foobar'::text AS textcol, 'varchar string'::varchar as varcharcol, ''::varchar as empty_varchar_col, 'varchar-5-col'::varchar(5) as varchar5col, '5 days'::interval day to second"
+    // TODO: add interval type to test concise types
     return_code_ = SQLExecDirect(handle_stmt_,
-                                 (SQLCHAR *) "SELECT CAST('1' AS INTEGER) AS intcol, CAST('foobar' AS VARCHAR) AS textcol, CAST('varchar string' AS VARCHAR) as varcharcol, CAST(''AS VARCHAR) as empty_varchar_col, CAST('varchar-5-col' AS VARCHAR(5)) as varchar5col",
+                                 (SQLCHAR *) "SELECT CAST('1' AS INTEGER) AS intcol, CAST('foobar' AS VARCHAR) AS textcol, CAST('varchar string' AS VARCHAR) as varcharcol, CAST(''AS VARCHAR) as empty_varchar_col, CAST('varchar-5-col' AS VARCHAR(5)) as varchar5col, CAST('2022-10-06' AS TIMESTAMP) as timestampcol",
                                  SQL_NTS);
     CHECK_STMT_RESULT(return_code_, "SQLExecDirect failed", handle_stmt_);
 
     return_code_ = SQLNumResultCols(handle_stmt_, &num_cols);
     CHECK_STMT_RESULT(return_code_, "SQLNumResultCols failed", handle_stmt_);
 
-    std::vector<std::string> expected_names = {"intcol", "textcol", "varcharcol", "empty_varchar_col", "varchar5col"};
-    std::vector<std::string> expected_type_names = {"INTEGER", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR"};
+    std::vector<std::string> expected_names = {"intcol", "textcol", "varcharcol", "empty_varchar_col", "varchar5col", "timestampcol"};
+    std::vector<std::string> expected_type_names = {"INTEGER", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "SQL_DATETIME"};
+    std::vector<long> expected_concise_type = {SQL_INTEGER, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_TYPE_TIMESTAMP};
     std::vector<long> expected_octet_length = {4, 65536, 65536, 65536, 65536};
 
     for (i = 1; i <= num_cols; i++) {
         char actual_column_name[64];
+        long actual_concise_type;
         char actual_type_name[64];
         SQLLEN actual_octet_length;
 
+        // Check the column name
         return_code_ = SQLColAttribute(handle_stmt_,
                                        i,
                                        SQL_DESC_LABEL,
@@ -74,26 +80,40 @@ TEST_P(SQLColAttributeTest, ColAttributeTestWithExtraConnOptions) {
         CHECK_STMT_RESULT(return_code_, "SQLColAttribute failed", handle_stmt_);
         EXPECT_EQ(actual_column_name, expected_names[i - 1]);
 
+        // Check the concise type
         return_code_ = SQLColAttribute(handle_stmt_,
                                        i,
-                                       SQL_DESC_TYPE_NAME,
-                                       actual_type_name,
-                                       sizeof(actual_type_name),
-                                       nullptr,
-                                       nullptr);
-        CHECK_STMT_RESULT(return_code_, "SQLColAttribute failed", handle_stmt_);
-        GTEST_SKIP_("DX-52040: Type names currently don't match and DX-52041: Octet length doesn't match.");
-        EXPECT_EQ(actual_type_name, expected_type_names[i - 1]);
-
-        return_code_ = SQLColAttribute(handle_stmt_,
-                                       i,
-                                       SQL_DESC_OCTET_LENGTH,
+                                       SQL_DESC_CONCISE_TYPE,
                                        nullptr,
                                        SQL_IS_INTEGER,
                                        nullptr,
-                                       &actual_octet_length);
+                                       &actual_concise_type);
         CHECK_STMT_RESULT(return_code_, "SQLColAttribute failed", handle_stmt_);
-        EXPECT_EQ(actual_octet_length, expected_octet_length[i - 1]);
+        EXPECT_EQ(actual_concise_type, expected_concise_type[i - 1]);
+
+        // // Check the type name
+        // GTEST_SKIP_("DX-50240: Type names are incorrect");
+        // return_code_ = SQLColAttribute(handle_stmt_,
+        //                                i,
+        //                                SQL_DESC_TYPE_NAME,
+        //                                actual_type_name,
+        //                                sizeof(actual_type_name),
+        //                                nullptr,
+        //                                nullptr);
+        // CHECK_STMT_RESULT(return_code_, "SQLColAttribute failed", handle_stmt_);
+        // EXPECT_EQ(actual_type_name, expected_type_names[i - 1]);
+
+        // // Check the octet length
+        // GTEST_SKIP_("DX-52041: Octet length doesn't match.");
+        // return_code_ = SQLColAttribute(handle_stmt_,
+        //                                i,
+        //                                SQL_DESC_OCTET_LENGTH,
+        //                                nullptr,
+        //                                SQL_IS_INTEGER,
+        //                                nullptr,
+        //                                &actual_octet_length);
+        // CHECK_STMT_RESULT(return_code_, "SQLColAttribute failed", handle_stmt_);
+        // EXPECT_EQ(actual_octet_length, expected_octet_length[i - 1]);
     }
 }
 

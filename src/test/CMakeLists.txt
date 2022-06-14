@@ -32,15 +32,16 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
 add_executable(warpdrive_test
-        src/bindcol-test.cc
-        src/catalogfunctions-test.cc
+        # src/bindcol-test.cc
+        # src/catalogfunctions-test.cc
         src/colattribute-test.cc
         src/common.cc
-        src/connect-test.cc
-        src/diagnostic-test.cc
-        src/result-conversions-test.cc
-        src/select-test.cc
-        src/statement-functions-test.cc)
+        # src/connect-test.cc
+        # src/diagnostic-test.cc
+        # src/result-conversions-test.cc
+        # src/select-test.cc
+        # src/statement-functions-test.cc
+)
 
 target_link_libraries(warpdrive_test gtest_main)
 add_test(NAME warpdrive-tests COMMAND warpdrive_test)
