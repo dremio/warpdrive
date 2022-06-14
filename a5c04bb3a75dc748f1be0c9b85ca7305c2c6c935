@@ -38,6 +38,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "045c57a3_8e603cf3",
+        "filename": "readme.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000132
+      },
+      "writtenOn": "2022-06-14T21:55:46Z",
+      "side": 1,
+      "message": "We should probably remove the src/warpdrive. And since you moved the readme.txt to the top level we should do the same for \"license.txt\".",
+      "parentUuid": "74c9bb28_b24a0b18",
+      "revId": "a5c04bb3a75dc748f1be0c9b85ca7305c2c6c935",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "c4bd5c04_a2620f8b",
         "filename": "src/arrow-odbc/main.cc",
         "patchSetId": 1
@@ -67,6 +85,24 @@
       "side": 1,
       "message": "Yes, I wrote this myself.",
       "parentUuid": "c4bd5c04_a2620f8b",
+      "revId": "a5c04bb3a75dc748f1be0c9b85ca7305c2c6c935",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6920398c_208bda5c",
+        "filename": "src/arrow-odbc/main.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1000132
+      },
+      "writtenOn": "2022-06-14T21:55:46Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9645bfa7_30230332",
       "revId": "a5c04bb3a75dc748f1be0c9b85ca7305c2c6c935",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
@@ -108,6 +144,24 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "095d5692_483e88b8",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1000132
+      },
+      "writtenOn": "2022-06-14T21:55:46Z",
+      "side": 1,
+      "message": "Makes sense to fix it.",
+      "parentUuid": "14c38981_e61a5bd6",
+      "revId": "a5c04bb3a75dc748f1be0c9b85ca7305c2c6c935",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "790feb25_ba38612e",
         "filename": "src/warpdrive/c_ptr.h",
         "patchSetId": 1
@@ -137,6 +191,24 @@
       "side": 1,
       "message": "Yes, I wrote this file directly. This is a C++ style header block. Can change if it matters. I used this format for code that I wrote myself.",
       "parentUuid": "790feb25_ba38612e",
+      "revId": "a5c04bb3a75dc748f1be0c9b85ca7305c2c6c935",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "654dc978_f1a2be28",
+        "filename": "src/warpdrive/c_ptr.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1000132
+      },
+      "writtenOn": "2022-06-14T21:55:46Z",
+      "side": 1,
+      "message": "Doesn\u0027t probably matter. Just looks funny with three slashes versus two. Nit.",
+      "parentUuid": "3016d30c_e697bea5",
       "revId": "a5c04bb3a75dc748f1be0c9b85ca7305c2c6c935",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
