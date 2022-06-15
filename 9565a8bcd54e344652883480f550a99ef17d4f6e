@@ -16,6 +16,24 @@
       "message": "Please initialize connected_ and return_code_",
       "revId": "9565a8bcd54e344652883480f550a99ef17d4f6e",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a39600ec_19f75ab6",
+        "filename": "src/test/src/result-set-metadata-test.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1000302
+      },
+      "writtenOn": "2022-06-15T17:28:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "07fca121_c30d5430",
+      "revId": "9565a8bcd54e344652883480f550a99ef17d4f6e",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
