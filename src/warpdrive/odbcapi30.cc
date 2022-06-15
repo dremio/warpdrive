@@ -189,15 +189,20 @@ SQLEndTran(SQLSMALLINT HandleType, SQLHANDLE Handle,
 	switch (HandleType)
 	{
 		case SQL_HANDLE_ENV:
-                  return ODBCEnvironment::ExecuteWithDiagnostics(Handle, rc, [&]() -> SQLRETURN {
-                    throw DriverException("Unsupported function", "HYC00");
-                    return WD_Transact(Handle, SQL_NULL_HDBC, CompletionType);
-                                      });
+          return ODBCEnvironment::ExecuteWithDiagnostics(Handle, rc, [&]() -> SQLRETURN {
+            throw DriverException("Unsupported function", "HYC00");
+          });
 		case SQL_HANDLE_DBC:
-                  return ODBCConnection::ExecuteWithDiagnostics(Handle, rc, [&]() -> SQLRETURN {
-                    throw DriverException("Unsupported function", "HYC00");
-                    return WD_Transact(SQL_NULL_HENV, Handle, CompletionType);
-                                      });
+          return ODBCConnection::ExecuteWithDiagnostics(Handle, rc, [&]() -> SQLRETURN {
+            ODBC::ODBCConnection *conn = reinterpret_cast<ODBC::ODBCConnection *>(Handle);
+            uint8_t value;
+            conn->GetConnectAttr(SQL_ATTR_AUTOCOMMIT, &value, sizeof(uint8_t), nullptr, false);
+            if (value != SQL_AUTOCOMMIT_ON) {
+                throw DriverException("Unsupported function", "HYC00");
+            } else {
+                return SQL_SUCCESS;
+            }
+          });
 		default:
 			return SQL_ERROR;
 			break;
