@@ -46,6 +46,30 @@
       },
       "revId": "f311491e90d272b0dfe2999244475cd7b15f0164",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "f7108ba8_71f4226e",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-15T22:46:14Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "69daec76_b8448910",
+      "range": {
+        "startLine": 73,
+        "startChar": 19,
+        "endLine": 73,
+        "endChar": 46
+      },
+      "revId": "f311491e90d272b0dfe2999244475cd7b15f0164",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }

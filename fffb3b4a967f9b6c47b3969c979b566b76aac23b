@@ -88,6 +88,30 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "1662742e_25c05486",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 8
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-15T22:46:14Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9591527d_e4f9c55b",
+      "range": {
+        "startLine": 171,
+        "startChar": 8,
+        "endLine": 186,
+        "endChar": 103
+      },
+      "revId": "fffb3b4a967f9b6c47b3969c979b566b76aac23b",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "a33a31a1_f4f707af",

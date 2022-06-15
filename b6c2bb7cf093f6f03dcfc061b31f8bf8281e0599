@@ -18,6 +18,24 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "e3610e99_b3b33884",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-15T22:46:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "89f501aa_90cb19fa",
+      "revId": "b6c2bb7cf093f6f03dcfc061b31f8bf8281e0599",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "cdedb5b2_2d76dd73",
@@ -35,6 +53,24 @@
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     },
     {
+      "unresolved": false,
+      "key": {
+        "uuid": "aa0e3bef_445dd0e7",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-15T22:46:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cdedb5b2_2d76dd73",
+      "revId": "b6c2bb7cf093f6f03dcfc061b31f8bf8281e0599",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
       "unresolved": true,
       "key": {
         "uuid": "48a71641_0e2f3ea8",
@@ -48,6 +84,42 @@
       "writtenOn": "2022-06-15T21:26:22Z",
       "side": 1,
       "message": "This should be the actual_concise_type and get compared to the expected_concise_type.",
+      "revId": "b6c2bb7cf093f6f03dcfc061b31f8bf8281e0599",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "b91b584a_88bfed01",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-15T22:46:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "48a71641_0e2f3ea8",
+      "revId": "b6c2bb7cf093f6f03dcfc061b31f8bf8281e0599",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7a655f94_e5c8318b",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-15T22:46:14Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "48a71641_0e2f3ea8",
       "revId": "b6c2bb7cf093f6f03dcfc061b31f8bf8281e0599",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
