@@ -16,6 +16,24 @@
       "message": "The expected concise type for ODBC 2 SQL_TYPE_TIMESTAMP is SQL_TIMESTAMP. Intervals should just be the same as the ODBC 3 concise type.",
       "revId": "b2e000db92932a70728a7c9dbe267f906a419968",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7262c273_0ca822f3",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-15T18:54:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d9df1dda_d664f170",
+      "revId": "b2e000db92932a70728a7c9dbe267f906a419968",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
