@@ -22,6 +22,30 @@
       },
       "revId": "f311491e90d272b0dfe2999244475cd7b15f0164",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "69daec76_b8448910",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-15T19:30:20Z",
+      "side": 1,
+      "message": "You actually probably want to test SQLPrepare, then get metadata as one test, and SQLPrepare, SQLExecute, then get metadata as another test. ODBC has a quirk where drivers can report more accurate metadata after executing a query vs. having it prepared. Feel free to do this in a separate commit.",
+      "parentUuid": "0ba7b192_22dbfc60",
+      "range": {
+        "startLine": 73,
+        "startChar": 19,
+        "endLine": 73,
+        "endChar": 46
+      },
+      "revId": "f311491e90d272b0dfe2999244475cd7b15f0164",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
