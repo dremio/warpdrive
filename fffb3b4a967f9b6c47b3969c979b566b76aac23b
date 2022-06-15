@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "726af465_29ea535d",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 8
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-15T19:11:37Z",
+      "side": 1,
+      "message": "You\u0027ll want to trigger jenkins on warpdrive _after_ you\u0027ve merged the corresponding flightsql-odbc change.",
+      "revId": "fffb3b4a967f9b6c47b3969c979b566b76aac23b",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "a33a31a1_f4f707af",
+        "filename": "src/warpdrive/results.cc",
+        "patchSetId": 8
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-15T19:11:37Z",
+      "side": 1,
+      "message": "This should be m_conciseType. SQLDescribeCol returns the concise type field in the SQL type argument (the original code is incorrect, however it happened to work because we stored the concise type in m_type before)",
+      "revId": "fffb3b4a967f9b6c47b3969c979b566b76aac23b",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
