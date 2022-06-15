@@ -3,6 +3,40 @@
     {
       "unresolved": true,
       "key": {
+        "uuid": "89f501aa_90cb19fa",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-15T21:58:28Z",
+      "side": 1,
+      "message": "We don\u0027t actually test SQL_DESC_TYPE through either SQLColAttribute or SQLDescribeCol. So these should not be used for this test as it is.",
+      "revId": "b6c2bb7cf093f6f03dcfc061b31f8bf8281e0599",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "cdedb5b2_2d76dd73",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 10
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-15T21:58:28Z",
+      "side": 1,
+      "message": "The concise type should vary between ODBC 2/3 for timestamp.",
+      "revId": "b6c2bb7cf093f6f03dcfc061b31f8bf8281e0599",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
         "uuid": "48a71641_0e2f3ea8",
         "filename": "src/test/src/colattribute-test.cc",
         "patchSetId": 10
