@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "0ba7b192_22dbfc60",
+        "filename": "src/test/src/colattribute-test.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1000291
+      },
+      "writtenOn": "2022-06-15T19:18:33Z",
+      "side": 1,
+      "message": "I am aware we should be testing prepare + exec as well.",
+      "range": {
+        "startLine": 73,
+        "startChar": 19,
+        "endLine": 73,
+        "endChar": 46
+      },
+      "revId": "f311491e90d272b0dfe2999244475cd7b15f0164",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
