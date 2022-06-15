@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "7da3ca47_ca9c5158",
+        "filename": "src/warpdrive/warpdriveConfig.cmake",
+        "patchSetId": 13
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1000132
+      },
+      "writtenOn": "2022-06-15T17:23:00Z",
+      "side": 1,
+      "message": "I can\u0027t recall. Did we say we were removing SNAPSHOT?",
+      "revId": "fc7dc8a4c6faf6495eea0d27be06218d1c69cb45",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
