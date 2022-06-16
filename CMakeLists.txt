@@ -570,7 +570,10 @@ if (NOT ODBCABSTRACTION_REPO)
   endif()
 endif()
 
-define_option(ODBCABSTRACTION_GIT_TAG, "Tag for the ODBC Abstraction project" "dab491ce4d6e8e96a847f1bee0456ceb22a89767")
+define_option(ODBCABSTRACTION_GIT_TAG, "Tag for the ODBC Abstraction project" "")
+if (NOT ODBCABSTRACTION_GIT_TAG)
+  set(ODBCABSTRACTION_GIT_TAG "$ENV{ODBCABSTRACTION_GIT_TAG}")
+endif()
 
 define_option(ARROW_GIT_REPOSITORY "Arrow repo" "")
 if (NOT ARROW_GIT_REPOSITORY)
