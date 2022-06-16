@@ -767,9 +767,34 @@ SQLExtendedFetch(HSTMT hstmt,
       SQLPOINTER m_oldRowStatus;
     };
 
+    struct ARDFieldTracker {
+      ARDFieldTracker(ODBCDescriptor* ard, SQLULEN newRowArraySize)
+          : m_ard(ard), m_newRowArraySize(newRowArraySize),
+            m_oldRowArraySize(1) {
+        m_ard->GetHeaderField(SQL_DESC_ARRAY_SIZE, &m_oldRowArraySize, 0,
+                            nullptr);
+
+        if (m_newRowArraySize != m_oldRowArraySize) {
+          m_ard->SetHeaderField(SQL_DESC_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(m_newRowArraySize),
+                                0);
+        }
+      }
+
+      ~ARDFieldTracker() {
+        if (m_newRowArraySize != m_oldRowArraySize) {
+          m_ard->SetHeaderField(SQL_DESC_ARRAY_SIZE, reinterpret_cast<SQLPOINTER>(m_oldRowArraySize), 0);
+        }
+      }
+
+      ODBCDescriptor* m_ard;
+      SQLULEN m_newRowArraySize;
+      SQLULEN m_oldRowArraySize;
+    };
+
     ODBCStatement* stmt = ODBCStatement::of(hstmt);
     ODBCDescriptor* ird = stmt->GetIRD();
     IRDFieldTracker irdTracker(ird, pcrow, rgfRowStatus);
+    ARDFieldTracker ardTracker(stmt->GetARD(), stmt->GetRowsetSize());
     RETCODE result = WD_Fetch(hstmt);
     return result;
   });

@@ -152,7 +152,7 @@ TEST_F(SQLBindColTests, SQLBindColExtendedFetchTest) {
   });
 }
 
-TEST_F(SQLBindColTests, SQLBindColetchScrollTest) {
+TEST_F(SQLBindColTests, SQLBindColFetchScrollTest) {
   ExecuteFetchTest([](HSTMT stmt) -> SQLRETURN {
     SQLRETURN result = SQLFetchScroll(stmt, SQL_FETCH_NEXT, 0);
     return result;
@@ -165,10 +165,27 @@ TEST_F(SQLBindColTests, SQLBindColFetchTest_Multiple_Batches_Single_Fetch) {
   });
 }
 
-TEST_F(SQLBindColTests, SQLBindColExtendedFetchTest_Multiple_Batches_Single_Fetch) {
+TEST_F(SQLBindColTests, SQLBindColExtendedFetchTest_Ignore_SQL_ATTR_ROW_ARRAY_SIZE) {
+  ExecuteFetchTest([](HSTMT stmt) -> SQLRETURN {
+    SQLULEN rows_fetched = 0;
+    SQLUSMALLINT row_status = 0;
+    SQLSetStmtAttr(stmt, SQL_ATTR_ROW_ARRAY_SIZE, (SQLPOINTER) 3, SQL_IS_INTEGER); // This should get ignored.
+    SQLRETURN result = SQLExtendedFetch(stmt, SQL_FETCH_NEXT, 0, &rows_fetched, &row_status);
+    if (SQL_SUCCEEDED(result)) {
+      EXPECT_EQ(1, rows_fetched);
+    } else if (result == SQL_NO_DATA) {
+      EXPECT_EQ(0, rows_fetched);
+    }
+    return result;
+  });
+}
+
+TEST_F(SQLBindColTests, SQLBindColExtendedFetchTest_Multiple_Batches_Single_Fetch_Use_SQL_ROWSET_SIZE) {
   ExecuteFetchTest_Multiple_Batches_Single_Fetch([](HSTMT stmt) -> SQLRETURN {
     SQLULEN rows_fetched = 0;
     SQLUSMALLINT row_status = 0;
+    SQLSetStmtAttr(stmt, SQL_ATTR_ROW_ARRAY_SIZE, (SQLPOINTER) 1, SQL_IS_INTEGER); // Should get ignored.
+    SQLSetStmtAttr(stmt, SQL_ROWSET_SIZE, (SQLPOINTER) 3, SQL_IS_INTEGER);
     SQLRETURN result = SQLExtendedFetch(stmt, SQL_FETCH_NEXT, 0, &rows_fetched, &row_status);
     if (SQL_SUCCEEDED(result)) {
       EXPECT_EQ(3, rows_fetched);
@@ -179,7 +196,7 @@ TEST_F(SQLBindColTests, SQLBindColExtendedFetchTest_Multiple_Batches_Single_Fetc
   });
 }
 
-TEST_F(SQLBindColTests, SQLBindColetchScrollTest_Multiple_Batches_Single_Fetch) {
+TEST_F(SQLBindColTests, SQLBindColFetchScrollTest_Multiple_Batches_Single_Fetch) {
   ExecuteFetchTest_Multiple_Batches_Single_Fetch([](HSTMT stmt) -> SQLRETURN {
     SQLRETURN result = SQLFetchScroll(stmt, SQL_FETCH_NEXT, 0);
     return result;
