@@ -1,8 +1,6 @@
-@rem
-@rem Copyright (C) 2020-2022 Dremio Corporation
-@rem
-@rem See “license.txt” for license information.
-
+@REM Copyright (C) 2020-2022 Dremio Corporation
+@REM
+@REM See “license.txt” for license information.
 
 @REM Please define ARROW_GIT_REPOSITORY to be the arrow repository. If this is a local repo,
 @REM use forward slashes instead of backslashes.
