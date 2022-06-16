@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "24997f00_36c5ad58",
+        "filename": "build.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-16T19:25:57Z",
+      "side": 1,
+      "message": "We should have ODBCABSTRACTION_REPO and ODBCABSTRATION_GIT_TAG come from environment variables like we do with arrow (and only overwrite environment variables when they are undefined).\n\nLet\u0027s do this in a separate commit.",
+      "revId": "6d00052b7f50fa78b544a0c07d0a7fe224295f19",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
