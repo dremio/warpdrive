@@ -9,9 +9,11 @@
 #include "common.h"
 #include <gtest/gtest.h>
 #include <iostream>
+#include <functional>
 #include <string>
 
 struct SQLColAttributeTestParams {
+    std::function<int(HSTMT, std::string)> m_execQuery;
     std::string m_connectionOptions;
     uint32_t m_odbcVersion;
 
@@ -69,26 +71,23 @@ TEST_P(SQLColAttributeTest, ColAttributeTestWithExtraConnOptions) {
     // Get column attributes of a simple query.
 
     // NOTE: Original query was: "SELECT '1'::int AS intcol, 'foobar'::text AS textcol, 'varchar string'::varchar as varcharcol, ''::varchar as empty_varchar_col, 'varchar-5-col'::varchar(5) as varchar5col, '5 days'::interval day to second"
-    // TODO: add interval type to test concise types
-    return_code_ = SQLExecDirect(handle_stmt_,
-                                 (SQLCHAR *) "SELECT "
+    std::string query =  "SELECT "
                                  "CAST('1' AS INTEGER) AS intcol, "
                                  "CAST('foobar' AS VARCHAR) AS textcol, "
                                  "CAST('varchar string' AS VARCHAR) as varcharcol, "
                                  "CAST(''AS VARCHAR) as empty_varchar_col, "
                                  "CAST('varchar-5-col' AS VARCHAR(5)) as varchar5col, "
                                  "CAST('2022-10-06' AS TIMESTAMP) as timestampcol, "
-                                 "CAST('2' AS INTERVAL DAY) as intervaldaycol"
-                                 ,
-                                 SQL_NTS);
-    CHECK_STMT_RESULT(return_code_, "SQLExecDirect failed", handle_stmt_);
+                                 "CAST('2' AS INTERVAL DAY) as intervaldaycol";
+    return_code_ = params.m_execQuery(handle_stmt_, query);
+    CHECK_STMT_RESULT(return_code_, "Exec Query failed", handle_stmt_);
 
     return_code_ = SQLNumResultCols(handle_stmt_, &num_cols);
     CHECK_STMT_RESULT(return_code_, "SQLNumResultCols failed", handle_stmt_);
 
     std::vector<std::string> expected_names = {"intcol", "textcol", "varcharcol", "empty_varchar_col", "varchar5col", "timestampcol", "intervaldaycol"};
     std::vector<std::string> expected_type_names = {"INTEGER", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "SQL_DATETIME", "SQL_INTERVAL"};
-    std::vector<long> expected_octet_lengths = {4, 65536, 65536, 65536, 65536, 1024, 1024};
+    std::vector<long> expected_octet_lengths = {-4, 1024, 1024, 1024, 1024, -4, -4}; // TODO: -4 values are incorrect and are bugs in the driver
 
     std::vector<SQLULEN> expected_concise_types_odbc_v2 = {SQL_INTEGER, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_TIMESTAMP, SQL_INTERVAL_DAY};
     std::vector<SQLULEN> expected_concise_types_odbc_v3 = {SQL_INTEGER, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_TYPE_TIMESTAMP, SQL_INTERVAL_DAY};
@@ -154,15 +153,15 @@ TEST_P(SQLColAttributeTest, ColAttributeTestWithExtraConnOptions) {
         // EXPECT_EQ(actual_type_name, expected_type_names[i - 1]);
 
             // // Check the octet length
-            // return_code_ = SQLColAttribute(handle_stmt_,
-            //                             i,
-            //                             SQL_DESC_OCTET_LENGTH,
-            //                             nullptr,
-            //                             SQL_IS_INTEGER,
-            //                             nullptr,
-            //                             &actual_octet_length);
-            // CHECK_STMT_RESULT(return_code_, "SQLColAttribute failed to get octet length", handle_stmt_);
-            // EXPECT_EQ(actual_octet_length, expected_octet_length);
+            return_code_ = SQLColAttribute(handle_stmt_,
+                                        i,
+                                        SQL_DESC_OCTET_LENGTH,
+                                        nullptr,
+                                        SQL_IS_INTEGER,
+                                        nullptr,
+                                        &actual_octet_length);
+            CHECK_STMT_RESULT(return_code_, "SQLColAttribute failed to get octet length", handle_stmt_);
+            EXPECT_EQ(actual_octet_length, expected_octet_length) << "Failure at " + expected_column_name;
         }
 
         SQLCHAR actual_column_name_sql_describe[64];
@@ -187,32 +186,80 @@ TEST_P(SQLColAttributeTest, ColAttributeTestWithExtraConnOptions) {
     }
 }
 
+int exec_direct(HSTMT h, std::string query) {
+    return SQLExecDirect(h, (SQLCHAR *)query.c_str(), SQL_NTS);
+}
+
+int exec_with_prepare(HSTMT h, std::string query) {
+    int rc = SQLPrepare(h, (SQLCHAR *)query.c_str(), SQL_NTS);
+    CHECK_STMT_RESULT(rc, "SQLPrepareStmt failed", h);
+    
+    return SQLExecute(h);
+}
+
 INSTANTIATE_TEST_SUITE_P(UnknownSizesTest,
  SQLColAttributeTest,
  ::testing::Values(
         SQLColAttributeTestParams {
+            exec_direct,
             "UnknownSizes=0;MaxVarcharSize=100",
             SQL_OV_ODBC2
         },
         SQLColAttributeTestParams {
+	    exec_direct,
             "UnknownSizes=1;MaxVarcharSize=100",
             SQL_OV_ODBC2
         },
         SQLColAttributeTestParams {
+	    exec_direct,
             "UnknownSizes=2;MaxVarcharSize=100",
             SQL_OV_ODBC2
         },
         SQLColAttributeTestParams {
+	    exec_direct,
             "UnknownSizes=0;MaxVarcharSize=100",
             SQL_OV_ODBC3
         },
         SQLColAttributeTestParams {
+	    exec_direct,
             "UnknownSizes=1;MaxVarcharSize=100",
             SQL_OV_ODBC3
         },
         SQLColAttributeTestParams {
+	    exec_direct,
+            "UnknownSizes=2;MaxVarcharSize=100",
+            SQL_OV_ODBC3
+        },
+    	SQLColAttributeTestParams {
+            exec_with_prepare,
+            "UnknownSizes=0;MaxVarcharSize=100",
+            SQL_OV_ODBC2
+        },
+        SQLColAttributeTestParams {
+	    exec_with_prepare,
+            "UnknownSizes=1;MaxVarcharSize=100",
+            SQL_OV_ODBC2
+        },
+        SQLColAttributeTestParams {
+	    exec_with_prepare,
+            "UnknownSizes=2;MaxVarcharSize=100",
+            SQL_OV_ODBC2
+        },
+        SQLColAttributeTestParams {
+	    exec_with_prepare,
+            "UnknownSizes=0;MaxVarcharSize=100",
+            SQL_OV_ODBC3
+        },
+        SQLColAttributeTestParams {
+	    exec_with_prepare,
+            "UnknownSizes=1;MaxVarcharSize=100",
+            SQL_OV_ODBC3
+        },
+        SQLColAttributeTestParams {
+	    exec_with_prepare,
             "UnknownSizes=2;MaxVarcharSize=100",
             SQL_OV_ODBC3
         }
+
  )
 );
