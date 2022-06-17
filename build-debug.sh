@@ -32,7 +32,7 @@ cmake \
   -GNinja \
   -DOPENSSL_INCLUDE_DIR=/usr/include/openssl \
   -DODBCABSTRACTION_REPO=/opt/flightsql-odbc \
-  -DODBCABSTRACTION_GIT_TAG=dab491ce4d6e8e96a847f1bee0456ceb22a89767 \
+  -DODBCABSTRACTION_GIT_TAG=c6dde1791f5e2389ecc79940d3b0339d7fccd88f \
   -DARROW_GIT_REPOSITORY=$ARROW_GIT_REPOSITORY \
   -DARROW_GIT_TAG=$ARROW_GIT_TAG \
   -Dgtest_disable_pthreads=ON \
