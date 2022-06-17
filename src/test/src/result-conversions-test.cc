@@ -1536,7 +1536,7 @@ INSTANTIATE_TEST_SUITE_P(DISABLED_Varchar, ResultConversionsTest,
 	)
 );
 
-INSTANTIATE_TEST_SUITE_P(DISABLED_Date, ResultConversionsTest,
+INSTANTIATE_TEST_SUITE_P(Date, ResultConversionsTest,
 	::testing::Combine(
     	::testing::ValuesIn(
 	 		std::vector {
