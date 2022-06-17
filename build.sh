@@ -13,13 +13,13 @@ mkdir -p _build
 cd _build
 
 export ARROW_GIT_REPOSITORY=/opt/arrow
-export ARROW_GIT_TAG=b050bd0d31db6412256cec3362c0d57c9732e1f2
+export ARROW_GIT_TAG=6bd50bc8e1a938eeaacd44f00d886dd14a8c4a5b
 
 cmake \
   -GNinja \
   -DOPENSSL_INCLUDE_DIR=/usr/include/openssl \
   -DODBCABSTRACTION_REPO=/opt/flightsql-odbc \
-  -DODBCABSTRACTION_GIT_TAG=c6dde1791f5e2389ecc79940d3b0339d7fccd88f \
+  -DODBCABSTRACTION_GIT_TAG=6bd50bc8e1a938eeaacd44f00d886dd14a8c4a5b \
   -DARROW_GIT_REPOSITORY=$ARROW_GIT_REPOSITORY \
   -DARROW_GIT_TAG=$ARROW_GIT_TAG \
   ..
