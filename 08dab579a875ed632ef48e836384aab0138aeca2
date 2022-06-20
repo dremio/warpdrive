@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "46e9f622_3a02eee1",
+        "filename": "build_win32.bat",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-20T23:56:07Z",
+      "side": 1,
+      "message": "I believe you need ENDLOCAL at the end.",
+      "revId": "08dab579a875ed632ef48e836384aab0138aeca2",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
