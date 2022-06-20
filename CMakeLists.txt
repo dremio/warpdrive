@@ -5,7 +5,7 @@
 
 # Adapted from Apache Arrow.
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.14)
 message(STATUS "Building using CMake version: ${CMAKE_VERSION}")
 
 # Compiler id for Apple Clang is now AppleClang.
@@ -561,7 +561,7 @@ find_package(OpenSSL REQUIRED)
 
 define_option(ODBCABSTRACTION_REPO "Flight SQL ODBC repo" "")
 if (NOT ODBCABSTRACTION_REPO)
-  if (defined ENV{ODBCABSTRACTION_REPO})
+  if (DEFINED ENV{ODBCABSTRACTION_REPO})
     set(ODBCABSTRACTION_REPO "$ENV{ODBCABSTRACTION_REPO}")
   else()
     set(ODBCABSTRACTION_REPO "https://github.com/dremio/flightsql-odbc")
@@ -570,7 +570,7 @@ endif()
 
 define_option(ODBCABSTRACTION_GIT_TAG "Tag for the ODBC Abstraction project" "")
 if (NOT ODBCABSTRACTION_GIT_TAG)
-  if (defined ENV{ODBCABSTRACTION_GIT_TAG})
+  if (DEFINED ENV{ODBCABSTRACTION_GIT_TAG})
     set(ODBCABSTRACTION_GIT_TAG "$ENV{ODBCABSTRACTION_GIT_TAG}")
   else()
     set(ODBCABSTRACTION_GIT_TAG "5222786e32712b59dc905e3f2b64c6766fe379c2")
@@ -579,7 +579,7 @@ endif()
 
 define_option(ARROW_GIT_REPOSITORY "Arrow repo" "")
 if (NOT ARROW_GIT_REPOSITORY)
-  if (defined ENV{ARROW_GIT_REPOSITORY})
+  if (DEFINED ENV{ARROW_GIT_REPOSITORY})
     set(ARROW_GIT_REPOSITORY "$ENV{ARROW_GIT_REPOSITORY}")
   else()
     set(ARROW_GIT_REPOSITORY "https://github.com/apache/arrow")
@@ -588,7 +588,7 @@ endif()
 
 define_option(ARROW_GIT_TAG "Tag for the Arrow repository" "")
 if (NOT ARROW_GIT_TAG)
-  if (defined ENV{ARROW_GIT_TAG})
+  if (DEFINED ENV{ARROW_GIT_TAG})
     set(ARROW_GIT_TAG "$ENV{ARROW_GIT_TAG}")
   else()
     set(ARROW_GIT_TAG "b050bd0d31db6412256cec3362c0d57c9732e1f2")
