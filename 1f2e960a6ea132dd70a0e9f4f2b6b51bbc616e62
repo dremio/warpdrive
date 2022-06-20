@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "fad5290f_4f43e19f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 10
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-20T01:02:42Z",
+      "side": 1,
+      "message": "+2 to allow fixing build break.",
+      "revId": "1f2e960a6ea132dd70a0e9f4f2b6b51bbc616e62",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
