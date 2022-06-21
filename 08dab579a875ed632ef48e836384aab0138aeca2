@@ -16,6 +16,24 @@
       "message": "I believe you need ENDLOCAL at the end.",
       "revId": "08dab579a875ed632ef48e836384aab0138aeca2",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "c19072cf_5f124345",
+        "filename": "build_win32.bat",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1000509
+      },
+      "writtenOn": "2022-06-21T00:19:18Z",
+      "side": 1,
+      "message": "Oh yeah I forgot to comment about this but according to here https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/setlocal, we don\u0027t actually need a closing endlocal as the localization ends once the end of the batch file is reached",
+      "parentUuid": "46e9f622_3a02eee1",
+      "revId": "08dab579a875ed632ef48e836384aab0138aeca2",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
