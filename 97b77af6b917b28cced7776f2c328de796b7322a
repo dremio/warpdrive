@@ -34,6 +34,24 @@
       "parentUuid": "e46bc03c_62ad0a98",
       "revId": "97b77af6b917b28cced7776f2c328de796b7322a",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "6476daf5_b4664701",
+        "filename": "src/test/src/result-conversions-test.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-06-22T13:58:06Z",
+      "side": 1,
+      "message": "The driver is allowed to return the fractional seconds the same way it does for timestamp -\u003e char.",
+      "parentUuid": "7af3924b_eb04c3e0",
+      "revId": "97b77af6b917b28cced7776f2c328de796b7322a",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
