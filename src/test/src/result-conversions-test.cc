@@ -502,7 +502,7 @@ static const std::map< std::tuple<std::string, std::string, std::string>, std::s
 { std::make_tuple("'13:23:34'", "time", "SQL_C_UTINYINT"), "13" },
 { std::make_tuple("'13:23:34'", "time", "SQL_C_SBIGINT"), "13" },
 { std::make_tuple("'13:23:34'", "time", "SQL_C_UBIGINT"), "13" },
-{ std::make_tuple("'13:23:34'", "time", "SQL_C_BINARY"), "hex: 0D001700220000000000" },
+{ std::make_tuple("'13:23:34'", "time", "SQL_C_BINARY"), "hex: 0D0017002200" },
 { std::make_tuple("'13:23:34'", "time", "SQL_C_BOOKMARK"), "13" },
 { std::make_tuple("'13:23:34'", "time", "SQL_C_VARBOOKMARK"), "SQLGetData failed" },
 { std::make_tuple("'13:23:34'", "time", "SQL_C_TYPE_TIME"), "h: 13 m: 23 s: 34" },
@@ -523,8 +523,8 @@ static const std::map< std::tuple<std::string, std::string, std::string>, std::s
 { std::make_tuple("'13:23:34'", "time", "SQL_C_INTERVAL_HOUR_TO_SECOND"), "interval sign: 0 unknown interval type: 0" },
 { std::make_tuple("'13:23:34'", "time", "SQL_C_INTERVAL_MINUTE_TO_SECOND"), "interval sign: 0 unknown interval type: 0" },
 
-{ std::make_tuple("'2011-02-15 15:49:18'", "timestamp", "SQL_C_CHAR"), "2011-02-15 15:49:18" },
-{ std::make_tuple("'2011-02-15 15:49:18'", "timestamp", "SQL_C_WCHAR"), "2011-02-15 15:49:18" },
+{ std::make_tuple("'2011-02-15 15:49:18'", "timestamp", "SQL_C_CHAR"), "2011-02-15 15:49:18.000" },
+{ std::make_tuple("'2011-02-15 15:49:18'", "timestamp", "SQL_C_WCHAR"), "2011-02-15 15:49:18.000" },
 { std::make_tuple("'2011-02-15 15:49:18'", "timestamp", "SQL_C_SSHORT"), "2011" },
 { std::make_tuple("'2011-02-15 15:49:18'", "timestamp", "SQL_C_USHORT"), "2011" },
 { std::make_tuple("'2011-02-15 15:49:18'", "timestamp", "SQL_C_SLONG"), "2011" },
@@ -1555,7 +1555,7 @@ INSTANTIATE_TEST_SUITE_P(Date, ResultConversionsTest,
 	)
 );
 
-INSTANTIATE_TEST_SUITE_P(DISABLED_Time, ResultConversionsTest,
+INSTANTIATE_TEST_SUITE_P(Time, ResultConversionsTest,
 	::testing::Combine(
     	::testing::ValuesIn(
 	 		std::vector {
@@ -1567,14 +1567,14 @@ INSTANTIATE_TEST_SUITE_P(DISABLED_Time, ResultConversionsTest,
 				std::pair<int, std::string>(SQL_C_CHAR, "SQL_C_CHAR"),
 				std::pair<int, std::string>(SQL_C_WCHAR, "SQL_C_WCHAR"),
 				std::pair<int, std::string>(SQL_C_BINARY, "SQL_C_BINARY"),
-				std::pair<int, std::string>(SQL_C_TYPE_DATE, "SQL_C_TYPE_TIME"),
+				std::pair<int, std::string>(SQL_C_TYPE_TIME, "SQL_C_TYPE_TIME"),
 				std::pair<int, std::string>(SQL_C_TYPE_TIMESTAMP, "SQL_C_TYPE_TIMESTAMP"),
 			}
 		)
 	)
 );
 
-INSTANTIATE_TEST_SUITE_P(DISABLED_Timestamp, ResultConversionsTest,
+INSTANTIATE_TEST_SUITE_P(Timestamp, ResultConversionsTest,
 	::testing::Combine(
     	::testing::ValuesIn(
 	 		std::vector {
