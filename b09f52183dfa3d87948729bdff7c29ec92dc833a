@@ -16,6 +16,24 @@
       "message": "Lets remove the time part from this string and make it explicit on test cases?",
       "revId": "b09f52183dfa3d87948729bdff7c29ec92dc833a",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "ee9fd054_272fd551",
+        "filename": "src/test/src/result-conversions-test.cc",
+        "patchSetId": 4
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1000319
+      },
+      "writtenOn": "2022-06-23T16:48:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e3be173e_5b4fb0f8",
+      "revId": "b09f52183dfa3d87948729bdff7c29ec92dc833a",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
