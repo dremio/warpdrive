@@ -45,9 +45,10 @@
 namespace {
   void GetTimeForMillisSinceEpoch(tm& date, int64_t value) {
     #if defined(_WIN32)
-        gmtime_s(&date, &value);
+      gmtime_s(&date, &value);
     #else
-        gmtime_r(&value, &date);
+      time_t time_value = static_cast<time_t>(value);
+      gmtime_r(&time_value, &date);
     #endif
   }
 
