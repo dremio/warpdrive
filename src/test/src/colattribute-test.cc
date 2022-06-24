@@ -77,8 +77,7 @@ TEST_P(SQLColAttributeTest, ColAttributeTestWithExtraConnOptions) {
                                  "CAST('varchar string' AS VARCHAR) as varcharcol, "
                                  "CAST(''AS VARCHAR) as empty_varchar_col, "
                                  "CAST('varchar-5-col' AS VARCHAR(5)) as varchar5col, "
-                                 "CAST('2022-10-06' AS TIMESTAMP) as timestampcol, "
-                                 "CAST('2' AS INTERVAL DAY) as intervaldaycol"
+                                 "CAST('2022-10-06' AS TIMESTAMP) as timestampcol"
                                  ,
                                  SQL_NTS);
     CHECK_STMT_RESULT(return_code_, "SQLExecDirect failed", handle_stmt_);
@@ -86,12 +85,12 @@ TEST_P(SQLColAttributeTest, ColAttributeTestWithExtraConnOptions) {
     return_code_ = SQLNumResultCols(handle_stmt_, &num_cols);
     CHECK_STMT_RESULT(return_code_, "SQLNumResultCols failed", handle_stmt_);
 
-    std::vector<std::string> expected_names = {"intcol", "textcol", "varcharcol", "empty_varchar_col", "varchar5col", "timestampcol", "intervaldaycol"};
-    std::vector<std::string> expected_type_names = {"INTEGER", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "SQL_DATETIME", "SQL_INTERVAL"};
-    std::vector<long> expected_octet_lengths = {4, 65536, 65536, 65536, 65536, 1024, 1024};
+    std::vector<std::string> expected_names = {"intcol", "textcol", "varcharcol", "empty_varchar_col", "varchar5col", "timestampcol"};
+    std::vector<std::string> expected_type_names = {"INTEGER", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "SQL_DATETIME"};
+    std::vector<long> expected_octet_lengths = {4, 65536, 65536, 65536, 65536, 1024};
 
-    std::vector<SQLULEN> expected_concise_types_odbc_v2 = {SQL_INTEGER, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_TIMESTAMP, SQL_INTERVAL_DAY};
-    std::vector<SQLULEN> expected_concise_types_odbc_v3 = {SQL_INTEGER, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_TYPE_TIMESTAMP, SQL_INTERVAL_DAY};
+    std::vector<SQLULEN> expected_concise_types_odbc_v2 = {SQL_INTEGER, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_TIMESTAMP};
+    std::vector<SQLULEN> expected_concise_types_odbc_v3 = {SQL_INTEGER, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_TYPE_TIMESTAMP};
 
 
     std::vector<SQLULEN> expected_concise_types;
