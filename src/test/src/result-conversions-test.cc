@@ -1463,7 +1463,7 @@ INSTANTIATE_TEST_SUITE_P(Integers, ResultConversionsTest,
 				std::pair<int, std::string>(SQL_C_CHAR, "SQL_C_CHAR"),
 				std::pair<int, std::string>(SQL_C_WCHAR, "SQL_C_WCHAR"),
 				std::pair<int, std::string>(SQL_C_BIT, "SQL_C_BIT"),
-				// std::pair<int, std::string>(SQL_C_NUMERIC, "SQL_C_NUMERIC"), // TODO: Fix Integer to Numeric conversions
+				std::pair<int, std::string>(SQL_C_NUMERIC, "SQL_C_NUMERIC"),
 				// std::pair<int, std::string>(SQL_C_STINYINT, "SQL_C_STINYINT"),
 				// std::pair<int, std::string>(SQL_C_UTINYINT, "SQL_C_UTINYINT"),
 				std::pair<int, std::string>(SQL_C_SBIGINT, "SQL_C_SBIGINT"),
@@ -1472,7 +1472,7 @@ INSTANTIATE_TEST_SUITE_P(Integers, ResultConversionsTest,
 				// std::pair<int, std::string>(SQL_C_USHORT, "SQL_C_USHORT"),
 				std::pair<int, std::string>(SQL_C_SLONG, "SQL_C_SLONG"),
 				std::pair<int, std::string>(SQL_C_ULONG, "SQL_C_ULONG"),
-				// std::pair<int, std::string>(SQL_C_FLOAT, "SQL_C_FLOAT"), // TODO: Fix Integer to Float conversions
+				// std::pair<int, std::string>(SQL_C_FLOAT, "SQL_C_FLOAT"),
 				std::pair<int, std::string>(SQL_C_DOUBLE, "SQL_C_DOUBLE"),
 				// std::pair<int, std::string>(SQL_C_BINARY, "SQL_C_BINARY"), // TODO: Fix Integer to Binary conversions
 				std::pair<int, std::string>(SQL_C_BOOKMARK, "SQL_C_BOOKMARK"),
@@ -1482,7 +1482,7 @@ INSTANTIATE_TEST_SUITE_P(Integers, ResultConversionsTest,
 	)
 );
 
-INSTANTIATE_TEST_SUITE_P(DISABLED_FloatingPoint, ResultConversionsTest,
+INSTANTIATE_TEST_SUITE_P(FloatingPoint, ResultConversionsTest,
 	::testing::Combine(
     	::testing::ValuesIn(
 	 		std::vector {
@@ -1494,20 +1494,20 @@ INSTANTIATE_TEST_SUITE_P(DISABLED_FloatingPoint, ResultConversionsTest,
 			std::vector {
 				std::pair<int, std::string>(SQL_C_CHAR, "SQL_C_CHAR"),
 				std::pair<int, std::string>(SQL_C_WCHAR, "SQL_C_WCHAR"),
-				std::pair<int, std::string>(SQL_C_BIT, "SQL_C_BIT"),
-				// std::pair<int, std::string>(SQL_C_NUMERIC, "SQL_C_NUMERIC"),
-				std::pair<int, std::string>(SQL_C_STINYINT, "SQL_C_STINYINT"),
-				std::pair<int, std::string>(SQL_C_UTINYINT, "SQL_C_UTINYINT"),
-				std::pair<int, std::string>(SQL_C_SBIGINT, "SQL_C_SBIGINT"),
-				std::pair<int, std::string>(SQL_C_UBIGINT, "SQL_C_UBIGINT"),
-				std::pair<int, std::string>(SQL_C_SSHORT, "SQL_C_SSHORT"),
-				std::pair<int, std::string>(SQL_C_USHORT, "SQL_C_USHORT"),
-				std::pair<int, std::string>(SQL_C_SLONG, "SQL_C_SLONG"),
-				std::pair<int, std::string>(SQL_C_ULONG, "SQL_C_ULONG"),
+				// std::pair<int, std::string>(SQL_C_BIT, "SQL_C_BIT"),
+				std::pair<int, std::string>(SQL_C_NUMERIC, "SQL_C_NUMERIC"),
+				// std::pair<int, std::string>(SQL_C_STINYINT, "SQL_C_STINYINT"),
+				// std::pair<int, std::string>(SQL_C_UTINYINT, "SQL_C_UTINYINT"),
+				// std::pair<int, std::string>(SQL_C_SBIGINT, "SQL_C_SBIGINT"),
+				// std::pair<int, std::string>(SQL_C_UBIGINT, "SQL_C_UBIGINT"),
+				// std::pair<int, std::string>(SQL_C_SSHORT, "SQL_C_SSHORT"),
+				// std::pair<int, std::string>(SQL_C_USHORT, "SQL_C_USHORT"),
+				// std::pair<int, std::string>(SQL_C_SLONG, "SQL_C_SLONG"),
+				// std::pair<int, std::string>(SQL_C_ULONG, "SQL_C_ULONG"),
 				std::pair<int, std::string>(SQL_C_FLOAT, "SQL_C_FLOAT"),
 				std::pair<int, std::string>(SQL_C_DOUBLE, "SQL_C_DOUBLE"),
 				// std::pair<int, std::string>(SQL_C_BINARY, "SQL_C_BINARY"),
-				std::pair<int, std::string>(SQL_C_BOOKMARK, "SQL_C_BOOKMARK"),
+				// std::pair<int, std::string>(SQL_C_BOOKMARK, "SQL_C_BOOKMARK"),
 				// std::pair<int, std::string>(SQL_C_VARBOOKMARK, "SQL_C_VARBOOKMARK"),
 			}
 		)
@@ -1618,7 +1618,7 @@ INSTANTIATE_TEST_SUITE_P(Timestamp, ResultConversionsTest,
 	)
 );
 
-INSTANTIATE_TEST_SUITE_P(DISABLED_NumericAndDecimal, ResultConversionsTest,
+INSTANTIATE_TEST_SUITE_P(NumericAndDecimal, ResultConversionsTest,
 	::testing::Combine(
     	::testing::ValuesIn(
 	 		std::vector {
@@ -1630,10 +1630,10 @@ INSTANTIATE_TEST_SUITE_P(DISABLED_NumericAndDecimal, ResultConversionsTest,
 			std::vector {
 				std::pair<int, std::string>(SQL_C_CHAR, "SQL_C_CHAR"),
 				std::pair<int, std::string>(SQL_C_WCHAR, "SQL_C_WCHAR"),
-				std::pair<int, std::string>(SQL_C_BIT, "SQL_C_BIT"),
+				// std::pair<int, std::string>(SQL_C_BIT, "SQL_C_BIT"),
 				std::pair<int, std::string>(SQL_C_NUMERIC, "SQL_C_NUMERIC"),
-				std::pair<int, std::string>(SQL_C_STINYINT, "SQL_C_STINYINT"),
-				std::pair<int, std::string>(SQL_C_UTINYINT, "SQL_C_UTINYINT"),
+				// std::pair<int, std::string>(SQL_C_STINYINT, "SQL_C_STINYINT"),
+				// std::pair<int, std::string>(SQL_C_UTINYINT, "SQL_C_UTINYINT"),
 				std::pair<int, std::string>(SQL_C_SBIGINT, "SQL_C_SBIGINT"),
 				std::pair<int, std::string>(SQL_C_UBIGINT, "SQL_C_UBIGINT"),
 				std::pair<int, std::string>(SQL_C_SSHORT, "SQL_C_SSHORT"),
@@ -1642,13 +1642,13 @@ INSTANTIATE_TEST_SUITE_P(DISABLED_NumericAndDecimal, ResultConversionsTest,
 				std::pair<int, std::string>(SQL_C_ULONG, "SQL_C_ULONG"),
 				std::pair<int, std::string>(SQL_C_FLOAT, "SQL_C_FLOAT"),
 				std::pair<int, std::string>(SQL_C_DOUBLE, "SQL_C_DOUBLE"),
-				std::pair<int, std::string>(SQL_C_BINARY, "SQL_C_BINARY"),
+				// std::pair<int, std::string>(SQL_C_BINARY, "SQL_C_BINARY"),
 			}
 		)
 	)
 );
 
-INSTANTIATE_TEST_SUITE_P(DISABLED_FloatingPointEdgeCombinations, ResultConversionsTest,
+INSTANTIATE_TEST_SUITE_P(FloatingPointEdgeCombinations, ResultConversionsTest,
 	::testing::Combine(
 		::testing::ValuesIn(floating_point_edge_cases),
 		::testing::ValuesIn( 
