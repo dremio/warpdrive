@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "da5932b6_abfffd84",
+        "filename": "src/arrow-odbc/CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1000331
+      },
+      "writtenOn": "2022-06-28T16:32:05Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be the default value if none is present? Look the NOT expression here: https://cmake.org/cmake/help/latest/command/if.html",
+      "range": {
+        "startLine": 93,
+        "startChar": 2,
+        "endLine": 94,
+        "endChar": 115
+      },
+      "revId": "eb1523bbbda198a63ebc8944ae350aafba8aad1f",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "334931c8_c02037f9",
+        "filename": "src/arrow-odbc/CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1000331
+      },
+      "writtenOn": "2022-06-28T16:32:05Z",
+      "side": 1,
+      "message": "Seems like you\u0027re setting a version with commas in a condition, and with periods in another. Remember that WARPDRIVE_RC_FILEVERSION has to be separated with commas, and WARPDRIVE_RC_PRODUCTVERSION with periods. WARPDRIVE_BUILD_VERSION is expected to be a variable separated by periods.",
+      "range": {
+        "startLine": 94,
+        "startChar": 2,
+        "endLine": 96,
+        "endChar": 63
+      },
+      "revId": "eb1523bbbda198a63ebc8944ae350aafba8aad1f",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "36238c7d_c303bba2",
+        "filename": "src/arrow-odbc/CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1000331
+      },
+      "writtenOn": "2022-06-28T16:32:05Z",
+      "side": 1,
+      "message": "Just do \u0027string(REPLACE \".\" \",\" WARPDRIVE_RC_FILEVERSION \"${WARPDRIVE_RC_PRODUCTVERSION}\")\u0027 to avoid the redundant set.",
+      "range": {
+        "startLine": 100,
+        "startChar": 2,
+        "endLine": 101,
+        "endChar": 80
+      },
+      "revId": "eb1523bbbda198a63ebc8944ae350aafba8aad1f",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
