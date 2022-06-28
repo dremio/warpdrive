@@ -14,6 +14,9 @@ add_dependencies(warpdrive-all
 # Enable unicode driver build
 add_compile_definitions(UNICODE_SUPPORT)
 
+# Define the version number
+add_compile_definitions(WARPDRIVE_VERSION="${WARPDRIVE_VERSION}")
+
 include_directories(${ODBC_INCLUDE_DIRS})
 
 
