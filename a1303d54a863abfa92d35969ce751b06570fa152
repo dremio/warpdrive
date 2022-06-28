@@ -22,6 +22,30 @@
       },
       "revId": "a1303d54a863abfa92d35969ce751b06570fa152",
       "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "d547aad4_23e891e9",
+        "filename": "src/arrow-odbc/CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1000331
+      },
+      "writtenOn": "2022-06-28T19:31:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "13312474_95be0064",
+      "range": {
+        "startLine": 93,
+        "startChar": 2,
+        "endLine": 94,
+        "endChar": 64
+      },
+      "revId": "a1303d54a863abfa92d35969ce751b06570fa152",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
     }
   ]
 }
