@@ -14,5 +14,7 @@
  * @brief Create a Driver object
  */
 std::shared_ptr<driver::odbcabstraction::Driver> CreateDriver() {
-    return std::shared_ptr<driver::odbcabstraction::Driver>(new driver::flight_sql::FlightSqlDriver());
+    auto driver = std::shared_ptr<driver::odbcabstraction::Driver>(new driver::flight_sql::FlightSqlDriver());
+    driver->SetVersion(WARPDRIVE_BUILD_VERSION);
+    return driver;
 }

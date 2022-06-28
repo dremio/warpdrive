@@ -34,6 +34,14 @@ find_package(OpenSSL REQUIRED)
 # Add gRPC dependencies needed by Arrow Flight. Should be pre-installed.
 find_package(gRPC 1.36 CONFIG REQUIRED)
 
+# Define the version number information.
+if(DEFINED ENV{WARPDRIVE_BUILD_VERSION})
+  set(WARPDRIVE_BUILD_VERSION "$ENV{WARPDRIVE_BUILD_VERSION}")
+else()
+  set(WARPDRIVE_BUILD_VERSION "${WARPDRIVE_VERSION_MAJOR}.${WARPDRIVE_VERSION_MINOR}.${WARPDRIVE_VERSION_PATCH}.0")
+endif()
+
+
 if (MSVC)
   # the following definitions stop arrow from using __declspec when staticly linking and will break on windows without them
   add_compile_definitions(ARROW_STATIC ARROW_FLIGHT_STATIC)
@@ -89,18 +97,13 @@ if (MSVC)
 
   # Add version info resources
   # More info at: https://docs.microsoft.com/en-us/windows/win32/menurc/versioninfo-resource
-  
-  if(DEFINED ENV{WARPDRIVE_BUILD_VERSION})
-    set(WARPDRIVE_BUILD_VERSION "$ENV{WARPDRIVE_BUILD_VERSION}")
-  else()
-    set(WARPDRIVE_BUILD_VERSION "${WARPDRIVE_VERSION_MAJOR}.${WARPDRIVE_VERSION_MINOR}.${WARPDRIVE_VERSION_PATCH}.0")
-  endif()
-
   set(WARPDRIVE_RC_PRODUCTVERSION "${WARPDRIVE_BUILD_VERSION}")
   string(REPLACE "." "," WARPDRIVE_RC_FILEVERSION "${WARPDRIVE_RC_PRODUCTVERSION}")
   configure_file(version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/version.rc @ONLY)
-
   list(APPEND ARROW_ODBC_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
+  add_compile_definitions(WARPDRIVE_BUILD_VERSION=${WARPDRIVE_BUILD_VERSION})
+else()
+  add_compile_definitions(WARPDRIVE_BUILD_VERSION="${WARPDRIVE_BUILD_VERSION}")
 endif()
 
 # Add symbols file
