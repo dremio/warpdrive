@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "13312474_95be0064",
+        "filename": "src/arrow-odbc/CMakeLists.txt",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1000331
+      },
+      "writtenOn": "2022-06-28T17:47:40Z",
+      "side": 1,
+      "message": "This still feels very counter-intuitive, can you try using \u0027if(DEFINED ENV{WARPDRIVE_BUILD_VERSION})\u0027 instead?",
+      "range": {
+        "startLine": 93,
+        "startChar": 2,
+        "endLine": 94,
+        "endChar": 64
+      },
+      "revId": "a1303d54a863abfa92d35969ce751b06570fa152",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
