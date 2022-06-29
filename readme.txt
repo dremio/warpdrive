@@ -1,9 +1,14 @@
 
-/********************************************************************
+/**********************************************************************
 
-  PSQLODBC.DLL - A library to talk to the PostgreSQL DBMS using ODBC.
+  Warpdrive - A library to talk to Arrow Flight SQL servers using ODBC.
 
 
+  Copyright (C) 2021 - 2022   Dremio Corporation
+
+
+  Code is derived from PSQLODBC.DLL - A library to talk to the
+    PostgreSQL DBMS using ODBC.
   Copyright (C) 1998          Insight Distribution Systems
   Copyright (C) 1998 - 2021   The PostgreSQL Global Development Group
 
@@ -31,8 +36,7 @@
 
   How to contact the authors:
 
-  email:   pgsql-odbc@postgresql.org
-  website: https://odbc.postgresql.org/
+  website: https://community.dremio.com/
 
 
-***********************************************************************/
+*************************************************************************/
