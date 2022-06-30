@@ -1,3 +1,11 @@
+///
+/// Copyright (C) 2020-2022 Dremio Corporation
+///
+/// See “license.txt” for license information.
+///
+/// Module:			version.rc.in
+///
+/// Description:		Template file for storing DLL version information.
 #define VS_FF_DEBUG 0x1L
 #define VS_VERSION_INFO 0x1L
 #define VS_FFI_FILEFLAGSMASK 0x17L
