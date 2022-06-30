@@ -90,7 +90,6 @@ TEST_F(SQLStatementFunctionsTest, TestExecDirectEarlyClose){
 }
 
 TEST_F(SQLStatementFunctionsTest, TestNormalFlow){
-  GTEST_SKIP_("DX-51635: Crash when disconnecting after a SQLPrepare->SQLExec query");
   std::string sqlQuery = "SELECT * FROM postgres.tpch.customer WHERE c_custkey BETWEEN 536796 AND 536800 LIMIT 5;";
   return_code_ = SQLPrepare(hstmt_, (SQLCHAR *) sqlQuery.c_str(), sqlQuery.length());
   CHECK_STMT_RESULT(return_code_, "SQLPrepare failed", hstmt_);
@@ -108,7 +107,6 @@ TEST_F(SQLStatementFunctionsTest, TestNormalFlow){
   EXPECT_EQ(exp_result, result.value());
 }
 TEST_F(SQLStatementFunctionsTest, TestCursorClose){
-  GTEST_SKIP_("DX-51635: Crash when disconnecting after a SQLPrepare->SQLExec query");
   std::string sqlQuery = "SELECT * FROM postgres.tpch.customer LIMIT 5;";
   return_code_ = SQLPrepare(hstmt_, (SQLCHAR *) sqlQuery.c_str(), sqlQuery.length());
   CHECK_STMT_RESULT(return_code_, "SQLPrepare failed", hstmt_);
@@ -121,7 +119,6 @@ TEST_F(SQLStatementFunctionsTest, TestCursorClose){
 }
 
 TEST_F(SQLStatementFunctionsTest, TestEarlyClose){
-  GTEST_SKIP_("DX-51635: Crash when disconnecting after a SQLPrepare->SQLExec query");
   std::string sqlQuery = "SELECT * FROM postgres.tpch.customer LIMIT 5;";
   return_code_ = SQLPrepare(hstmt_, (SQLCHAR *) sqlQuery.c_str(), sqlQuery.length());
   CHECK_STMT_RESULT(return_code_, "SQLPrepare failed", hstmt_);
@@ -137,7 +134,6 @@ TEST_F(SQLStatementFunctionsTest, TestEarlyClose){
 }
 
 TEST_F(SQLStatementFunctionsTest, TestStatementReuse){
-  GTEST_SKIP_("DX-51635: Crash when disconnecting after a SQLPrepare->SQLExec query");
   std::string sqlQuery = "SELECT * FROM postgres.tpch.customer WHERE c_custkey BETWEEN 536796 AND 536800 LIMIT 5;";
   return_code_ = SQLPrepare(hstmt_, (SQLCHAR *) sqlQuery.c_str(), sqlQuery.length());
   CHECK_STMT_RESULT(return_code_, "SQLPrepare failed", hstmt_);
@@ -162,7 +158,6 @@ TEST_F(SQLStatementFunctionsTest, TestStatementReuse){
 }
 
 TEST_F(SQLStatementFunctionsTest, TestStatementReuse2){
-  GTEST_SKIP_("DX-51635: Crash when disconnecting after a SQLPrepare->SQLExec query");
   std::string sqlQuery = "SELECT * FROM postgres.tpch.customer WHERE c_custkey BETWEEN 536796 AND 536800 LIMIT 5;";
   std::string exp_result = "536796\tCustomer#000536796\tUWHFXVJzZMixLpz00Mk1r,PfP3LT DuLeO\t10\t20-352-489-5961\t5193.040000\tMACHINERY \t beans run after the carefully pending \n"
                            "536797\tCustomer#000536797\t51QNmdLF0ZR\t7\t17-492-119-8512\t3379.690000\tAUTOMOBILE\tkly regular accounts sleep even, regula\n"
