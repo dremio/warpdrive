@@ -77,7 +77,11 @@ TEST_P(SQLColAttributeTest, ColAttributeTestWithExtraConnOptions) {
                                  "CAST('varchar string' AS VARCHAR) as varcharcol, "
                                  "CAST(''AS VARCHAR) as empty_varchar_col, "
                                  "CAST('varchar-5-col' AS VARCHAR(5)) as varchar5col, "
-                                 "CAST('2022-10-06' AS TIMESTAMP) as timestampcol"
+                                 "CAST('2022-10-06' AS TIMESTAMP) as timestampcol, "
+                                 "CAST('09:10:00' AS TIME) as timecol, "
+                                 "CAST('2022-10-06' AS DATE) as datecol, "
+                                 "CAST('true' AS BOOLEAN) as boolcol, "
+                                 "CAST('456.98' AS DECIMAL(10,2)) as decimalcol"
                                  ,
                                  SQL_NTS);
     CHECK_STMT_RESULT(return_code_, "SQLExecDirect failed", handle_stmt_);
@@ -85,15 +89,14 @@ TEST_P(SQLColAttributeTest, ColAttributeTestWithExtraConnOptions) {
     return_code_ = SQLNumResultCols(handle_stmt_, &num_cols);
     CHECK_STMT_RESULT(return_code_, "SQLNumResultCols failed", handle_stmt_);
 
-    std::vector<std::string> expected_names = {"intcol", "textcol", "varcharcol", "empty_varchar_col", "varchar5col", "timestampcol"};
-    std::vector<std::string> expected_type_names = {"INTEGER", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR", "SQL_DATETIME"};
-    std::vector<long> expected_octet_lengths = {4, 65536, 65536, 65536, 65536, 1024};
+    std::vector<std::string> expected_names = {"intcol", "textcol", "varcharcol", "empty_varchar_col", "varchar5col", "timestampcol", "timecol", "datecol", "boolcol", "decimalcol"};
+    std::vector<std::string> expected_type_names = {"INTEGER", "CHARACTER VARYING", "CHARACTER VARYING", "CHARACTER VARYING", "CHARACTER VARYING", "TIMESTAMP", "TIME", "DATE", "BOOLEAN", "DECIMAL"};
+    std::vector<long> expected_octet_lengths = {4, 65536, 65536, 65536, 65536, 16, 6, 6, 1, 12};
 
-    std::vector<SQLULEN> expected_concise_types_odbc_v2 = {SQL_INTEGER, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_TIMESTAMP};
-    std::vector<SQLULEN> expected_concise_types_odbc_v3 = {SQL_INTEGER, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_TYPE_TIMESTAMP};
+    std::vector<SQLLEN> expected_concise_types_odbc_v2 = {SQL_INTEGER, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_TIMESTAMP, SQL_TIME, SQL_DATE, SQL_BIT, SQL_DECIMAL};
+    std::vector<SQLLEN> expected_concise_types_odbc_v3 = {SQL_INTEGER, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_VARCHAR, SQL_TYPE_TIMESTAMP, SQL_TYPE_TIME, SQL_TYPE_DATE, SQL_BIT, SQL_DECIMAL};
 
-
-    std::vector<SQLULEN> expected_concise_types;
+    std::vector<SQLLEN> expected_concise_types;
     switch (params.m_odbcVersion) {
         case SQL_OV_ODBC2:
             expected_concise_types = expected_concise_types_odbc_v2;
@@ -140,17 +143,16 @@ TEST_P(SQLColAttributeTest, ColAttributeTestWithExtraConnOptions) {
             CHECK_STMT_RESULT(return_code_, "SQLColAttribute failed", handle_stmt_);
             EXPECT_EQ(actual_concise_type, expected_concise_type) << "Failure at " + expected_column_name;
         
-        // // Check the type name
-        // GTEST_SKIP_("DX-50240: Type names are incorrect");
-        // return_code_ = SQLColAttribute(handle_stmt_,
-        //                                i,
-        //                                SQL_DESC_TYPE_NAME,
-        //                                actual_type_name,
-        //                                sizeof(actual_type_name),
-        //                                nullptr,
-        //                                nullptr);
-        // CHECK_STMT_RESULT(return_code_, "SQLColAttribute failed to get SQL_DESC_TYPE_NAME", handle_stmt_);
-        // EXPECT_EQ(actual_type_name, expected_type_names[i - 1]);
+          // Check the type name
+          return_code_ = SQLColAttribute(handle_stmt_,
+                                        i,
+                                        SQL_DESC_TYPE_NAME,
+                                        actual_type_name,
+                                        sizeof(actual_type_name),
+                                        nullptr,
+                                        nullptr);
+          CHECK_STMT_RESULT(return_code_, "SQLColAttribute failed to get SQL_DESC_TYPE_NAME", handle_stmt_);
+          EXPECT_EQ(actual_type_name, expected_type_names[i - 1]);
 
             // // Check the octet length
             // return_code_ = SQLColAttribute(handle_stmt_,
