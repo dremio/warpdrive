@@ -64,6 +64,8 @@ else()
   )
 endif()
 
+find_package(Boost REQUIRED COMPONENTS locale)
+
 set(ARROW_ODBC_THIRDPARTY_LIBS
   arrow_odbc_spi_impl
   odbcabstraction
@@ -76,7 +78,9 @@ set(ARROW_ODBC_THIRDPARTY_LIBS
 )
 
 if (MSVC)
+  find_package(Boost REQUIRED COMPONENTS locale)
   list(APPEND ARROW_ODBC_THIRDPARTY_LIBS
+    ${Boost_LIBRARIES}
     ${CMAKE_CURRENT_BINARY_DIR}/../../${CMAKE_BUILD_TYPE}/$(Configuration)/warpdrive_static.lib
     legacy_stdio_definitions)
 endif()

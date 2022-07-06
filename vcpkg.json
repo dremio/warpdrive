@@ -6,6 +6,7 @@
     "benchmark",
     "boost-beast",
     "boost-filesystem",
+    "boost-locale",
     "boost-multiprecision",
     "boost-process",
     "boost-system",
