@@ -64,6 +64,8 @@ else()
   )
 endif()
 
+find_package(Boost REQUIRED COMPONENTS locale)
+
 set(ARROW_ODBC_THIRDPARTY_LIBS
   arrow_odbc_spi_impl
   odbcabstraction
@@ -73,6 +75,7 @@ set(ARROW_ODBC_THIRDPARTY_LIBS
   ${Protobuf_LIBRARIES}
   ${ODBC_LIBRARIES}
   ${OPENSSL_LIBRARIES}
+  ${Boost_LIBRARIES}
 )
 
 if (MSVC)
