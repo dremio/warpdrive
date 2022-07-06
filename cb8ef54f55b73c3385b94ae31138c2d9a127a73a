@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e8743f93_bf884ef6",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000319
+      },
+      "writtenOn": "2022-07-06T18:31:39Z",
+      "side": 1,
+      "message": "Improve your commit message saying what are you actually doing in this patch",
+      "revId": "cb8ef54f55b73c3385b94ae31138c2d9a127a73a",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
