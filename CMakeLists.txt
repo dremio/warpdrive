@@ -532,18 +532,12 @@ endif()
 # Add ODBC dependencies.
 # ODBC_LIBRARIES is really more for applications to link to the DM. We overwrite it to
 # just pull in the ODBC installer library for SQLGetPrivateProfileString.
-if(APPLE)
-  set(ODBC_INCLUDE_DIRS /usr/local/Cellar/libiodbc/3.52.15/include)
-  set(ODBC_LIBRARIES /usr/local/Cellar/libiodbc/3.52.15/lib/libiodbcinst.dylib)
-  add_compile_definitions(HAVE_LONG_LONG SQLCOLATTRIBUTE_SQLLEN WITH_IODBC)
-else()
-  find_package(ODBC REQUIRED)
-  if(UNIX)
-    add_compile_definitions(WITH_UNIXODBC)
-    set(ODBC_LIBRARIES odbcinst)
-  elseif(MSVC)
-  set(ODBC_LIBRARIES odbccp32)    
-  endif()
+find_package(ODBC REQUIRED)
+if(UNIX)
+  add_compile_definitions(WITH_UNIXODBC)
+  set(ODBC_LIBRARIES odbcinst)
+elseif(MSVC)
+set(ODBC_LIBRARIES odbccp32)
 endif()
 
 # Add OpenSSL dependencies needed by ODBCAbstraction. Should be pre-installed.
@@ -573,7 +567,7 @@ if (NOT ODBCABSTRACTION_GIT_TAG)
   if (DEFINED ENV{ODBCABSTRACTION_GIT_TAG})
     set(ODBCABSTRACTION_GIT_TAG "$ENV{ODBCABSTRACTION_GIT_TAG}")
   else()
-    set(ODBCABSTRACTION_GIT_TAG "8eb2ee955dc2ec99e55a0b4ac4665127d02b41e5")
+    set(ODBCABSTRACTION_GIT_TAG "af6139a4c37808620b11dd89cf4c8d1aabd69fca")
   endif()
 endif()
 
