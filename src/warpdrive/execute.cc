@@ -36,6 +36,7 @@
 #include <odbcabstraction/odbc_impl/ODBCStatement.h>
 #include <odbcabstraction/odbc_impl/ODBCConnection.h>
 #include <string>
+#include <iostream>
 
 using namespace ODBC;
 
@@ -74,6 +75,9 @@ WD_ExecDirect(HSTMT hstmt,
 
 	const char* queryStr = reinterpret_cast<const char*>(szSqlStr);
 	std::string query = std::string(queryStr, SQL_NTS == cbSqlStr ? strlen(queryStr) : cbSqlStr);
+
+  std::cout << "WD_ExecDirect query: " << query << std::endl;
+
 	stmt->ExecuteDirect(query);
 
 	MYLOG(0, "leaving %hd\n", result);
