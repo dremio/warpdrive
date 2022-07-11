@@ -24,6 +24,9 @@
 #include "unicode_support.h"
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
+#include <fstream>
+#include <ctype.h>
 
 #include "wdapifunc.h"
 #include "connection.h"
@@ -93,6 +96,7 @@ SQLDriverConnectW(HDBC hdbc,
 				  SQLSMALLINT *pcbConnStrOut,
 				  SQLUSMALLINT fDriverCompletion)
 {
+  get_convtype();
   SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLDriverConnectW";
         return ODBCConnection::ExecuteWithDiagnostics(hdbc, rc, [&]() {
@@ -245,6 +249,24 @@ SQLDescribeColW(HSTMT StatementHandle,
               });
 }
 
+void hexdump(void *ptr, int buflen) {
+  unsigned char *buf = (unsigned char*)ptr;
+  int i, j;
+  for (i=0; i<buflen; i+=16) {
+    printf("%06x: ", i);
+    for (j=0; j<16; j++)
+      if (i+j < buflen)
+        printf("%02x ", buf[i+j]);
+      else
+        printf("   ");
+    printf(" ");
+    for (j=0; j<16; j++)
+      if (i+j < buflen)
+        printf("%c", isprint(buf[i+j]) ? buf[i+j] : '.');
+    printf("\n");
+  }
+}
+
 WD_EXPORT_SYMBOL
 RETCODE  SQL_API
 SQLExecDirectW(HSTMT StatementHandle,
@@ -258,7 +280,19 @@ SQLExecDirectW(HSTMT StatementHandle,
 
 	MYLOG(0, "Entering\n");
         return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
-          stxt.reset(ucs2_to_utf8(StatementText, TextLength, &slen, FALSE));
+          std::ofstream myfile;
+          myfile.open("/tmp/odbc_log.txt");
+          myfile << "Size of SQLWCHAR: " << sizeof(SQLWCHAR) << std::endl;
+          myfile << "TextLength: " << TextLength << std::endl;
+          myfile << "Before conversion: " << std::endl;
+          hexdump(StatementText, sizeof(SQLWCHAR) * TextLength);
+
+          myfile << "After conversion: " << std::endl;
+          stxt.reset(wcs_to_utf8(StatementText, TextLength, &slen, FALSE));
+          myfile << "slen: " << slen << std::endl;
+          hexdump(((SQLCHAR *)stxt.get()), sizeof(SQLWCHAR) * TextLength * 4);
+
+          myfile.close();
           return WD_ExecDirect(StatementHandle, (SQLCHAR *)stxt.get(),
                               (SQLINTEGER)slen, flag);
   });
