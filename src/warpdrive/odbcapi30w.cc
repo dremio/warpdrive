@@ -128,7 +128,7 @@ SQLSetDescFieldW(SQLHDESC DescriptorHandle, SQLSMALLINT RecNumber,
       case SQL_DESC_TABLE_NAME:
       case SQL_DESC_TYPE_NAME:
         uval.reset(
-            ucs2_to_utf8(static_cast<SQLWCHAR *>(Value),
+            ucs2_to_utf8(static_cast<UInt2 *>(Value),
                          BufferLength > 0 ? BufferLength / WCLEN : BufferLength,
                          &vallen, FALSE));
         break;
@@ -180,7 +180,7 @@ SQLGetDescFieldW(SQLHDESC hdesc, SQLSMALLINT iRecord, SQLSMALLINT iField,
             ODBCStatement::of(hdesc)->GetDiagnostics().Clear();
       }
       if (SQL_SUCCEEDED(ret)) {
-        blen = (SQLINTEGER)utf8_to_ucs2(rgbV.get(), blen, (SQLWCHAR *)rgbValue,
+        blen = (SQLINTEGER)utf8_to_ucs2(rgbV.get(), blen, (UInt2 *)rgbValue,
                                         cbValueMax / WCLEN);
         if (SQL_SUCCESS == ret &&
             static_cast<SQLINTEGER>(blen * WCLEN) >= cbValueMax) {
@@ -231,9 +231,9 @@ SQLGetDiagRecW(SQLSMALLINT fHandleType,
 			utf8_to_ucs2(qstr_ansi, -1, szSqlState, 6);
 		if (mtxt && tlen <= cbErrorMsgMax)
 		{
-			SQLULEN ulen = utf8_to_ucs2_lf(mtxt.get(), tlen, FALSE, szErrorMsg, cbErrorMsgMax, TRUE);
+			SQLULEN ulen = utf8_to_ucs2_lf(mtxt.get(), tlen, FALSE, (UInt2*) szErrorMsg, cbErrorMsgMax, TRUE);
 			if (ulen == (SQLULEN) -1)
-				tlen = (SQLSMALLINT) locale_to_sqlwchar((SQLWCHAR *) szErrorMsg, mtxt.get(), cbErrorMsgMax, FALSE);
+				tlen = (SQLSMALLINT) locale_to_sqlwchar((UInt2 *) szErrorMsg, mtxt.get(), cbErrorMsgMax, FALSE);
 			else
 				tlen = (SQLSMALLINT) ulen;
 			if (tlen >= cbErrorMsgMax)
@@ -306,7 +306,7 @@ SQLColAttributeW(SQLHSTMT	hstmt,
             ODBCStatement::of(hstmt)->GetDiagnostics().Clear();
       }
       if (SQL_SUCCEEDED(ret)) {
-        blen = (SQLSMALLINT)utf8_to_ucs2(rgbD.get(), blen, (SQLWCHAR *)pCharAttr,
+        blen = (SQLSMALLINT)utf8_to_ucs2(rgbD.get(), blen, (UInt2 *)pCharAttr,
                                          cbCharAttrMax / WCLEN);
         if (SQL_SUCCESS == ret &&
             static_cast<SQLSMALLINT>(blen * WCLEN) >= cbCharAttrMax) {
@@ -370,10 +370,10 @@ SQLGetDiagFieldW(SQLSMALLINT	fHandleType,
       }
       if (SQL_SUCCEEDED(ret)) {
         SQLULEN ulen = (SQLSMALLINT)utf8_to_ucs2_lf(
-            rgbD.get(), blen, FALSE, (SQLWCHAR *)rgbDiagInfo, cbDiagInfoMax / WCLEN,
+            rgbD.get(), blen, FALSE, (UInt2 *)rgbDiagInfo, cbDiagInfoMax / WCLEN,
             TRUE);
         if (ulen == (SQLULEN)-1)
-          blen = (SQLSMALLINT)locale_to_sqlwchar((SQLWCHAR *)rgbDiagInfo, rgbD.get(),
+          blen = (SQLSMALLINT)locale_to_sqlwchar((UInt2 *)rgbDiagInfo, rgbD.get(),
                                                  cbDiagInfoMax / WCLEN, FALSE);
         else
           blen = (SQLSMALLINT)ulen;

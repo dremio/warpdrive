@@ -24,6 +24,9 @@
 #include "unicode_support.h"
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
+#include <fstream>
+#include <ctype.h>
 
 #include "wdapifunc.h"
 #include "connection.h"
@@ -50,10 +53,10 @@ SQLColumnsW(HSTMT StatementHandle,
   return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() {
     c_ptr ctName, scName, tbName, clName;
     SQLLEN nmlen1, nmlen2, nmlen3, nmlen4;
-    ctName.reset(ucs2_to_utf8(CatalogName, NameLength1, &nmlen1, FALSE));
-    scName.reset(ucs2_to_utf8(SchemaName, NameLength2, &nmlen2, FALSE));
-    tbName.reset(ucs2_to_utf8(TableName, NameLength3, &nmlen3, FALSE));
-    clName.reset(ucs2_to_utf8(ColumnName, NameLength4, &nmlen4, FALSE));
+    ctName.reset(wcs_to_utf8(CatalogName, NameLength1, &nmlen1, FALSE));
+    scName.reset(wcs_to_utf8(SchemaName, NameLength2, &nmlen2, FALSE));
+    tbName.reset(wcs_to_utf8(TableName, NameLength3, &nmlen3, FALSE));
+    clName.reset(wcs_to_utf8(ColumnName, NameLength4, &nmlen4, FALSE));
     return
         WD_Columns(StatementHandle, (SQLCHAR *)ctName.get(), (SQLSMALLINT)nmlen1,
                    (SQLCHAR *)scName.get(), (SQLSMALLINT)nmlen2, (SQLCHAR *)tbName.get(),
@@ -73,9 +76,9 @@ SQLConnectW(HDBC ConnectionHandle,
   return ODBCConnection::ExecuteWithDiagnostics(ConnectionHandle, rc, [&]() {
     c_ptr svName, usName, auth;
     SQLLEN nmlen1, nmlen2, nmlen3;
-    svName.reset(ucs2_to_utf8(ServerName, NameLength1, &nmlen1, FALSE));
-    usName.reset(ucs2_to_utf8(UserName, NameLength2, &nmlen2, FALSE));
-    auth.reset(ucs2_to_utf8(Authentication, NameLength3, &nmlen3, FALSE));
+    svName.reset(wcs_to_utf8(ServerName, NameLength1, &nmlen1, FALSE));
+    usName.reset(wcs_to_utf8(UserName, NameLength2, &nmlen2, FALSE));
+    auth.reset(wcs_to_utf8(Authentication, NameLength3, &nmlen3, FALSE));
     return WD_Connect(ConnectionHandle, (SQLCHAR *)svName.get(), (SQLSMALLINT)nmlen1,
                      (SQLCHAR *)usName.get(), (SQLSMALLINT)nmlen2, (SQLCHAR *)auth.get(),
                      (SQLSMALLINT)nmlen3);
@@ -93,6 +96,7 @@ SQLDriverConnectW(HDBC hdbc,
 				  SQLSMALLINT *pcbConnStrOut,
 				  SQLUSMALLINT fDriverCompletion)
 {
+  get_convtype();
   SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLDriverConnectW";
         return ODBCConnection::ExecuteWithDiagnostics(hdbc, rc, [&]() {
@@ -103,7 +107,7 @@ SQLDriverConnectW(HDBC hdbc,
           ODBCConnection *conn = ODBCConnection::of(hdbc);
           RETCODE ret;
 
-          szIn.reset(ucs2_to_utf8(szConnStrIn, cbConnStrIn, &inlen, FALSE));
+          szIn.reset(wcs_to_utf8(szConnStrIn, cbConnStrIn, &inlen, FALSE));
           maxlen = cbConnStrOutMax;
           pCSO = NULL;
           olen = 0;
@@ -122,9 +126,9 @@ SQLDriverConnectW(HDBC hdbc,
             SQLLEN outlen = olen;
 
             if (olen < obuflen)
-              outlen = utf8_to_ucs2(szOut.get(), olen, szConnStrOut, cbConnStrOutMax);
+              outlen = utf8_to_ucs2(szOut.get(), olen, (UInt2*) szConnStrOut, cbConnStrOutMax);
             else
-              utf8_to_ucs2(szOut.get(), maxlen, szConnStrOut, cbConnStrOutMax);
+              utf8_to_ucs2(szOut.get(), maxlen, (UInt2*) szConnStrOut, cbConnStrOutMax);
             if (outlen >= cbConnStrOutMax && NULL != szConnStrOut &&
                 NULL != pcbConnStrOut) {
               MYLOG(DETAIL_LOG_LEVEL, "cbConnstrOutMax=%d pcb=%p\n", cbConnStrOutMax,
@@ -159,7 +163,7 @@ SQLBrowseConnectW(HDBC			hdbc,
           SQLSMALLINT olen;
           RETCODE ret;
 
-          szIn.reset(ucs2_to_utf8(szConnStrIn, cbConnStrIn, &inlen, FALSE));
+          szIn.reset(wcs_to_utf8(szConnStrIn, cbConnStrIn, &inlen, FALSE));
           obuflen = cbConnStrOutMax + 1;
           szOut.reset(static_cast<char *>(malloc(obuflen)));
           if (szOut)
@@ -170,7 +174,7 @@ SQLBrowseConnectW(HDBC			hdbc,
             ret = SQL_SUCCESS_WITH_INFO;
           }
           if (ret != SQL_ERROR) {
-            SQLLEN outlen = utf8_to_ucs2(szOut.get(), olen, szConnStrOut, cbConnStrOutMax);
+            SQLLEN outlen = utf8_to_ucs2(szOut.get(), olen, (UInt2*) szConnStrOut, cbConnStrOutMax);
             if (pcbConnStrOut)
               *pcbConnStrOut = (SQLSMALLINT)outlen;
           }
@@ -233,7 +237,7 @@ SQLDescribeColW(HSTMT StatementHandle,
             SQLLEN nmcount = nmlen;
 
             if (nmlen < buflen)
-              nmcount = utf8_to_ucs2(clName.get(), nmlen, ColumnName, BufferLength);
+              nmcount = utf8_to_ucs2(clName.get(), nmlen, (UInt2*) ColumnName, BufferLength);
             if (SQL_SUCCESS == ret && BufferLength > 0 && nmcount > BufferLength) {
               ret = SQL_SUCCESS_WITH_INFO;
               ODBCStatement::of(StatementHandle)->GetDiagnostics().AddTruncationWarning();
@@ -243,6 +247,24 @@ SQLDescribeColW(HSTMT StatementHandle,
           }
           return ret;
               });
+}
+
+void hexdump(void *ptr, int buflen) {
+  unsigned char *buf = (unsigned char*)ptr;
+  int i, j;
+  for (i=0; i<buflen; i+=16) {
+    printf("%06x: ", i);
+    for (j=0; j<16; j++)
+      if (i+j < buflen)
+        printf("%02x ", buf[i+j]);
+      else
+        printf("   ");
+    printf(" ");
+    for (j=0; j<16; j++)
+      if (i+j < buflen)
+        printf("%c", isprint(buf[i+j]) ? buf[i+j] : '.');
+    printf("\n");
+  }
 }
 
 WD_EXPORT_SYMBOL
@@ -258,7 +280,19 @@ SQLExecDirectW(HSTMT StatementHandle,
 
 	MYLOG(0, "Entering\n");
         return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
-          stxt.reset(ucs2_to_utf8(StatementText, TextLength, &slen, FALSE));
+          std::ofstream myfile;
+          myfile.open("/tmp/odbc_log.txt");
+          myfile << "Size of SQLWCHAR: " << sizeof(SQLWCHAR) << std::endl;
+          myfile << "TextLength: " << TextLength << std::endl;
+          myfile << "Before conversion: " << std::endl;
+          hexdump(StatementText, sizeof(SQLWCHAR) * TextLength);
+
+          myfile << "After conversion: " << std::endl;
+          stxt.reset(wcs_to_utf8(StatementText, TextLength, &slen, FALSE));
+          myfile << "slen: " << slen << std::endl;
+          hexdump(((SQLCHAR *)stxt.get()), sizeof(SQLWCHAR) * TextLength * 4);
+
+          myfile.close();
           return WD_ExecDirect(StatementHandle, (SQLCHAR *)stxt.get(),
                               (SQLINTEGER)slen, flag);
   });
@@ -302,7 +336,7 @@ SQLGetCursorNameW(HSTMT StatementHandle,
             SQLLEN nmcount = clen;
 
             if (clen < buflen)
-              nmcount = utf8_to_ucs2(crName.get(), clen, CursorName, BufferLength);
+              nmcount = utf8_to_ucs2(crName.get(), clen, (UInt2*) CursorName, BufferLength);
             if (SQL_SUCCESS == ret && nmcount > BufferLength) {
               stmt->GetDiagnostics().AddTruncationWarning();
               ret = SQL_SUCCESS_WITH_INFO;
@@ -340,7 +374,7 @@ SQLPrepareW(HSTMT StatementHandle,
           SQLLEN slen;
 
           MYLOG(0, "Entering\n");
-          stxt.reset(ucs2_to_utf8(StatementText, TextLength, &slen, FALSE));
+          stxt.reset(wcs_to_utf8(StatementText, TextLength, &slen, FALSE));
           return WD_Prepare(StatementHandle, (SQLCHAR *)stxt.get(), (SQLINTEGER)slen);
               });
 }
@@ -356,7 +390,7 @@ SQLSetCursorNameW(HSTMT StatementHandle,
 
 	MYLOG(0, "Entering\n");
         return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, ret, [&]() -> SQLRETURN {
-          crName.reset(ucs2_to_utf8(CursorName, NameLength, &nlen, FALSE));
+          crName.reset(wcs_to_utf8(CursorName, NameLength, &nlen, FALSE));
           throw driver::odbcabstraction::DriverException("Unsupported function", "HYC00");
           ret = WD_SetCursorName(StatementHandle, (SQLCHAR *)crName.get(),
                                  (SQLSMALLINT)nlen);
@@ -384,9 +418,9 @@ SQLSpecialColumnsW(HSTMT StatementHandle,
 
           MYLOG(0, "Entering\n");
 
-          ctName.reset(ucs2_to_utf8(CatalogName, NameLength1, &nmlen1, lower_id));
-          scName.reset(ucs2_to_utf8(SchemaName, NameLength2, &nmlen2, lower_id));
-          tbName.reset(ucs2_to_utf8(TableName, NameLength3, &nmlen3, lower_id));
+          ctName.reset(wcs_to_utf8(CatalogName, NameLength1, &nmlen1, lower_id));
+          scName.reset(wcs_to_utf8(SchemaName, NameLength2, &nmlen2, lower_id));
+          tbName.reset(wcs_to_utf8(TableName, NameLength3, &nmlen3, lower_id));
           throw driver::odbcabstraction::DriverException("Unsupported function", "HYC00");
           /*	else
                           ret = WD_SpecialColumns(StatementHandle, IdentifierType,
@@ -414,9 +448,9 @@ SQLStatisticsW(HSTMT StatementHandle,
           BOOL lower_id = FALSE;
 
           MYLOG(0, "Entering\n");
-          ctName.reset(ucs2_to_utf8(CatalogName, NameLength1, &nmlen1, lower_id));
-          scName.reset(ucs2_to_utf8(SchemaName, NameLength2, &nmlen2, lower_id));
-          tbName.reset(ucs2_to_utf8(TableName, NameLength3, &nmlen3, lower_id));
+          ctName.reset(wcs_to_utf8(CatalogName, NameLength1, &nmlen1, lower_id));
+          scName.reset(wcs_to_utf8(SchemaName, NameLength2, &nmlen2, lower_id));
+          tbName.reset(wcs_to_utf8(TableName, NameLength3, &nmlen3, lower_id));
           throw driver::odbcabstraction::DriverException("Unsupported function", "HYC00");
           ret = WD_Statistics(StatementHandle, (SQLCHAR *)ctName.get(),
                               (SQLSMALLINT)nmlen1, (SQLCHAR *)scName.get(),
@@ -441,10 +475,10 @@ SQLTablesW(HSTMT StatementHandle,
 
 	MYLOG(0, "Entering\n");
         return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
-          ctName.reset(ucs2_to_utf8(CatalogName, NameLength1, &nmlen1, FALSE));
-          scName.reset(ucs2_to_utf8(SchemaName, NameLength2, &nmlen2, FALSE));
-          tbName.reset(ucs2_to_utf8(TableName, NameLength3, &nmlen3, FALSE));
-          tbType.reset(ucs2_to_utf8(TableType, NameLength4, &nmlen4, FALSE));
+          ctName.reset(wcs_to_utf8(CatalogName, NameLength1, &nmlen1, FALSE));
+          scName.reset(wcs_to_utf8(SchemaName, NameLength2, &nmlen2, FALSE));
+          tbName.reset(wcs_to_utf8(TableName, NameLength3, &nmlen3, FALSE));
+          tbType.reset(wcs_to_utf8(TableType, NameLength4, &nmlen4, FALSE));
           return WD_Tables(
               StatementHandle, (SQLCHAR *)ctName.get(), (SQLSMALLINT)nmlen1,
               (SQLCHAR *)scName.get(), (SQLSMALLINT)nmlen2, (SQLCHAR *)tbName.get(),
@@ -474,10 +508,10 @@ SQLColumnPrivilegesW(HSTMT			hstmt,
 
 	MYLOG(0, "Entering\n");
         return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
-          ctName.reset(ucs2_to_utf8(szCatalogName, cbCatalogName, &nmlen1, lower_id));
-          scName.reset(ucs2_to_utf8(szSchemaName, cbSchemaName, &nmlen2, lower_id));
-          tbName.reset(ucs2_to_utf8(szTableName, cbTableName, &nmlen3, lower_id));
-          clName.reset(ucs2_to_utf8(szColumnName, cbColumnName, &nmlen4, lower_id));
+          ctName.reset(wcs_to_utf8(szCatalogName, cbCatalogName, &nmlen1, lower_id));
+          scName.reset(wcs_to_utf8(szSchemaName, cbSchemaName, &nmlen2, lower_id));
+          tbName.reset(wcs_to_utf8(szTableName, cbTableName, &nmlen3, lower_id));
+          clName.reset(wcs_to_utf8(szColumnName, cbColumnName, &nmlen4, lower_id));
           throw driver::odbcabstraction::DriverException("Unsupported function", "HYC00");
           return WD_ColumnPrivileges(hstmt, (SQLCHAR *)ctName.get(), (SQLSMALLINT)nmlen1,
                                     (SQLCHAR *)scName.get(), (SQLSMALLINT)nmlen2,
@@ -511,13 +545,13 @@ SQLForeignKeysW(HSTMT			hstmt,
 
 	MYLOG(0, "Entering\n");
         return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
-          ctName.reset(ucs2_to_utf8(szPkCatalogName, cbPkCatalogName, &nmlen1, lower_id));
-          scName.reset(ucs2_to_utf8(szPkSchemaName, cbPkSchemaName, &nmlen2, lower_id));
-          tbName.reset(ucs2_to_utf8(szPkTableName, cbPkTableName, &nmlen3, lower_id));
+          ctName.reset(wcs_to_utf8(szPkCatalogName, cbPkCatalogName, &nmlen1, lower_id));
+          scName.reset(wcs_to_utf8(szPkSchemaName, cbPkSchemaName, &nmlen2, lower_id));
+          tbName.reset(wcs_to_utf8(szPkTableName, cbPkTableName, &nmlen3, lower_id));
           fkctName.reset(
-              ucs2_to_utf8(szFkCatalogName, cbFkCatalogName, &nmlen4, lower_id));
-          fkscName.reset(ucs2_to_utf8(szFkSchemaName, cbFkSchemaName, &nmlen5, lower_id));
-          fktbName.reset(ucs2_to_utf8(szFkTableName, cbFkTableName, &nmlen6, lower_id));
+              wcs_to_utf8(szFkCatalogName, cbFkCatalogName, &nmlen4, lower_id));
+          fkscName.reset(wcs_to_utf8(szFkSchemaName, cbFkSchemaName, &nmlen5, lower_id));
+          fktbName.reset(wcs_to_utf8(szFkTableName, cbFkTableName, &nmlen6, lower_id));
           throw driver::odbcabstraction::DriverException("Unsupported function", "HYC00");
           /*		ret = WD_ForeignKeys(hstmt,
                                                                           (SQLCHAR *)
@@ -549,7 +583,7 @@ SQLNativeSqlW(HDBC			hdbc,
 
 	MYLOG(0, "Entering\n");
         return ODBCConnection::ExecuteWithDiagnostics(hdbc, rc, [&]() -> SQLRETURN {
-          szIn.reset(ucs2_to_utf8(szSqlStrIn, cbSqlStrIn, &slen, FALSE));
+          szIn.reset(wcs_to_utf8(szSqlStrIn, cbSqlStrIn, &slen, FALSE));
           buflen = 3 * cbSqlStrMax;
           if (buflen > 0)
             szOut.reset(static_cast<char *>(malloc(buflen)));
@@ -569,7 +603,7 @@ SQLNativeSqlW(HDBC			hdbc,
             SQLLEN szcount = olen;
 
             if (olen < buflen)
-              szcount = utf8_to_ucs2(szOut.get(), olen, szSqlStr, cbSqlStrMax);
+              szcount = utf8_to_ucs2(szOut.get(), olen, (UInt2*) szSqlStr, cbSqlStrMax);
             if (SQL_SUCCESS == ret && szcount > cbSqlStrMax) {
               ret = SQL_SUCCESS_WITH_INFO;
               ODBCConnection::of(hdbc)->GetDiagnostics().AddTruncationWarning();
@@ -600,9 +634,9 @@ SQLPrimaryKeysW(HSTMT			hstmt,
           BOOL lower_id = FALSE;
 
           MYLOG(0, "Entering\n");
-          ctName.reset(ucs2_to_utf8(szCatalogName, cbCatalogName, &nmlen1, lower_id));
-          scName.reset(ucs2_to_utf8(szSchemaName, cbSchemaName, &nmlen2, lower_id));
-          tbName.reset(ucs2_to_utf8(szTableName, cbTableName, &nmlen3, lower_id));
+          ctName.reset(wcs_to_utf8(szCatalogName, cbCatalogName, &nmlen1, lower_id));
+          scName.reset(wcs_to_utf8(szSchemaName, cbSchemaName, &nmlen2, lower_id));
+          tbName.reset(wcs_to_utf8(szTableName, cbTableName, &nmlen3, lower_id));
           throw driver::odbcabstraction::DriverException("Unsupported function", "HYC00");
           /*else
                   ret = WD_PrimaryKeys(hstmt,
@@ -637,10 +671,10 @@ SQLProcedureColumnsW(HSTMT			hstmt,
 
 	MYLOG(0, "Entering\n");
         return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
-          ctName.reset(ucs2_to_utf8(szCatalogName, cbCatalogName, &nmlen1, lower_id));
-          scName.reset(ucs2_to_utf8(szSchemaName, cbSchemaName, &nmlen2, lower_id));
-          prName.reset(ucs2_to_utf8(szProcName, cbProcName, &nmlen3, lower_id));
-          clName.reset(ucs2_to_utf8(szColumnName, cbColumnName, &nmlen4, lower_id));
+          ctName.reset(wcs_to_utf8(szCatalogName, cbCatalogName, &nmlen1, lower_id));
+          scName.reset(wcs_to_utf8(szSchemaName, cbSchemaName, &nmlen2, lower_id));
+          prName.reset(wcs_to_utf8(szProcName, cbProcName, &nmlen3, lower_id));
+          clName.reset(wcs_to_utf8(szColumnName, cbColumnName, &nmlen4, lower_id));
           throw driver::odbcabstraction::DriverException("Unsupported function", "HYC00");
           /*	else
                           ret = WD_ProcedureColumns(hstmt,
@@ -671,9 +705,9 @@ SQLProceduresW(HSTMT		hstmt,
 
 	MYLOG(0, "Entering\n");
         return ODBCStatement::ExecuteWithDiagnostics(hstmt, ret, [&]() -> SQLRETURN {
-          ctName.reset(ucs2_to_utf8(szCatalogName, cbCatalogName, &nmlen1, lower_id));
-          scName.reset(ucs2_to_utf8(szSchemaName, cbSchemaName, &nmlen2, lower_id));
-          prName.reset(ucs2_to_utf8(szProcName, cbProcName, &nmlen3, lower_id));
+          ctName.reset(wcs_to_utf8(szCatalogName, cbCatalogName, &nmlen1, lower_id));
+          scName.reset(wcs_to_utf8(szSchemaName, cbSchemaName, &nmlen2, lower_id));
+          prName.reset(wcs_to_utf8(szProcName, cbProcName, &nmlen3, lower_id));
           throw driver::odbcabstraction::DriverException("Unsupported function", "HYC00");
           /*	else
                           ret = WD_Procedures(hstmt,
@@ -704,9 +738,9 @@ SQLTablePrivilegesW(HSTMT			hstmt,
 
 	MYLOG(0, "Entering\n");
         return ODBCStatement::ExecuteWithDiagnostics(hstmt, ret, [&]() -> SQLRETURN {
-          ctName.reset(ucs2_to_utf8(szCatalogName, cbCatalogName, &nmlen1, lower_id));
-          scName.reset(ucs2_to_utf8(szSchemaName, cbSchemaName, &nmlen2, lower_id));
-          tbName.reset(ucs2_to_utf8(szTableName, cbTableName, &nmlen3, lower_id));
+          ctName.reset(wcs_to_utf8(szCatalogName, cbCatalogName, &nmlen1, lower_id));
+          scName.reset(wcs_to_utf8(szSchemaName, cbSchemaName, &nmlen2, lower_id));
+          tbName.reset(wcs_to_utf8(szTableName, cbTableName, &nmlen3, lower_id));
           throw driver::odbcabstraction::DriverException("Unsupported function", "HYC00");
           /*	else
                           ret = WD_TablePrivileges(hstmt,
