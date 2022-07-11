@@ -231,7 +231,7 @@ SQLGetDiagRecW(SQLSMALLINT fHandleType,
 			utf8_to_ucs2(qstr_ansi, -1, szSqlState, 6);
 		if (mtxt && tlen <= cbErrorMsgMax)
 		{
-			SQLULEN ulen = utf8_to_ucs2_lf(mtxt.get(), tlen, FALSE, szErrorMsg, cbErrorMsgMax, TRUE);
+			SQLULEN ulen = utf8_to_ucs2_lf(mtxt.get(), tlen, FALSE, (UInt2*) szErrorMsg, cbErrorMsgMax, TRUE);
 			if (ulen == (SQLULEN) -1)
 				tlen = (SQLSMALLINT) locale_to_sqlwchar((SQLWCHAR *) szErrorMsg, mtxt.get(), cbErrorMsgMax, FALSE);
 			else
@@ -370,10 +370,10 @@ SQLGetDiagFieldW(SQLSMALLINT	fHandleType,
       }
       if (SQL_SUCCEEDED(ret)) {
         SQLULEN ulen = (SQLSMALLINT)utf8_to_ucs2_lf(
-            rgbD.get(), blen, FALSE, (SQLWCHAR *)rgbDiagInfo, cbDiagInfoMax / WCLEN,
+            rgbD.get(), blen, FALSE, (UInt2 *)rgbDiagInfo, cbDiagInfoMax / WCLEN,
             TRUE);
         if (ulen == (SQLULEN)-1)
-          blen = (SQLSMALLINT)locale_to_sqlwchar((SQLWCHAR *)rgbDiagInfo, rgbD.get(),
+          blen = (SQLSMALLINT)locale_to_sqlwchar((UInt2 *)rgbDiagInfo, rgbD.get(),
                                                  cbDiagInfoMax / WCLEN, FALSE);
         else
           blen = (SQLSMALLINT)ulen;
