@@ -24,6 +24,8 @@
 #include "unicode_support.h"
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
+#include <ctype.h>
 
 #include "wdapifunc.h"
 #include "connection.h"
@@ -245,6 +247,24 @@ SQLDescribeColW(HSTMT StatementHandle,
               });
 }
 
+void hexdump(void *ptr, int buflen) {
+  unsigned char *buf = (unsigned char*)ptr;
+  int i, j;
+  for (i=0; i<buflen; i+=16) {
+    printf("%06x: ", i);
+    for (j=0; j<16; j++)
+      if (i+j < buflen)
+        printf("%02x ", buf[i+j]);
+      else
+        printf("   ");
+    printf(" ");
+    for (j=0; j<16; j++)
+      if (i+j < buflen)
+        printf("%c", isprint(buf[i+j]) ? buf[i+j] : '.');
+    printf("\n");
+  }
+}
+
 WD_EXPORT_SYMBOL
 RETCODE  SQL_API
 SQLExecDirectW(HSTMT StatementHandle,
@@ -258,7 +278,14 @@ SQLExecDirectW(HSTMT StatementHandle,
 
 	MYLOG(0, "Entering\n");
         return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
-          stxt.reset(ucs2_to_utf8(StatementText, TextLength, &slen, FALSE));
+          std::cout << "Size of SQLWCHAR: " << sizeof(SQLWCHAR) << std::endl;
+          std::cout << "Before conversion: " << std::endl;
+          hexdump(StatementText, sizeof(SQLWCHAR) * TextLength);
+
+          std::cout << "After conversion: " << std::endl;
+          stxt.reset(wcs_to_utf8(StatementText, TextLength, &slen, FALSE));
+          hexdump(((SQLCHAR *)stxt.get()), sizeof(SQLWCHAR) * TextLength * 4);
+
           return WD_ExecDirect(StatementHandle, (SQLCHAR *)stxt.get(),
                               (SQLINTEGER)slen, flag);
   });
