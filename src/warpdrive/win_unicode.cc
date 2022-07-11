@@ -22,7 +22,7 @@
 #define	FORMAT_SIZE_T	"%zu"
 #endif
 
-#if (defined(__STDC_ISO_10646__) && defined(HAVE_MBSTOWCS) && defined(HAVE_WCSTOMBS)) || defined(WIN32)
+#if (defined(__STDC_ISO_10646__) && defined(HAVE_MBSTOWCS) && defined(HAVE_WCSTOMBS)) || defined(WIN32) || true
 #define	__WCS_ISO10646__
 static	BOOL	use_wcs = FALSE;
 #endif
@@ -787,7 +787,6 @@ utf8_to_wcs_lf(const char *utf8str, SQLLEN ilen, BOOL lfconv,
 	return -1;
 }
 
-static
 char *wcs_to_utf8(const wchar_t *wcsstr, SQLLEN ilen, SQLLEN *olen, BOOL lower_identifier)
 {
 	switch (get_convtype())
