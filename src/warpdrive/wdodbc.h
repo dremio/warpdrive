@@ -132,13 +132,7 @@ void		debug_memory_check(void);
 #define GetWindowLongPtr(hdlg, DWLP_USER) GetWindowLong(hdlg, DWLP_USER);
 #endif
 
-#if defined(WIN32)
 #include <odbcinst.h>
-#elif defined(__APPLE__)
-#include <iodbcinst.h>
-#else
-#include <odbcinst.h>
-#endif
 
 #ifdef	__cplusplus
 extern "C" {
@@ -416,6 +410,8 @@ BOOL isSqlServr(void);
 #define PATH_MAX       1024
 #endif /* _MAX_PATH */
 #endif /* PATH_MAX */
+
+typedef unsigned short SQLWCHAR;
 
 typedef struct ConnectionClass_ ConnectionClass;
 typedef struct StatementClass_ StatementClass;
