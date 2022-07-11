@@ -15,6 +15,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <dlfcn.h>
+#include <iostream>
+#include <fstream>
 
 #ifdef	WIN32
 #define	FORMAT_SIZE_T	"%Iu"
@@ -22,7 +25,7 @@
 #define	FORMAT_SIZE_T	"%zu"
 #endif
 
-#if (defined(__STDC_ISO_10646__) && defined(HAVE_MBSTOWCS) && defined(HAVE_WCSTOMBS)) || defined(WIN32)
+#if (defined(__STDC_ISO_10646__) && defined(HAVE_MBSTOWCS) && defined(HAVE_WCSTOMBS)) || defined(WIN32) || true
 #define	__WCS_ISO10646__
 static	BOOL	use_wcs = FALSE;
 #endif
@@ -38,6 +41,28 @@ static	int	convtype = -1;
 int get_convtype(void)
 {
 	const UCHAR *cdt;
+
+#if defined(__APPLE__)
+  if (convtype < 0) {
+    std::ofstream myfile;
+    myfile.open("/tmp/odbc_log.txt");
+    myfile << "Apple detected, detecting iODBC..." << std::endl;
+
+    void* handle = dlopen("odbc", RTLD_NOW | RTLD_NOLOAD); // load the driver manager DLL
+    if (dlsym(handle, "SQLGetInfoW")) {
+      myfile << "iODBC found, using utf32" << std::endl;
+      convtype = WCSTYPE_UTF32_LE;
+    } else {
+      myfile << "iODBC not found, using utf16" << std::endl;
+      convtype = WCSTYPE_UTF16_LE;
+    }
+    use_wcs = TRUE;
+
+    myfile.close();
+    dlclose(handle);
+    return convtype;
+  }
+#endif
 
 #if defined(__WCS_ISO10646__)
 	if (convtype < 0)
@@ -787,7 +812,6 @@ utf8_to_wcs_lf(const char *utf8str, SQLLEN ilen, BOOL lfconv,
 	return -1;
 }
 
-static
 char *wcs_to_utf8(const wchar_t *wcsstr, SQLLEN ilen, SQLLEN *olen, BOOL lower_identifier)
 {
 	switch (get_convtype())
