@@ -542,7 +542,7 @@ else()
     add_compile_definitions(WITH_UNIXODBC)
     set(ODBC_LIBRARIES odbcinst)
   elseif(MSVC)
-  set(ODBC_LIBRARIES odbccp32)    
+  set(ODBC_LIBRARIES odbccp32)
   endif()
 endif()
 
