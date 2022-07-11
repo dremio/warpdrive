@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <dlfcn.h>
 
 #ifdef	WIN32
 #define	FORMAT_SIZE_T	"%Iu"
@@ -22,7 +23,7 @@
 #define	FORMAT_SIZE_T	"%zu"
 #endif
 
-#if (defined(__STDC_ISO_10646__) && defined(HAVE_MBSTOWCS) && defined(HAVE_WCSTOMBS)) || defined(WIN32)
+#if (defined(__STDC_ISO_10646__) && defined(HAVE_MBSTOWCS) && defined(HAVE_WCSTOMBS)) || defined(WIN32) || true
 #define	__WCS_ISO10646__
 static	BOOL	use_wcs = FALSE;
 #endif
@@ -38,6 +39,21 @@ static	int	convtype = -1;
 int get_convtype(void)
 {
 	const UCHAR *cdt;
+
+#if defined(__APPLE__)
+  if (convtype < 0) {
+    void* handle = dlopen("odbc", RTLD_NOW | RTLD_NOLOAD); // load the driver manager DLL
+    if (dlsym(handle, "iodbc_version")) {
+      convtype = WCSTYPE_UTF32_LE;
+    } else {
+      convtype = WCSTYPE_UTF32_LE;
+    }
+    use_wcs = TRUE;
+
+    dlclose(handle);
+    return convtype;
+  }
+#endif
 
 #if defined(__WCS_ISO10646__)
 	if (convtype < 0)
@@ -787,7 +803,6 @@ utf8_to_wcs_lf(const char *utf8str, SQLLEN ilen, BOOL lfconv,
 	return -1;
 }
 
-static
 char *wcs_to_utf8(const wchar_t *wcsstr, SQLLEN ilen, SQLLEN *olen, BOOL lower_identifier)
 {
 	switch (get_convtype())
