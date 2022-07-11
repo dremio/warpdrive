@@ -132,13 +132,7 @@ void		debug_memory_check(void);
 #define GetWindowLongPtr(hdlg, DWLP_USER) GetWindowLong(hdlg, DWLP_USER);
 #endif
 
-#if defined(WIN32)
 #include <odbcinst.h>
-#elif defined(__APPLE__)
-#include <iodbcinst.h>
-#else
-#include <odbcinst.h>
-#endif
 
 #ifdef	__cplusplus
 extern "C" {
@@ -190,11 +184,9 @@ typedef	long	ssize_t;
 #if (SIZEOF_VOID_P == SIZEOF_LONG) /* ILP32 or LP64 */
 typedef	long 	LONG_PTR;
 typedef	unsigned long 	ULONG_PTR;
-#elif defined (HAVE_LONG_LONG) /* LLP64 */
+#else
 typedef	long long LONG_PTR;
 typedef	unsigned long long ULONG_PTR;
-#else /* SIZEOF_VOID_P */
-#error appropriate long pointer type not found
 #endif /* SIZEOF_VOID_P */
 #if (SIZEOF_LONG == 8) /* LP64 */
 #define	FORMAT_INTEGER	"%d"	/* SQLINTEGER */
