@@ -24,6 +24,7 @@
 #include "unicode_support.h"
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
 
 #include "wdapifunc.h"
 #include "connection.h"
@@ -258,7 +259,21 @@ SQLExecDirectW(HSTMT StatementHandle,
 
 	MYLOG(0, "Entering\n");
         return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
-          stxt.reset(ucs2_to_utf8(StatementText, TextLength, &slen, FALSE));
+
+          std::cout << "Before conversion: ";
+          for (int i = 0; StatementText[i]; ++i) {
+            std::cout << std::hex << StatementText[i];
+          }
+          std::cout << std::endl;
+
+          std::cout << "After conversion: ";
+          stxt.reset(wcs_to_utf8(StatementText, TextLength, &slen, FALSE));
+
+          for (int i = 0; ((SQLCHAR *)stxt.get())[i]; ++i) {
+            std::cout << std::hex << ((SQLCHAR *)stxt.get())[i];
+          }
+          std::cout << std::endl;
+
           return WD_ExecDirect(StatementHandle, (SQLCHAR *)stxt.get(),
                               (SQLINTEGER)slen, flag);
   });
