@@ -258,7 +258,7 @@ SQLExecDirectW(HSTMT StatementHandle,
 
 	MYLOG(0, "Entering\n");
         return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
-          stxt.reset(ucs2_to_utf8(StatementText, TextLength, &slen, FALSE));
+          stxt.reset(wcs_to_utf8(StatementText, TextLength, &slen, FALSE));
           return WD_ExecDirect(StatementHandle, (SQLCHAR *)stxt.get(),
                               (SQLINTEGER)slen, flag);
   });
