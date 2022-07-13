@@ -306,7 +306,7 @@ extern int posix_snprintf(char *buf, size_t size, const char *format, ...);
 
 #ifdef	UNICODE_SUPPORT
 #define WCLEN	sizeof(SQLWCHAR)
-SQLULEN ucs2strlen(const SQLWCHAR *);
+SQLULEN wcsstrlen(const SQLWCHAR *);
 #else
 #undef	SQL_WCHAR
 #undef	SQL_WVARCHAR
