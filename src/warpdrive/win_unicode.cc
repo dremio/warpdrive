@@ -22,7 +22,7 @@
 #define	FORMAT_SIZE_T	"%zu"
 #endif
 
-#if (defined(__STDC_ISO_10646__) && defined(HAVE_MBSTOWCS) && defined(HAVE_WCSTOMBS)) || defined(WIN32)
+#if (defined(__STDC_ISO_10646__) && defined(HAVE_MBSTOWCS) && defined(HAVE_WCSTOMBS)) || defined(WIN32) || true
 #define	__WCS_ISO10646__
 static	BOOL	use_wcs = FALSE;
 #endif
@@ -130,7 +130,7 @@ SQLULEN	ucs2strlen(const SQLWCHAR *ucs2str)
 		;
 	return len;
 }
-char *ucs2_to_utf8(const SQLWCHAR *ucs2str, SQLLEN ilen, SQLLEN *olen, BOOL lower_identifier)
+char *ucs2_to_utf8(const UInt2 *ucs2str, SQLLEN ilen, SQLLEN *olen, BOOL lower_identifier)
 {
 	char *	utf8str;
 	int	len = 0;
@@ -787,13 +787,12 @@ utf8_to_wcs_lf(const char *utf8str, SQLLEN ilen, BOOL lfconv,
 	return -1;
 }
 
-static
-char *wcs_to_utf8(const wchar_t *wcsstr, SQLLEN ilen, SQLLEN *olen, BOOL lower_identifier)
+char *wcs_to_utf8(const SQLWCHAR *wcsstr, SQLLEN ilen, SQLLEN *olen, BOOL lower_identifier)
 {
 	switch (get_convtype())
 	{
 		case WCSTYPE_UTF16_LE:
-			return ucs2_to_utf8((const SQLWCHAR *) wcsstr, ilen, olen, lower_identifier);
+			return ucs2_to_utf8((const UInt2 *) wcsstr, ilen, olen, lower_identifier);
 		case WCSTYPE_UTF32_LE:
 			return ucs4_to_utf8((const UInt4 *) wcsstr, ilen, olen, lower_identifier);
 	}
