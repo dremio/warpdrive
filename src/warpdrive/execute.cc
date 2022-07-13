@@ -1147,7 +1147,7 @@ WD_PutData(HSTMT hstmt,
 #ifdef	UNICODE_SUPPORT
 		if (SQL_C_WCHAR == ctype)
 		{
-			putlen = WCLEN * ucs2strlen((SQLWCHAR *) rgbValue);
+			putlen = WCLEN * wcsstrlen((SQLWCHAR *) rgbValue);
 			lenset = TRUE;
 		}
 		else
