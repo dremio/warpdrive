@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <iostream>
 
 #ifdef	WIN32
 #define	FORMAT_SIZE_T	"%Iu"
@@ -22,7 +23,7 @@
 #define	FORMAT_SIZE_T	"%zu"
 #endif
 
-#if (defined(__STDC_ISO_10646__) && defined(HAVE_MBSTOWCS) && defined(HAVE_WCSTOMBS)) || defined(WIN32)
+#if (defined(__STDC_ISO_10646__) && defined(HAVE_MBSTOWCS) && defined(HAVE_WCSTOMBS)) || defined(WIN32) || true
 #define	__WCS_ISO10646__
 static	BOOL	use_wcs = FALSE;
 #endif
@@ -96,6 +97,7 @@ int get_convtype(void)
 #endif /* __CHAR16_UTF_16__ */
 	if (convtype < 0)
 		convtype = CONVTYPE_UNKNOWN;	/* unknown */
+
 	return convtype;
 }
 
@@ -123,14 +125,14 @@ int get_convtype(void)
 
 static int little_endian = -1;
 
-SQLULEN	ucs2strlen(const SQLWCHAR *ucs2str)
+SQLULEN	ucs2strlen(const UInt2 *ucs2str)
 {
 	SQLULEN	len;
 	for (len = 0; ucs2str[len]; len++)
 		;
 	return len;
 }
-char *ucs2_to_utf8(const SQLWCHAR *ucs2str, SQLLEN ilen, SQLLEN *olen, BOOL lower_identifier)
+char *ucs2_to_utf8(const UInt2 *ucs2str, SQLLEN ilen, SQLLEN *olen, BOOL lower_identifier)
 {
 	char *	utf8str;
 	int	len = 0;
@@ -156,7 +158,7 @@ MYPRINTF(0, " newlen=" FORMAT_LEN, ilen);
 		int	i = 0;
 		UInt2	byte2code;
 		Int4	byte4code, surrd1, surrd2;
-		const SQLWCHAR	*wstr;
+		const UInt2	*wstr;
 
 		for (i = 0, wstr = ucs2str; i < ilen; i++, wstr++)
 		{
@@ -722,7 +724,7 @@ MYLOG(0, " ilen=" FORMAT_LEN " bufcount=%d\n", ilen, bufcount);
 	return outlen;
 }
 static
-int ucs2_to_ucs4(const SQLWCHAR *ucs2str, SQLLEN ilen, unsigned int *ucs4str, int bufcount)
+int ucs2_to_ucs4(const UInt2 *ucs2str, SQLLEN ilen, unsigned int *ucs4str, int bufcount)
 {
 	int			outlen = 0, i;
 	UCHAR		*ucdt;
@@ -787,18 +789,55 @@ utf8_to_wcs_lf(const char *utf8str, SQLLEN ilen, BOOL lfconv,
 	return -1;
 }
 
-static
-char *wcs_to_utf8(const wchar_t *wcsstr, SQLLEN ilen, SQLLEN *olen, BOOL lower_identifier)
+void hexdump(void *ptr, int buflen) {
+  unsigned char *buf = (unsigned char*)ptr;
+  int i, j;
+  for (i=0; i<buflen; i+=16) {
+    printf("%06x: ", i);
+    for (j=0; j<16; j++)
+      if (i+j < buflen)
+        printf("%02x ", buf[i+j]);
+      else
+        printf("   ");
+    printf(" ");
+    for (j=0; j<16; j++)
+      if (i+j < buflen)
+        printf("%c", isprint(buf[i+j]) ? buf[i+j] : '.');
+    printf("\n");
+  }
+}
+
+char *wcs_to_utf8(const SQLWCHAR *wcsstr, SQLLEN ilen, SQLLEN *olen, BOOL lower_identifier)
 {
-	switch (get_convtype())
+  int i = get_convtype();
+  i = WCSTYPE_UTF16_LE; // TODO: Test
+
+  hexdump((void*) wcsstr, ilen * sizeof(SQLWCHAR));
+
+  switch (i)
 	{
 		case WCSTYPE_UTF16_LE:
-			return ucs2_to_utf8((const SQLWCHAR *) wcsstr, ilen, olen, lower_identifier);
+      std::cerr << "Got WCSTYPE_UTF16_LE: " << i << std::endl;
+			return ucs2_to_utf8((const UInt2 *) wcsstr, ilen, olen, lower_identifier);
 		case WCSTYPE_UTF32_LE:
+      std::cerr << "Got WCSTYPE_UTF32_LE: " << i << std::endl;
 			return ucs4_to_utf8((const UInt4 *) wcsstr, ilen, olen, lower_identifier);
 	}
 
 	return NULL;
+}
+
+SQLULEN wcsstrlen(const SQLWCHAR *wcsstr)
+{
+  switch (get_convtype())
+  {
+    case WCSTYPE_UTF16_LE:
+      return ucs2strlen((const UInt2 *) wcsstr);
+    case WCSTYPE_UTF32_LE:
+      return ucs4strlen((const UInt4 *) wcsstr);
+  }
+
+  return 0;
 }
 
 /*
@@ -1017,7 +1056,7 @@ SQLLEN bindpara_msg_to_utf8(const char *ldt, char **wcsbuf, SQLLEN used)
 #if defined(__WCS_ISO10646__)
 	if (use_wcs)
 	{
-		wchar_t	*wcsdt = (wchar_t *) malloc((count + 1) * sizeof(wchar_t));
+		SQLWCHAR	*wcsdt = (SQLWCHAR *) malloc((count + 1) * sizeof(wchar_t));
 
 		if ((l = msgtowstr(ldt_nts, (wchar_t *) wcsdt, count + 1)) >= 0)
 			utf8 = wcs_to_utf8(wcsdt, -1, &l, FALSE);
@@ -1058,7 +1097,7 @@ SQLLEN bindpara_wchar_to_msg(const SQLWCHAR *utf16, char **wcsbuf, SQLLEN used)
 
 	if (SQL_NTS == used)
 	{
-		count = ucs2strlen(utf16);
+		count = wcsstrlen(utf16);
 		utf16_nts = (SQLWCHAR *) utf16;
 	}
 	else if (used < 0)
@@ -1092,7 +1131,7 @@ MYLOG(0, "\n");
 		{
 			unsigned int	*utf32 = (unsigned int *) malloc((count + 1) * sizeof(unsigned int));
 
-			l = ucs2_to_ucs4(utf16_nts, -1, utf32, count + 1);
+			l = ucs2_to_ucs4((UInt2 *)utf16_nts, -1, utf32, count + 1);
 			if ((l = wstrtomsg((wchar_t *)utf32, NULL, 0)) >= 0)
 			{
 				ldt = (char *) malloc(l + 1);
