@@ -128,7 +128,7 @@ SQLSetDescFieldW(SQLHDESC DescriptorHandle, SQLSMALLINT RecNumber,
       case SQL_DESC_TABLE_NAME:
       case SQL_DESC_TYPE_NAME:
         uval.reset(
-            ucs2_to_utf8(static_cast<SQLWCHAR *>(Value),
+            wcs_to_utf8(static_cast<SQLWCHAR *>(Value),
                          BufferLength > 0 ? BufferLength / WCLEN : BufferLength,
                          &vallen, FALSE));
         break;
