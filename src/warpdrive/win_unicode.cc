@@ -1305,14 +1305,4 @@ MYLOG(0, " return=" FORMAT_LEN "\n", l);
 	return l;
 }
 
-SQLLEN utf8_to_locale(char *ldt, const char *utf8dt, size_t n, BOOL lf_conv)
-{
-	SQLLEN	l;
-	char * tmpbuf;
-
-	if ((l = bindcol_localize_estimate(utf8dt, lf_conv, &tmpbuf)) >= 0)
-		l = bindcol_localize_exec(ldt, n, lf_conv, &tmpbuf);
-
-	return l;
-}
 #endif	/* UNICODE_SUPPORT */
