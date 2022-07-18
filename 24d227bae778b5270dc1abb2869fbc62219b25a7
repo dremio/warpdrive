@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "bf39e88e_86f33fc6",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-07-18T13:56:51Z",
+      "side": 1,
+      "message": "Self +2 since this is just consuming flightsql-odbc changes",
+      "revId": "24d227bae778b5270dc1abb2869fbc62219b25a7",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
