@@ -66,11 +66,32 @@ endif()
 
 find_package(Boost REQUIRED COMPONENTS locale)
 
+include(FetchContent)
+
+FetchContent_Declare(
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+        GIT_TAG        v1.10.0
+)
+FetchContent_GetProperties(spdlog)
+if (NOT spdlog_POPULATED)
+  FetchContent_Populate(spdlog)
+  add_subdirectory(${spdlog_SOURCE_DIR} ${spdlog_BINARY_DIR})
+endif ()
+
+FetchContent_Declare(
+        fmt
+        GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+        GIT_TAG 9.0.0
+)
+FetchContent_MakeAvailable(fmt)
+
 set(ARROW_ODBC_THIRDPARTY_LIBS
   arrow_odbc_spi_impl
   odbcabstraction
   ${ARROW_LIBS}
   gRPC::grpc++
+  fmt::fmt-header-only
   ${ZLIB_LIBRARIES}
   ${Protobuf_LIBRARIES}
   ${ODBC_LIBRARIES}
