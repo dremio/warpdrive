@@ -42,6 +42,7 @@ add_executable(warpdrive_test
         src/result-set-metadata-test.cc
         src/result-conversions-test.cc
         src/select-test.cc
+        src/multithreading-test.cc
         src/wchar-char-test-utf8.cc
 )
 
