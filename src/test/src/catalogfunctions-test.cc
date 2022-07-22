@@ -192,9 +192,9 @@ TEST_F(CatalogFunctionsTest, GetInfoTest){
   SQLSMALLINT	len;
 
   /* Test SQLGetInfo */
-  rc_ = SQLGetInfo(conn, SQL_ODBC_VER, buf, sizeof(buf), &len);
+  rc_ = SQLGetInfo(conn, SQL_DRIVER_ODBC_VER, buf, sizeof(buf), &len);
   CHECK_STMT_RESULT(rc_, "SQLGetInfo failed", hstmt_);
-  EXPECT_STREQ("03.52", buf);
+  EXPECT_STREQ("03.80", buf);
 
   rc_ = SQLGetInfo(conn, SQL_TABLE_TERM, buf, sizeof(buf), &len);
   CHECK_STMT_RESULT(rc_, "SQLGetInfo failed", hstmt_);
