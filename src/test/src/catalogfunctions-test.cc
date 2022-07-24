@@ -77,11 +77,11 @@ TEST_F(CatalogFunctionsTest, GetTypeInfoTest){
                                          "NULL\t12\t2147483647\t'\t'\tmax length\t1\t0\t3\tNULL\t0\tNULL\tVARCHAR\tNULL\tNULL\t12\tNULL\tNULL\tNULL\n",
                                          "UNION\t12\t2147483647\t'\t'\tmax length\t1\t0\t3\tNULL\t0\tNULL\tVARCHAR\tNULL\tNULL\t12\tNULL\tNULL\tNULL\n",
                                          "ARRAY\t12\t2147483647\t'\t'\tmax length\t1\t0\t3\tNULL\t0\tNULL\tVARCHAR\tNULL\tNULL\t12\tNULL\tNULL\tNULL\n"};
+  EXPECT_EQ(exp_result_meta, print_result_meta(hstmt_, &err_msg).value());
   std::string result = get_result(hstmt_, &err_msg).value();
   for (std::string type: exp_result) {
     EXPECT_TRUE(result.find(type) != std::string::npos);
   }
-  EXPECT_EQ(exp_result_meta, print_result_meta(hstmt_, &err_msg).value());
 }
 
 TEST_F(CatalogFunctionsTest, GetTablesTest){
