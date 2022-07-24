@@ -184,16 +184,18 @@ WD_Connect(HDBC hdbc,
   if (szUID) {
     size_t uidLen = cbUID == SQL_NTS ? strlen(reinterpret_cast<const char*>(szUID)) : cbUID;
     if (uidLen) {
-      connStr += ";UID=";
+      connStr += ";UID={";
       connStr += std::string(reinterpret_cast<const char*>(szUID), uidLen);
+      connStr += "}";
     }
   }
 
   if (szAuthStr) {
     size_t authLen = cbAuthStr == SQL_NTS ? strlen(reinterpret_cast<const char*>(szAuthStr)) : cbAuthStr;
     if (authLen) {
-      connStr += ";PWD=";
+      connStr += ";PWD={";
       connStr += std::string(reinterpret_cast<const char*>(szAuthStr), authLen);
+      connStr += "}";
     }
   }
   Connection::ConnPropertyMap properties;

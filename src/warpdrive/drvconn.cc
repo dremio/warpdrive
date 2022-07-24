@@ -119,6 +119,22 @@ WD_DriverConnect(HDBC hdbc,
 	std::string dsn = ODBCConnection::getPropertiesFromConnString(connStr, properties);
 	conn->connect(dsn, properties, missing_properties);
 
+        // Just copy the input string and write it to the output string on success.
+        if (szConnStrOut) {
+          if (cbConnStrOutMax > connStr.size() + 1) {
+            memcpy(szConnStrOut, connStr.c_str(), connStr.size());
+            szConnStrOut[connStr.size()] = '\0';
+          } else {
+            memcpy(szConnStrOut, connStr.c_str(), cbConnStrOutMax);
+            szConnStrOut[cbConnStrOutMax - 1] = '\0';
+            conn->GetDiagnostics_Impl().AddTruncationWarning();
+          }
+        }
+
+        if (pcbConnStrOut) {
+          *pcbConnStrOut = connStr.size();
+        }
+
 	return SQL_SUCCESS;
 }
 
