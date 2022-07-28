@@ -34,6 +34,7 @@
 #include "wdapifunc.h"
 
 #include <odbcabstraction/exceptions.h>
+#include <odbcabstraction/logger.h>
 #include <odbcabstraction/odbc_impl/ODBCConnection.h>
 #include <odbcabstraction/odbc_impl/ODBCDescriptor.h>
 #include <odbcabstraction/odbc_impl/ODBCEnvironment.h>
@@ -51,39 +52,48 @@ RETCODE		SQL_API
 SQLAllocHandle(SQLSMALLINT HandleType,
 			   SQLHANDLE InputHandle, SQLHANDLE * OutputHandle)
 {
+  LOG_TRACE("[{}] Entry with parameters: HandleType '{}', InputHandle '{}'", __FUNCTION__, HandleType, InputHandle);
   SQLRETURN rc = SQL_SUCCESS;
-	MYLOG(0, "Entering\n");
-	switch (HandleType)
-	{
+	switch (HandleType) {
 		case SQL_HANDLE_ENV:
-                    // Note: nowhere to write errors to.
-                    try {
-                       return WD_AllocEnv(OutputHandle);
-                    } catch (const std::exception& e) {
-                      MYLOG(0, "Error occurred allocating environment handle: %s", e.what());
-                      return SQL_ERROR;
-                    } catch (...) {
-                      MYLOG(0, "Unknown error occurred allocating environment handle.");
-                      return SQL_ERROR;
-                    }
+      // Note: nowhere to write errors to.
+      try {
+        rc = WD_AllocEnv(OutputHandle);
+        LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+        return rc;
+      } catch (const std::exception& e) {
+        rc = SQL_ERROR;
+        LOG_ERROR("[{}] Error occurred allocating environment handle:\n{}\nExiting with return code {}", __FUNCTION__, e.what(), rc);
+        return rc;
+      } catch (...) {
+        rc = SQL_ERROR;
+        LOG_ERROR("[{}] Unknown error occurred allocating environment handle. Exiting with return code {}", __FUNCTION__, rc);
+        return rc;
+      }
 		case SQL_HANDLE_DBC:
-                {
-                  return ODBCEnvironment::ExecuteWithDiagnostics(InputHandle, rc, [&]() -> SQLRETURN {
-                    return WD_AllocConnect(InputHandle, OutputHandle);
-                                  });
-}
+      rc = ODBCEnvironment::ExecuteWithDiagnostics(InputHandle, rc, [&]() -> SQLRETURN {
+        return WD_AllocConnect(InputHandle, OutputHandle);
+      });
+      LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+      return rc;
 		case SQL_HANDLE_STMT:
-                  return ODBCConnection::ExecuteWithDiagnostics(InputHandle, rc, [&]() -> SQLRETURN {
-                    return WD_AllocStmt(InputHandle, OutputHandle,
-                                        PODBC_EXTERNAL_STATEMENT |
-                                            PODBC_INHERIT_CONNECT_OPTIONS);
-                                      });
+      rc = ODBCConnection::ExecuteWithDiagnostics(InputHandle, rc, [&]() -> SQLRETURN {
+        return WD_AllocStmt(InputHandle, OutputHandle,
+                            PODBC_EXTERNAL_STATEMENT |
+                            PODBC_INHERIT_CONNECT_OPTIONS);
+      });
+      LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+      return rc;
 		case SQL_HANDLE_DESC:
-                  return ODBCConnection::ExecuteWithDiagnostics(InputHandle, rc, [&]() -> SQLRETURN {
-                    return WD_AllocDesc(InputHandle, OutputHandle);
-                                      });
+      rc = ODBCConnection::ExecuteWithDiagnostics(InputHandle, rc, [&]() -> SQLRETURN {
+        return WD_AllocDesc(InputHandle, OutputHandle);
+      });
+      LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+      return rc;
 		default:
-			return SQL_ERROR;
+      rc = SQL_ERROR;
+      LOG_ERROR("[{}] Invalid HandleType '{}'. Exiting with return code {}", __FUNCTION__, HandleType, rc);
+      return rc;
 	}
 }
 
@@ -96,20 +106,22 @@ SQLBindParam(HSTMT StatementHandle,
 			 SQLSMALLINT ParameterScale, PTR ParameterValue,
 			 SQLLEN *StrLen_or_Ind)
 {
+  LOG_TRACE("[{}] Entry with parameters: StatementHandle '{}', ParameterNumber '{}', ValueType '{}', ParameterType '{}', LengthPrecision '{}', ParameterScale '{}', ParameterValue '{}'",
+            __FUNCTION__, StatementHandle, ParameterNumber, ValueType, ParameterType, LengthPrecision, ParameterScale, ParameterValue);
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+  rc = ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
     throw DriverException("Unsupported function", "HYC00");
     RETCODE ret;
     StatementClass *stmt = (StatementClass *)StatementHandle;
     int BufferLength = 512; /* Is it OK ? */
 
-    MYLOG(0, "Entering\n");
     ret = WD_BindParameter(StatementHandle, ParameterNumber, SQL_PARAM_INPUT,
                            ValueType, ParameterType, LengthPrecision,
                            ParameterScale, ParameterValue, BufferLength,
                            StrLen_or_Ind);
     return ret;
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
 }
 
 /*	New function */
@@ -117,15 +129,16 @@ WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLCloseCursor(HSTMT StatementHandle)
 {
+  LOG_TRACE("[{}] Entry with parameters: StatementHandle '{}'", __FUNCTION__, StatementHandle);
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+  rc = ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
     ODBCStatement *stmt = ODBCStatement::of(StatementHandle);
-
-    MYLOG(0, "Entering\n");
 
     stmt->closeCursor(false);
     return SQL_SUCCESS;
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+  return rc;
 }
 
 #ifndef	UNICODE_SUPPORTXX
@@ -145,13 +158,14 @@ SQLColAttribute(SQLHSTMT StatementHandle,
 #endif
 			)
 {
+  LOG_TRACE("[{}] Entry with parameters: StatementHandle '{}', ColumnNumber '{}', FieldIdentifier '{}', CharacterAttribute '{}', BufferLength '{}'", __FUNCTION__, StatementHandle, ColumnNumber, FieldIdentifier, CharacterAttribute, BufferLength);
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
-    MYLOG(0, "Entering\n");
+  rc = ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
     return WD_ColAttributes(StatementHandle, ColumnNumber, FieldIdentifier,
                            CharacterAttribute, BufferLength, StringLength,
                            static_cast<SQLLEN *>(NumericAttribute));
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -161,19 +175,23 @@ RETCODE		SQL_API
 SQLCopyDesc(SQLHDESC SourceDescHandle,
 			SQLHDESC TargetDescHandle)
 {
+  LOG_TRACE("[{}] Entry with parameters: SourceDescHandle '{}', TargetDescHandle '{}'", __FUNCTION__, SourceDescHandle, TargetDescHandle);
+  SQLRETURN rc = SQL_SUCCESS;
   if (!SourceDescHandle || !TargetDescHandle) {
-    return SQL_INVALID_HANDLE;
+    rc = SQL_INVALID_HANDLE;
+    LOG_TRACE("[{}] No valid source/target SQLHDESC was provided. Exiting with return code {}", __FUNCTION__, rc);
+    return rc;
   }
 
-  SQLRETURN rc = SQL_SUCCESS;
-  return ODBCDescriptor::ExecuteWithDiagnostics(TargetDescHandle, rc, [&]() -> SQLRETURN {
+  rc = ODBCDescriptor::ExecuteWithDiagnostics(TargetDescHandle, rc, [&]() -> SQLRETURN {
     throw DriverException("Unsupported function.", "HYC00");
     RETCODE ret;
 
-    MYLOG(0, "Entering\n");
     ret = WD_CopyDesc(SourceDescHandle, TargetDescHandle);
     return ret;
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+  return rc;
 }
 
 /*	SQLTransact -> SQLEndTran */
@@ -182,32 +200,34 @@ RETCODE		SQL_API
 SQLEndTran(SQLSMALLINT HandleType, SQLHANDLE Handle,
 		   SQLSMALLINT CompletionType)
 {
+  LOG_TRACE("[{}] Entry with parameters: HandleType '{}', Handle '{}', CompletionType '{}'", __FUNCTION__, HandleType, Handle, CompletionType);
   SQLRETURN rc = SQL_SUCCESS;
-	RETCODE	ret;
 
-	MYLOG(0, "Entering\n");
-	switch (HandleType)
-	{
-		case SQL_HANDLE_ENV:
-          return ODBCEnvironment::ExecuteWithDiagnostics(Handle, rc, [&]() -> SQLRETURN {
-            throw DriverException("Unsupported function", "HYC00");
-          });
-		case SQL_HANDLE_DBC:
-          return ODBCConnection::ExecuteWithDiagnostics(Handle, rc, [&]() -> SQLRETURN {
-            ODBC::ODBCConnection *conn = reinterpret_cast<ODBC::ODBCConnection *>(Handle);
-            SQLUINTEGER value;
-            conn->GetConnectAttr(SQL_ATTR_AUTOCOMMIT, &value, sizeof(SQLUINTEGER), nullptr, false);
-            if (value != SQL_AUTOCOMMIT_ON) {
-                throw DriverException("Unsupported function", "HYC00");
-            } else {
-                return SQL_SUCCESS;
-            }
-          });
-		default:
-			return SQL_ERROR;
-			break;
-	}
-	return ret;
+  switch (HandleType) {
+    case SQL_HANDLE_ENV:
+      rc = ODBCEnvironment::ExecuteWithDiagnostics(Handle, rc, [&]() -> SQLRETURN {
+        throw DriverException("Unsupported function", "HYC00");
+      });
+      break;
+    case SQL_HANDLE_DBC:
+      rc = ODBCConnection::ExecuteWithDiagnostics(Handle, rc, [&]() -> SQLRETURN {
+        auto *conn = reinterpret_cast<ODBC::ODBCConnection *>(Handle);
+        SQLUINTEGER value;
+        conn->GetConnectAttr(SQL_ATTR_AUTOCOMMIT, &value, sizeof(SQLUINTEGER), nullptr, false);
+        if (value != SQL_AUTOCOMMIT_ON) {
+          throw DriverException("Unsupported function", "HYC00");
+        } else {
+          return SQL_SUCCESS;
+        }
+      });
+      break;
+    default:
+      rc = SQL_ERROR;
+      LOG_ERROR("[{}] Invalid HandleType '{}'. Exiting with return code {}", __FUNCTION__, HandleType, rc);
+      break;
+  }
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+  return rc;
 }
 
 WD_EXPORT_SYMBOL
@@ -215,15 +235,19 @@ RETCODE		SQL_API
 SQLFetchScroll(HSTMT StatementHandle,
 			   SQLSMALLINT FetchOrientation, SQLLEN FetchOffset)
 {
+  LOG_TRACE("[{}] Entry with parameters: StatementHandle '{}', FetchOrientation '{}', FetchOffset '{}'", __FUNCTION__, StatementHandle, FetchOrientation, FetchOffset);
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+
+  rc = ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
     if (FetchOrientation != SQL_FETCH_NEXT) {
       throw DriverException("Fetch type unsupported", "HY106");
     }
 
-    RETCODE result = WD_Fetch(StatementHandle);
-    return result;
+    return WD_Fetch(StatementHandle);
   });
+
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+  return rc;
 }
 
 /*	SQLFree(Connect/Env/Stmt) -> SQLFreeHandle */
@@ -231,29 +255,33 @@ WD_EXPORT_SYMBOL
 RETCODE		SQL_API
 SQLFreeHandle(SQLSMALLINT HandleType, SQLHANDLE Handle)
 {
+  LOG_TRACE("[{}] Entry with parameters: HandleType '{}', Handle '{}'", __FUNCTION__, HandleType, Handle);
   SQLRETURN rc = SQL_SUCCESS;
-	RETCODE		ret;
-	MYLOG(0, "Entering\n");
 
-    // Do not use ExecuteWithDiagnostics, since freeing handles destroys the diagnostics
-    // and ExecuteWithDiagnostics tries to check them after the lambda body.
-    switch (HandleType)
-	{
-		case SQL_HANDLE_ENV:
-            return WD_FreeEnv(Handle);
-		case SQL_HANDLE_DBC:
-            return WD_FreeConnect(Handle);
-		case SQL_HANDLE_STMT:
-            return WD_FreeStmt(Handle, SQL_DROP);
-		case SQL_HANDLE_DESC:
-            return WD_FreeDesc(Handle);
-		default:
-            ret = SQL_INVALID_HANDLE;
-			break;
-	}
-	return ret;
+  // Do not use ExecuteWithDiagnostics, since freeing handles destroys the diagnostics
+  // and ExecuteWithDiagnostics tries to check them after the lambda body.
+  switch (HandleType) {
+    case SQL_HANDLE_ENV:
+      rc = WD_FreeEnv(Handle);
+      break;
+    case SQL_HANDLE_DBC:
+      rc = WD_FreeConnect(Handle);
+      break;
+    case SQL_HANDLE_STMT:
+      rc = WD_FreeStmt(Handle, SQL_DROP);
+      break;
+    case SQL_HANDLE_DESC:
+      rc = WD_FreeDesc(Handle);
+      break;
+    default:
+      rc = SQL_INVALID_HANDLE;
+      LOG_ERROR("[{}] Invalid HandleType '{}'. Exiting with return code {}", __FUNCTION__, HandleType, rc);
+      break;
+  }
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+  return rc;
 }
-		
+
 #ifndef	UNICODE_SUPPORTXX
 /*	new function */
 WD_EXPORT_SYMBOL
@@ -263,12 +291,14 @@ SQLGetDescField(SQLHDESC DescriptorHandle,
 				PTR Value, SQLINTEGER BufferLength,
 				SQLINTEGER *StringLength)
 {
+  LOG_TRACE("[{}] Entry with parameters: DescriptorHandle '{}', RecNumber '{}', FieldIdentifier '{}', Value '{}', BufferLength '{}'", __FUNCTION__, DescriptorHandle, RecNumber, FieldIdentifier, Value, BufferLength);
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, rc, [&]() -> SQLRETURN {
-    MYLOG(0, "Entering\n");
+  rc = ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, rc, [&]() -> SQLRETURN {
     return WD_GetDescField(DescriptorHandle, RecNumber, FieldIdentifier, Value,
                           BufferLength, StringLength);
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+  return rc;
 }
 
 /*	new function */
@@ -281,13 +311,15 @@ SQLGetDescRec(SQLHDESC DescriptorHandle,
 			  SQLLEN *Length, SQLSMALLINT *Precision,
 			  SQLSMALLINT *Scale, SQLSMALLINT *Nullable)
 {
+  LOG_TRACE("[{}] Entry with parameters: DescriptorHandle '{}', RecNumber '{}', BufferLength '{}'", __FUNCTION__, DescriptorHandle, RecNumber, BufferLength);
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, rc, [&]() -> SQLRETURN {
-    MYLOG(0, "Entering\n");
+  rc = ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, rc, [&]() -> SQLRETURN {
     return WD_GetDescRec(DescriptorHandle, RecNumber, Name, BufferLength,
                         StringLength, Type, SubType, Length, Precision, Scale,
                         Nullable);
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+  return rc;
 }
 
 /*	new function */
@@ -298,22 +330,24 @@ SQLGetDiagField(SQLSMALLINT HandleType, SQLHANDLE Handle,
 				PTR DiagInfo, SQLSMALLINT BufferLength,
 				SQLSMALLINT *StringLength)
 {
+  LOG_TRACE("[{}] Entry with parameters: HandleType '{}', Handle '{}', RecNumber '{}', DiagIdentifier '{}', DiagInfo '{}', BufferLength '{}'", __FUNCTION__, HandleType, Handle, RecNumber, DiagIdentifier, DiagInfo, BufferLength);
   // Note: Do not use the diag manager here.
-	RETCODE	ret;
-        try {
+  RETCODE ret;
+  try {
+    ret = WD_GetDiagField(HandleType, Handle, RecNumber, DiagIdentifier,
+                           DiagInfo, BufferLength, StringLength);
 
-          MYLOG(0, "Entering Handle=(%u,%p) Rec=%d Id=%d info=(%p,%d)\n",
-                HandleType, Handle, RecNumber, DiagIdentifier, DiagInfo,
-                BufferLength);
-          return WD_GetDiagField(HandleType, Handle, RecNumber, DiagIdentifier,
-                                DiagInfo, BufferLength, StringLength);
-        } catch (const std::exception& ex) {
-          MYLOG(0, "Error getting diagnostics: %s", ex.what());
-          return SQL_ERROR;
-        } catch (...) {
-          MYLOG(0, "Unknown error getting diagnostics.");
-          return SQL_ERROR;
-        }
+    LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, ret);
+    return ret;
+  } catch (const std::exception &ex) {
+    ret = SQL_ERROR;
+    LOG_ERROR("[{}] Error getting diagnostics:\n{}\nExiting with return code {}", __FUNCTION__, ex.what(), ret);
+    return ret;
+  } catch (...) {
+    ret = SQL_ERROR;
+    LOG_ERROR("[{}] Unknown error getting diagnostics. Exiting with return code {}", __FUNCTION__, ret);
+    return ret;
+  }
 }
 
 /*	SQLError -> SQLDiagRec */
@@ -324,22 +358,22 @@ SQLGetDiagRec(SQLSMALLINT HandleType, SQLHANDLE Handle,
 			  SQLINTEGER *NativeError, SQLCHAR *MessageText,
 			  SQLSMALLINT BufferLength, SQLSMALLINT *TextLength)
 {
+  LOG_TRACE("[{}] Entry with parameters: HandleType '{}', Handle '{}', RecNumber '{}'", __FUNCTION__, HandleType, Handle, RecNumber);
   // Note: Do not use the diag manager here.
-	RETCODE	ret;
-        try {
-
-          MYLOG(0, "Entering\n");
-          ret =
-              WD_GetDiagRec(HandleType, Handle, RecNumber, Sqlstate,
-                            NativeError, MessageText, BufferLength, TextLength);
-          return ret;
-        } catch (const std::exception& ex) {
-          MYLOG(0, "Error getting diagnostics: %s", ex.what());
-          return SQL_ERROR;
-        } catch (...) {
-          MYLOG(0, "Unknown error getting diagnostics.");
-          return SQL_ERROR;
-        }
+  RETCODE ret;
+  try {
+    ret = WD_GetDiagRec(HandleType, Handle, RecNumber, Sqlstate, NativeError, MessageText, BufferLength, TextLength);
+    LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, ret);
+    return ret;
+  } catch (const std::exception &ex) {
+    ret = SQL_ERROR;
+    LOG_ERROR("[{}] Error getting diagnostics:\n{}\nExiting with return code {}", __FUNCTION__, ex.what(), ret);
+    return ret;
+  } catch (...) {
+    ret = SQL_ERROR;
+    LOG_ERROR("[{}] Unknown error getting diagnostics. Exiting with return code {}", __FUNCTION__, ret);
+    return ret;
+  }
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -350,13 +384,12 @@ SQLGetEnvAttr(HENV EnvironmentHandle,
 			  SQLINTEGER Attribute, PTR Value,
 			  SQLINTEGER BufferLength, SQLINTEGER *StringLength)
 {
+  LOG_TRACE("[{}] Entry with parameters: EnvironmentHandle '{}', Attribute '{}', Value '{}', BufferLength '{}'", __FUNCTION__, EnvironmentHandle, Attribute, Value, BufferLength);
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCEnvironment::ExecuteWithDiagnostics(EnvironmentHandle, rc, [&]() -> SQLRETURN {
+  rc = ODBCEnvironment::ExecuteWithDiagnostics(EnvironmentHandle, rc, [&]() -> SQLRETURN {
     RETCODE ret;
-    ODBC::ODBCEnvironment *env =
-        reinterpret_cast<ODBC::ODBCEnvironment *>(EnvironmentHandle);
+    auto *env = reinterpret_cast<ODBC::ODBCEnvironment *>(EnvironmentHandle);
 
-    MYLOG(0, "Entering " FORMAT_INTEGER "\n", Attribute);
     ret = SQL_SUCCESS;
     switch (Attribute) {
     case SQL_ATTR_CONNECTION_POOLING:
@@ -376,6 +409,8 @@ SQLGetEnvAttr(HENV EnvironmentHandle,
     }
     return ret;
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+  return rc;
 }
 
 #ifndef	UNICODE_SUPPORTXX
@@ -386,15 +421,14 @@ SQLGetConnectAttr(HDBC ConnectionHandle,
 				  SQLINTEGER Attribute, PTR Value,
 				  SQLINTEGER BufferLength, SQLINTEGER *StringLength)
 {
+  LOG_TRACE("[{}] Entry with parameters: ConnectionHandle '{}', Attribute '{}', Value '{}', BufferLength '{}'", __FUNCTION__, ConnectionHandle, Attribute, Value, BufferLength);
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCConnection::ExecuteWithDiagnostics(ConnectionHandle, rc, [&]() -> SQLRETURN {
-    RETCODE ret = SQL_SUCCESS;
-
-    MYLOG(0, "Entering " FORMAT_UINTEGER "\n", Attribute);
+  rc = ODBCConnection::ExecuteWithDiagnostics(ConnectionHandle, rc, [&]() -> SQLRETURN {
     return WD_GetConnectAttr(ConnectionHandle, Attribute, Value, BufferLength,
                             StringLength, false);
-    return ret;
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+  return rc;
 }
 
 /*	SQLGetStmtOption -> SQLGetStmtAttr */
@@ -404,13 +438,14 @@ SQLGetStmtAttr(HSTMT StatementHandle,
 			   SQLINTEGER Attribute, PTR Value,
 			   SQLINTEGER BufferLength, SQLINTEGER *StringLength)
 {
+  LOG_TRACE("[{}] Entry with parameters: StatementHandle '{}', Attribute '{}', Value '{}', BufferLength '{}'", __FUNCTION__, StatementHandle, Attribute, Value, BufferLength);
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
-    MYLOG(0, "Entering Handle=%p " FORMAT_INTEGER "\n", StatementHandle,
-          Attribute);
+  rc = ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
     return WD_GetStmtAttr(StatementHandle, Attribute, Value, BufferLength,
                          StringLength, false);
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+  return rc;
 }
 
 /*	SQLSetConnectOption -> SQLSetConnectAttr */
@@ -420,12 +455,14 @@ SQLSetConnectAttr(HDBC ConnectionHandle,
 				  SQLINTEGER Attribute, PTR Value,
 				  SQLINTEGER StringLength)
 {
+  LOG_TRACE("[{}] Entry with parameters: ConnectionHandle '{}', Attribute '{}', Value '{}', StringLength '{}'", __FUNCTION__, ConnectionHandle, Attribute, Value, StringLength);
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCConnection::ExecuteWithDiagnostics(ConnectionHandle, rc, [&]() -> SQLRETURN {
-    MYLOG(0, "Entering " FORMAT_INTEGER "\n", Attribute);
+  rc = ODBCConnection::ExecuteWithDiagnostics(ConnectionHandle, rc, [&]() -> SQLRETURN {
     return WD_SetConnectAttr(ConnectionHandle, Attribute, Value, StringLength,
                             false);
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+  return rc;
 }
 
 /*	new function */
@@ -435,13 +472,14 @@ SQLSetDescField(SQLHDESC DescriptorHandle,
 				SQLSMALLINT RecNumber, SQLSMALLINT FieldIdentifier,
 				PTR Value, SQLINTEGER BufferLength)
 {
+  LOG_TRACE("[{}] Entry with parameters: DescriptorHandle '{}', RecNumber '{}', FieldIdentifier '{}', Value '{}', BufferLength '{}'", __FUNCTION__, DescriptorHandle, RecNumber, FieldIdentifier, Value, BufferLength);
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, rc, [&]() -> SQLRETURN {
-    MYLOG(0, "Entering h=%p rec=%d field=%d val=%p\n", DescriptorHandle,
-          RecNumber, FieldIdentifier, Value);
+  rc = ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, rc, [&]() -> SQLRETURN {
     return WD_SetDescField(DescriptorHandle, RecNumber, FieldIdentifier, Value,
                           BufferLength);
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+  return rc;
 }
 
 /*	new fucntion */
@@ -454,12 +492,14 @@ SQLSetDescRec(SQLHDESC DescriptorHandle,
 			  PTR Data, SQLLEN *StringLength,
 			  SQLLEN *Indicator)
 {
+  LOG_TRACE("[{}] Entry with parameters: DescriptorHandle '{}', RecNumber '{}', Type '{}', SubType '{}', Length '{}', Precision '{}', Scale '{}', Data '{}'", __FUNCTION__, DescriptorHandle, RecNumber, Type, SubType, Length, Precision, Scale, Data);
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, rc, [&]() -> SQLRETURN {
-    MYLOG(0, "Entering\n");
+  rc = ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, rc, [&]() -> SQLRETURN {
     return WD_SetDescRec(DescriptorHandle, RecNumber, Type, SubType, Length,
                         Precision, Scale, Data, StringLength, Indicator);
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+  return rc;
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -470,14 +510,12 @@ SQLSetEnvAttr(HENV EnvironmentHandle,
 			  SQLINTEGER Attribute, PTR Value,
 			  SQLINTEGER StringLength)
 {
+  LOG_TRACE("[{}] Entry with parameters: EnvironmentHandle '{}', Attribute '{}', Value '{}', StringLength '{}'", __FUNCTION__, EnvironmentHandle, Attribute, Value, StringLength);
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCEnvironment::ExecuteWithDiagnostics(EnvironmentHandle, rc, [&]() -> SQLRETURN {
+  rc = ODBCEnvironment::ExecuteWithDiagnostics(EnvironmentHandle, rc, [&]() -> SQLRETURN {
     RETCODE ret;
-    ODBC::ODBCEnvironment *env =
-        reinterpret_cast<ODBC::ODBCEnvironment *>(EnvironmentHandle);
+    auto *env = reinterpret_cast<ODBC::ODBCEnvironment *>(EnvironmentHandle);
 
-    MYLOG(0, "Entering att=" FORMAT_INTEGER "," FORMAT_ULEN "\n", Attribute,
-          (SQLULEN)Value);
     switch (Attribute) {
     case SQL_ATTR_CONNECTION_POOLING:
       switch ((ULONG_PTR)Value) {
@@ -507,13 +545,15 @@ SQLSetEnvAttr(HENV EnvironmentHandle,
     default:
       throw DriverException("Invalid environment attribute", "HY024");
     }
-    if (SQL_SUCCESS_WITH_INFO == ret) {
+    if (ret == SQL_SUCCESS_WITH_INFO) {
       ODBCEnvironment::of(EnvironmentHandle)->GetDiagnostics().AddWarning(
           "Option value changed",
           "01S02", ODBCErrorCodes_GENERAL_WARNING);
     }
     return ret;
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+  return rc;
 }
 
 #ifndef	UNICODE_SUPPORTXX
@@ -524,16 +564,19 @@ SQLSetStmtAttr(HSTMT StatementHandle,
 			   SQLINTEGER Attribute, PTR Value,
 			   SQLINTEGER StringLength)
 {
+  LOG_TRACE("[{}] Entry with parameters: StatementHandle '{}', Attribute '{}', Value '{}', StringLength '{}'", __FUNCTION__, StatementHandle, Attribute, Value, StringLength);
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
+  rc = ODBCStatement::ExecuteWithDiagnostics(StatementHandle, rc, [&]() -> SQLRETURN {
     RETCODE ret = SQL_SUCCESS;
 
-    MYLOG(0, "Entering Handle=%p " FORMAT_INTEGER "," FORMAT_ULEN "\n",
+    LOG_TRACE("Entering Handle=%p " FORMAT_INTEGER "," FORMAT_ULEN "\n",
           StatementHandle, Attribute, (SQLULEN)Value);
     ret =
         WD_SetStmtAttr(StatementHandle, Attribute, Value, StringLength, false);
     return ret;
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc);
+  return rc;
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -555,7 +598,6 @@ SQLBulkOperations(HSTMT hstmt, SQLSMALLINT operation)
       return SQL_ERROR;
 
     ENTER_STMT_CS(stmt);
-    MYLOG(0, "Entering Handle=%p %d\n", hstmt, operation);
     SC_clear_error(stmt);
     StartRollbackState(stmt);
     ret = WD_BulkOperations(hstmt, operation);
