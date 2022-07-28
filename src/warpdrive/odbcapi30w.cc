@@ -26,6 +26,7 @@
 #include "statement.h"
 #include "misc.h"
 
+#include <odbcabstraction/logger.h>
 #include <odbcabstraction/odbc_impl/ODBCConnection.h>
 #include <odbcabstraction/odbc_impl/ODBCDescriptor.h>
 #include <odbcabstraction/odbc_impl/ODBCEnvironment.h>
@@ -44,14 +45,18 @@ SQLGetStmtAttrW(SQLHSTMT hstmt,
 				SQLINTEGER	cbValueMax,
 				SQLINTEGER	*pcbValue)
 {
+  LOG_TRACE("[{}] Entry with parameters: hstmt '{}', fAttribute '{}', rgbValue '{}', cbValueMax '{}'", __FUNCTION__, hstmt, fAttribute, rgbValue, cbValueMax)
+
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+  rc = ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
     RETCODE ret = SQL_SUCCESS;
 
     ret =
         WD_GetStmtAttr(hstmt, fAttribute, rgbValue, cbValueMax, pcbValue, true);
     return ret;
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc)
+  return rc;
 }
 
 WD_EXPORT_SYMBOL
@@ -61,12 +66,14 @@ SQLSetStmtAttrW(SQLHSTMT hstmt,
 				PTR		rgbValue,
 				SQLINTEGER	cbValueMax)
 {
-  SQLRETURN rc = SQL_SUCCESS;
-  return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+  LOG_TRACE("[{}] Entry with parameters: hstmt '{}', fAttribute '{}', rgbValue '{}', cbValueMax '{}'", __FUNCTION__, hstmt, fAttribute, rgbValue, cbValueMax)
 
-    MYLOG(0, "Entering\n");
+  SQLRETURN rc = SQL_SUCCESS;
+  rc = ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
     return WD_SetStmtAttr(hstmt, fAttribute, rgbValue, cbValueMax, true);
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc)
+  return rc;
 }
 
 WD_EXPORT_SYMBOL
@@ -77,14 +84,17 @@ SQLGetConnectAttrW(HDBC hdbc,
 				   SQLINTEGER	cbValueMax,
 				   SQLINTEGER	*pcbValue)
 {
+  LOG_TRACE("[{}] Entry with parameters: hdbc '{}', fAttribute '{}', rgbValue '{}', cbValueMax '{}'", __FUNCTION__, hdbc, fAttribute, rgbValue, cbValueMax)
+
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCConnection::ExecuteWithDiagnostics(hdbc, rc, [&]() -> SQLRETURN {
-    MYLOG(0, "Entering\n");
+  rc = ODBCConnection::ExecuteWithDiagnostics(hdbc, rc, [&]() -> SQLRETURN {
     return WD_GetConnectAttr(hdbc, fAttribute, rgbValue, cbValueMax, pcbValue,
                             true);
         });
-                                                }
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc)
+  return rc;
 }
+}  // extern "C"
 
 WD_EXPORT_SYMBOL
 RETCODE SQL_API
@@ -93,11 +103,14 @@ SQLSetConnectAttrW(HDBC hdbc,
 				   PTR		rgbValue,
 				   SQLINTEGER	cbValue)
 {
+  LOG_TRACE("[{}] Entry with parameters: hdbc '{}', fAttribute '{}', rgbValue '{}', cbValue '{}'", __FUNCTION__, hdbc, fAttribute, rgbValue, cbValue)
+
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCConnection::ExecuteWithDiagnostics(hdbc, rc, [&]() -> SQLRETURN {
-    MYLOG(0, "Entering " FORMAT_INTEGER "\n", fAttribute);
+  rc = ODBCConnection::ExecuteWithDiagnostics(hdbc, rc, [&]() -> SQLRETURN {
     return WD_SetConnectAttr(hdbc, fAttribute, rgbValue, cbValue, true);
   });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc)
+  return rc;
 }
 
 /*      new function */
@@ -107,13 +120,14 @@ SQLSetDescFieldW(SQLHDESC DescriptorHandle, SQLSMALLINT RecNumber,
 				 SQLSMALLINT FieldIdentifier, PTR Value,
 				 SQLINTEGER BufferLength)
 {
+  LOG_TRACE("[{}] Entry with parameters: DescriptorHandle '{}', RecNumber '{}', FieldIdentifier '{}', Value '{}', BufferLength '{}'", __FUNCTION__, DescriptorHandle, RecNumber, FieldIdentifier, Value, BufferLength)
+
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, rc, [&]() -> SQLRETURN {
+  rc = ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, rc, [&]() -> SQLRETURN {
     RETCODE ret;
     SQLLEN vallen;
     c_ptr uval;
 
-    MYLOG(0, "Entering\n");
     if (BufferLength > 0 || SQL_NTS == BufferLength) {
       switch (FieldIdentifier) {
       case SQL_DESC_BASE_COLUMN_NAME:
@@ -137,6 +151,8 @@ SQLSetDescFieldW(SQLHDESC DescriptorHandle, SQLSMALLINT RecNumber,
     return WD_SetDescField(DescriptorHandle, RecNumber, FieldIdentifier, uval ? uval.get() : Value,
                           uval ? (SQLINTEGER)vallen : BufferLength);
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc)
+  return rc;
 }
 
 WD_EXPORT_SYMBOL
@@ -145,13 +161,14 @@ SQLGetDescFieldW(SQLHDESC hdesc, SQLSMALLINT iRecord, SQLSMALLINT iField,
 				 PTR rgbValue, SQLINTEGER cbValueMax,
 				 SQLINTEGER *pcbValue)
 {
+  LOG_TRACE("[{}] Entry with parameters: iRecord '{}', iField '{}', rgbValue '{}', cbValueMax '{}'", __FUNCTION__, hdesc, iRecord, iField, rgbValue, cbValueMax)
+
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCDescriptor::ExecuteWithDiagnostics(hdesc, rc, [&]() -> SQLRETURN {
+  rc = ODBCDescriptor::ExecuteWithDiagnostics(hdesc, rc, [&]() -> SQLRETURN {
     RETCODE ret;
     SQLINTEGER blen = 0, bMax, *pcbV;
     c_ptr rgbV;
 
-    MYLOG(0, "Entering\n");
     switch (iField) {
     case SQL_DESC_BASE_COLUMN_NAME:
     case SQL_DESC_BASE_TABLE_NAME:
@@ -198,6 +215,8 @@ SQLGetDescFieldW(SQLHDESC hdesc, SQLSMALLINT iRecord, SQLSMALLINT iField,
 
     return ret;
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc)
+  return rc;
 }
 
 WD_EXPORT_SYMBOL
@@ -211,12 +230,13 @@ SQLGetDiagRecW(SQLSMALLINT fHandleType,
 			   SQLSMALLINT	cbErrorMsgMax,
 			   SQLSMALLINT	*pcbErrorMsg)
 {
-	RETCODE	ret;
+  LOG_TRACE("[{}] Entry with parameters: fHandleType '{}', handle '{}', iRecord '{}', cbErrorMsgMax '{}'", __FUNCTION__, fHandleType, handle, iRecord, cbErrorMsgMax)
+
+  RETCODE	ret;
         SQLSMALLINT	buflen, tlen;
         char    qstr_ansi[8];
         c_ptr mtxt;
 
-	MYLOG(0, "Entering\n");
 	buflen = 0;
         if (szErrorMsg && cbErrorMsgMax > 0)
 	{
@@ -249,7 +269,8 @@ SQLGetDiagRecW(SQLSMALLINT fHandleType,
 		if (pcbErrorMsg)
 			*pcbErrorMsg = tlen;
 	}
-	return ret;
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, ret)
+  return ret;
 }
 
 WD_EXPORT_SYMBOL
@@ -267,14 +288,15 @@ SQLColAttributeW(SQLHSTMT	hstmt,
 #endif
 	)
 {
+  LOG_TRACE("[{}] Entry with parameters: hstmt '{}', iCol '{}', iField '{}', pCharAttr '{}', cbCharAttrMax '{}'", __FUNCTION__, hstmt, iCol, iField, pCharAttr, cbCharAttrMax)
+
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+  rc = ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
     CSTR func = "SQLColAttributeW";
     RETCODE ret;
     SQLSMALLINT *rgbL, blen = 0, bMax;
     c_ptr rgbD;
 
-    MYLOG(0, "Entering\n");
     switch (iField) {
     case SQL_DESC_BASE_COLUMN_NAME:
     case SQL_DESC_BASE_TABLE_NAME:
@@ -325,6 +347,8 @@ SQLColAttributeW(SQLHSTMT	hstmt,
 
     return ret;
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc)
+  return rc;
 }
 
 WD_EXPORT_SYMBOL
@@ -337,14 +361,13 @@ SQLGetDiagFieldW(SQLSMALLINT	fHandleType,
 				 SQLSMALLINT	cbDiagInfoMax,
 				 SQLSMALLINT   *pcbDiagInfo)
 {
+  LOG_TRACE("[{}] Entry with parameters: fHandleType '{}', handle '{}', iRecord '{}', fDiagField '{}', rgbDiagInfo '{}', cbDiagInfoMax '{}'", __FUNCTION__, fHandleType, handle, iRecord, fDiagField, rgbDiagInfo, cbDiagInfoMax)
+
   // Note: Ensure the diagnostics manager is empty at the end of this function.
   RETCODE ret = SQL_SUCCESS;
   try {
     SQLSMALLINT *rgbL, blen = 0, bMax;
     c_ptr rgbD;
-
-    MYLOG(0, "Entering Handle=(%u,%p) Rec=%d Id=%d info=(%p,%d)\n", fHandleType,
-          handle, iRecord, fDiagField, rgbDiagInfo, cbDiagInfoMax);
 
     switch (fDiagField) {
     case SQL_DIAG_DYNAMIC_FUNCTION:
@@ -398,6 +421,7 @@ SQLGetDiagFieldW(SQLSMALLINT	fHandleType,
     ret = SQL_ERROR;
   }
 
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, ret)
   return ret;
 }
 
@@ -411,13 +435,14 @@ SQLGetDescRecW(SQLHDESC DescriptorHandle,
 			  SQLLEN *Length, SQLSMALLINT *Precision,
 			  SQLSMALLINT *Scale, SQLSMALLINT *Nullable)
 {
+  LOG_TRACE("[{}] Entry with parameters: DescriptorHandle '{}', RecNumber '{}', BufferLength '{}'", __FUNCTION__, DescriptorHandle, RecNumber, BufferLength)
+
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, rc, [&]() -> SQLRETURN {
+  rc = ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, rc, [&]() -> SQLRETURN {
     RETCODE ret;
     SQLSMALLINT buflen, nmlen;
     c_ptr clName;
 
-    MYLOG(0, "Entering\n");
     buflen = 0;
     if (BufferLength > 0)
       buflen = BufferLength * 3;
@@ -451,6 +476,8 @@ SQLGetDescRecW(SQLHDESC DescriptorHandle,
     }
     return ret;
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc)
+  return rc;
 }
 
 /*	new fucntion */
@@ -463,10 +490,13 @@ SQLSetDescRecW(SQLHDESC DescriptorHandle,
 			  PTR Data, SQLLEN *StringLength,
 			  SQLLEN *Indicator)
 {
+  LOG_TRACE("[{}] Entry with parameters: DescriptorHandle '{}', RecNumber '{}', Type '{}', SubType '{}', Length '{}', Precision '{}', Scale '{}', Data '{}'", __FUNCTION__, DescriptorHandle, RecNumber, Type, SubType, Length, Precision, Scale, Data)
   SQLRETURN rc = SQL_SUCCESS;
-  return ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, rc, [&]() -> SQLRETURN {
-    MYLOG(0, "Entering\n");
+  rc = ODBCDescriptor::ExecuteWithDiagnostics(DescriptorHandle, rc, [&]() -> SQLRETURN {
+    
     return WD_SetDescRec(DescriptorHandle, RecNumber, Type, SubType, Length,
                         Precision, Scale, Data, StringLength, Indicator);
         });
+  LOG_TRACE("[{}] Exiting successfully with return code {}", __FUNCTION__, rc)
+  return rc;
 }
