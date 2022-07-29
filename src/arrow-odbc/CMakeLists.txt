@@ -34,6 +34,9 @@ find_package(OpenSSL REQUIRED)
 # Add gRPC dependencies needed by Arrow Flight. Should be pre-installed.
 find_package(gRPC 1.36 CONFIG REQUIRED)
 
+# Ensure fmt is loaded as header only
+add_compile_definitions(FMT_HEADER_ONLY)
+
 # Define the version number information.
 if(DEFINED ENV{WARPDRIVE_BUILD_VERSION})
   set(WARPDRIVE_BUILD_VERSION "$ENV{WARPDRIVE_BUILD_VERSION}")
@@ -153,10 +156,10 @@ include_directories(arrow-odbc
   ${CMAKE_CURRENT_BINARY_DIR}/../warpdrive
   ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction/flight_sql/include
   ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction/odbcabstraction/include
+  ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction-build/_deps/spdlog-src/include
   ${ODBC_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
 )
 
 link_directories(${BUILD_OUTPUT_ROOT_DIRECTORY})
-
-#target_link_libraries(FirstTest gtest gtest_main pthread)
+configure_file(arrow-odbc.ini.in ${BUILD_OUTPUT_ROOT_DIRECTORY}/arrow-odbc.ini @ONLY)
