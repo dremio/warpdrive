@@ -16,5 +16,8 @@
 std::shared_ptr<driver::odbcabstraction::Driver> CreateDriver() {
     auto driver = std::shared_ptr<driver::odbcabstraction::Driver>(new driver::flight_sql::FlightSqlDriver());
     driver->SetVersion(WARPDRIVE_BUILD_VERSION);
+
+    // TODO: Check what would be the best way of calling RegisterLog
+    driver->RegisterLog("arrow-odbc.ini");
     return driver;
 }
