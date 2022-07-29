@@ -1,0 +1,5 @@
+LogEnabled=false
+LogLevel=0
+LogPath=[LOG_PATH]
+MaximumFileSize=16777216
+FileQuantity=1
