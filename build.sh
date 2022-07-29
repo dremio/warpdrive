@@ -15,7 +15,7 @@ cd _build
 ARROW_GIT_REPOSITORY="${ARROW_GIT_REPOSITORY:=https://github.com/apache/arrow}"
 ARROW_GIT_TAG="${ARROW_GIT_TAG:=b050bd0d31db6412256cec3362c0d57c9732e1f2}"
 ODBCABSTRACTION_REPO="${ODBCABSTRACTION_REPO:=/opt/flightsql-odbc}"
-ODBCABSTRACTION_GIT_TAG="${ODBCABSTRACTION_GIT_TAG:=0a310d64d5bdf0aa9d2922edda62b644a3d35251}"
+ODBCABSTRACTION_GIT_TAG="${ODBCABSTRACTION_GIT_TAG:=259e7f6f06c5ceded38977c968b18b9dd4696341}"
 
 cmake \
   -GNinja \
@@ -25,5 +25,5 @@ cmake \
   -DARROW_GIT_REPOSITORY=$ARROW_GIT_REPOSITORY \
   -DARROW_GIT_TAG=$ARROW_GIT_TAG \
   ..
-# Ninja should be called at most three times for clean builds
-ninja || ninja || ninja
+# Ninja should be called at most four times for clean builds
+ninja || ninja || ninja || ninja
