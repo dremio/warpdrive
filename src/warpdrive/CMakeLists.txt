@@ -141,6 +141,7 @@ add_dependencies(warpdrive ${WARPDRIVE_LIBRARIES})
 add_dependencies(warpdrive ODBCAbstraction)
 include_directories(warpdrive
   ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction/odbcabstraction/include
+  ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction-build/_deps/spdlog-src/include
   ${Boost_INCLUDE_DIRS}
 )
 
