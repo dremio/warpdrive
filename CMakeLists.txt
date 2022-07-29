@@ -573,7 +573,7 @@ if (NOT ODBCABSTRACTION_GIT_TAG)
   if (DEFINED ENV{ODBCABSTRACTION_GIT_TAG})
     set(ODBCABSTRACTION_GIT_TAG "$ENV{ODBCABSTRACTION_GIT_TAG}")
   else()
-    set(ODBCABSTRACTION_GIT_TAG "0a310d64d5bdf0aa9d2922edda62b644a3d35251")
+    set(ODBCABSTRACTION_GIT_TAG "8cb272e243dc7e169422ef2621178be29acf6982")
   endif()
 endif()
 
@@ -665,6 +665,23 @@ list(APPEND WARPDRIVE_SHARED_INSTALL_INTERFACE_LIBS odbcabstraction)
 
 # Add include directories for _only_ the ODBCAbstraction SPI.
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction/odbcabstraction/include)
+
+ExternalProject_Add(
+        dep_spdlog
+        GIT_REPOSITORY "https://github.com/gabime/spdlog"
+        GIT_TAG "v1.10.0"
+        GIT_SHALLOW 1
+        UPDATE_COMMAND ""
+        PATCH_COMMAND ""
+        CMAKE_ARGS
+        -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/dep_spdlog-prefix/src/dep_spdlog-install
+        -DSPDLOG_BUILD_EXAMPLES=OFF
+        -DSPDLOG_BUILD_BENCH=OFF
+        -DSPDLOG_BUILD_TESTS=OFF
+        TEST_COMMAND ""
+)
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/dep_spdlog-prefix/src/dep_spdlog/include)
 
 #
 # Linker and Dependencies
