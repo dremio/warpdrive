@@ -573,7 +573,7 @@ if (NOT ODBCABSTRACTION_GIT_TAG)
   if (DEFINED ENV{ODBCABSTRACTION_GIT_TAG})
     set(ODBCABSTRACTION_GIT_TAG "$ENV{ODBCABSTRACTION_GIT_TAG}")
   else()
-    set(ODBCABSTRACTION_GIT_TAG "0a310d64d5bdf0aa9d2922edda62b644a3d35251")
+    set(ODBCABSTRACTION_GIT_TAG "259e7f6f06c5ceded38977c968b18b9dd4696341")
   endif()
 endif()
 
@@ -665,6 +665,9 @@ list(APPEND WARPDRIVE_SHARED_INSTALL_INTERFACE_LIBS odbcabstraction)
 
 # Add include directories for _only_ the ODBCAbstraction SPI.
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction/odbcabstraction/include)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/ODBCAbstraction-prefix/src/ODBCAbstraction-build/_deps/spdlog-src/include)
+
+add_compile_definitions(FMT_HEADER_ONLY)
 
 #
 # Linker and Dependencies
