@@ -153,6 +153,7 @@ include_directories(arrow-odbc
   ${CMAKE_CURRENT_BINARY_DIR}/../warpdrive
   ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction/flight_sql/include
   ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction/odbcabstraction/include
+  ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction-build/dep_spdlog-prefix/src/dep_spdlog/include
   ${ODBC_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
 )
