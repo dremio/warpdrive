@@ -14,6 +14,9 @@ add_dependencies(warpdrive-all
 # Enable unicode driver build
 add_compile_definitions(UNICODE_SUPPORT)
 
+# Ensure fmt is loaded as header only
+add_compile_definitions(FMT_HEADER_ONLY)
+
 include_directories(${ODBC_INCLUDE_DIRS})
 
 
@@ -141,6 +144,7 @@ add_dependencies(warpdrive ${WARPDRIVE_LIBRARIES})
 add_dependencies(warpdrive ODBCAbstraction)
 include_directories(warpdrive
   ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction/odbcabstraction/include
+  ${CMAKE_CURRENT_BINARY_DIR}/../../ODBCAbstraction-prefix/src/ODBCAbstraction-build/_deps/spdlog-src/include
   ${Boost_INCLUDE_DIRS}
 )
 
