@@ -1,5 +1,5 @@
-LogEnabled=false
+LogEnabled=true
 LogLevel=0
-LogPath=[LOG_PATH]
+LogPath=/tmp/arrow-odbc.ini
 MaximumFileSize=16777216
 FileQuantity=1
