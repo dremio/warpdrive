@@ -716,7 +716,10 @@ set(WARPDRIVE_TEST_LINK_TOOLCHAIN
     ${BOOST_SYSTEM_LIBRARY})
 
 if(WARPDRIVE_BUILD_TESTS)
-  add_dependencies(warpdrive_test_dependencies ${WARPDRVE_TEST_LINK_TOOLCHAIN})
+  foreach(_dep IN LISTS ${WARPDRIVE_TEST_LINK_TOOLCHAIN})
+    message(STATUS "Adding dependency '${_dep}' to target 'warpdrive_test_dependencies'")
+    add_dependencies(warpdrive_test_dependencies ${WARPDRVE_TEST_LINK_TOOLCHAIN})
+  endforeach()
 endif()
 
 if(WARPDRIVE_BUILD_BENCHMARKS)
