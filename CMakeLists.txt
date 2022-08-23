@@ -533,8 +533,8 @@ endif()
 # ODBC_LIBRARIES is really more for applications to link to the DM. We overwrite it to
 # just pull in the ODBC installer library for SQLGetPrivateProfileString.
 if(APPLE)
-  set(ODBC_INCLUDE_DIRS /usr/local/Cellar/libiodbc/3.52.15/include)
-  set(ODBC_LIBRARIES /usr/local/Cellar/libiodbc/3.52.15/lib/libiodbcinst.dylib)
+  set(ODBC_INCLUDE_DIRS "$ENV{HOMEBREW_CELLAR}/libiodbc/3.52.15/include")
+  set(ODBC_LIBRARIES "$ENV{HOMEBREW_CELLAR}/libiodbc/3.52.15/lib/libiodbcinst.dylib")
   add_compile_definitions(HAVE_LONG_LONG SQLCOLATTRIBUTE_SQLLEN WITH_IODBC)
 else()
   find_package(ODBC REQUIRED)
@@ -549,9 +549,9 @@ endif()
 # Add OpenSSL dependencies needed by ODBCAbstraction. Should be pre-installed.
 # May need to set OPENSSL_ROOT_DIR first. On Mac if using brew:
 # brew install openssl@1.1
-# add to the cmake line -DOPENSSL_ROOT_DIR=/usr/local/Cellar/openssl@1.1/1.1.1m
+# add to the cmake line -DOPENSSL_ROOT_DIR="${HOMEBREW_CELLAR}/openssl@1.1/1.1.1m"
 if (NOT DEFINED OPENSSL_ROOT_DIR AND DEFINED APPLE AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)
-  set(OPENSSL_ROOT_DIR /usr/local/Cellar/openssl@1.1/1.1.1m)
+  set(OPENSSL_ROOT_DIR "$ENV{HOMEBREW_CELLAR}/openssl@1.1/1.1.1m")
 endif()
 if (NOT DEFINED MSVC)
   set(OpenSSL_USE_STATIC_LIBS ON)
