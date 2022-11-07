@@ -31,7 +31,7 @@ The build will generate a binary `/opt/warpdrive/_build/release/libarrow-odbc.so
 
 4. To run the ODBC Integration tests (in the container)
 
-```
+```bash
 export DSN=FlightSQL
 
 ./_build/release/warpdrive_tests > tests.log
