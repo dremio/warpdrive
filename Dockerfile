@@ -22,7 +22,7 @@ RUN yum groupinstall -y "Development Tools" && \
 SHELL [ "/usr/bin/scl", "enable", "devtoolset-9" ]
 
 RUN cd /tmp && \
-    git clone -b v1.36.4 https://github.com/grpc/grpc && \
+    git clone -b v1.50.1 https://github.com/grpc/grpc && \
     cd grpc && \
     git submodule update --init && \
     mkdir -p cmake-build && cd cmake-build && \
@@ -34,9 +34,9 @@ RUN rm /usr/local/lib/libssl.a /usr/local/lib/libcrypto.a && \
     ln -s /usr/lib64/libcrypto.a /usr/local/lib/libcrypto.a
 
 RUN yum install -y wget && \
-    wget https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.gz && \
-    tar -xzf boost_1_76_0.tar.gz && \
-    cd boost_1_76_0 && \
+    wget https://boostorg.jfrog.io/artifactory/main/release/1.80.0/source/boost_1_80_0.tar.gz && \
+    tar -xzf boost_1_80_0.tar.gz && \
+    cd boost_1_80_0 && \
     ./bootstrap.sh --prefix=/opt/boost && \
     ./b2 install --prefix=/opt/boost --with=all || true
 
