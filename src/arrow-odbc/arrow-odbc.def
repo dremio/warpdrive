@@ -117,3 +117,4 @@ SQLGetDiagFieldW	@129
 SQLGetDescFieldW	@130
 SQLGetDescRecW		@131
 ;SQLSetDescRecW		@132 // Not an ODBC function.
+SQLBrowseConnectW	@137
