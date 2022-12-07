@@ -624,7 +624,7 @@ WD_GetFunctions30(HDBC hdbc, SQLUSMALLINT fFunction, SQLUSMALLINT FAR* pfExists)
     SQL_FUNC_ESET(pfExists, SQL_API_SQLSTATISTICS);		/* 53 */
     SQL_FUNC_ESET(pfExists, SQL_API_SQLTABLES);		/* 54 */
 //	if (ci->drivers.lie)
-//		SQL_FUNC_ESET(pfExists, SQL_API_SQLBROWSECONNECT);	/* 55 */
+    SQL_FUNC_ESET(pfExists, SQL_API_SQLBROWSECONNECT);	/* 55 */
 //	if (ci->drivers.lie)
 //		SQL_FUNC_ESET(pfExists, SQL_API_SQLCOLUMNPRIVILEGES);	/* 56 */
     SQL_FUNC_ESET(pfExists, SQL_API_SQLDATASOURCES);	/* 57 */

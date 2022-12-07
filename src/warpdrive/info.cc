@@ -175,7 +175,7 @@ WD_GetFunctions(HDBC hdbc,
 		pfExists[SQL_API_SQLTABLES] = TRUE;
 
 		/* ODBC level 2 functions */
-		pfExists[SQL_API_SQLBROWSECONNECT] = FALSE;
+		pfExists[SQL_API_SQLBROWSECONNECT] = TRUE;
 		pfExists[SQL_API_SQLCOLUMNPRIVILEGES] = FALSE;
 		pfExists[SQL_API_SQLDATASOURCES] = FALSE;	/* only implemented by
 													 * DM */
@@ -286,7 +286,7 @@ WD_GetFunctions(HDBC hdbc,
 
 				/* ODBC level 2 functions */
 			case SQL_API_SQLBROWSECONNECT:
-				*pfExists = FALSE;
+				*pfExists = TRUE;
 				break;
 			case SQL_API_SQLCOLUMNPRIVILEGES:
 				*pfExists = FALSE;
