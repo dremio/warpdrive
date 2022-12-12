@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "6c754ded_46bd617e",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-12-12T18:51:01Z",
+      "side": 1,
+      "message": "Need to fix up the commit title but looks good otherwise.",
+      "revId": "32a6f841b867a97030448f8fc8e7cd9518d13ed4",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
