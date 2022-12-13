@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "361030a3_52f74a62",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1000033
+      },
+      "writtenOn": "2022-12-13T21:22:31Z",
+      "side": 1,
+      "message": "+1 until the implementation of SQLBrowseConnect is working.",
+      "revId": "c34b7817d91b834b8e7297a0bc3a20df94f923f6",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
