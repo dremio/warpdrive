@@ -9,7 +9,7 @@
 
 set -e
 
-./vcpkg/vcpkg install --triplet x64-osx --x-install-root=vcpkg/installed
+vcpkg/vcpkg install --triplet x64-osx --x-install-root=vcpkg/installed
 
 mkdir -p build
 cd build
