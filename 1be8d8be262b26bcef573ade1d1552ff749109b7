@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "21a507ab_5995ddbb",
+        "filename": "CMakeLists.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 721,
+      "author": {
+        "id": 1000453
+      },
+      "writtenOn": "2023-03-10T00:17:07Z",
+      "side": 1,
+      "message": "This looks like a list is still being passed to add_dependencies. Instead of $(WARPDRIVE_TEST_LINK_TOOLCHAIN) being passed to add_dependencies I would expect _dep to be passed in instead.",
+      "revId": "1be8d8be262b26bcef573ade1d1552ff749109b7",
+      "serverId": "8ca9cf2d-83f4-421d-8552-b009c9e056de"
+    }
+  ]
+}
