@@ -23,6 +23,7 @@
     "re2",
     "grpc",
     "utf8proc",
+    "xsimd",
     "zlib",
     "zstd"
   ],
