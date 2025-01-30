@@ -533,8 +533,8 @@ endif()
 # ODBC_LIBRARIES is really more for applications to link to the DM. We overwrite it to
 # just pull in the ODBC installer library for SQLGetPrivateProfileString.
 if(APPLE)
-  set(ODBC_INCLUDE_DIRS /usr/local/Cellar/libiodbc/3.52.15/include)
-  set(ODBC_LIBRARIES /usr/local/Cellar/libiodbc/3.52.15/lib/libiodbcinst.dylib)
+  set(ODBC_INCLUDE_DIRS /usr/local/Cellar/libiodbc/3.52.16/include)
+  set(ODBC_LIBRARIES /usr/local/Cellar/libiodbc/3.52.16/lib/libiodbcinst.dylib)
   add_compile_definitions(HAVE_LONG_LONG SQLCOLATTRIBUTE_SQLLEN WITH_IODBC)
 else()
   find_package(ODBC REQUIRED)

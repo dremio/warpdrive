@@ -11,8 +11,8 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Packages
 if (APPLE)
-  set(ODBC_INCLUDE_DIRS /usr/local/Cellar/libiodbc/3.52.15/include)
-  set(ODBC_LIBRARIES /usr/local/Cellar/libiodbc/3.52.15/lib/libiodbc.a)
+  set(ODBC_INCLUDE_DIRS /usr/local/Cellar/libiodbc/3.52.16/include)
+  set(ODBC_LIBRARIES /usr/local/Cellar/libiodbc/3.52.16/lib/libiodbc.a)
   add_compile_definitions(HAVE_LONG_LONG SQLCOLATTRIBUTE_SQLLEN WITH_IODBC)
 else()
     find_package(ODBC REQUIRED)
