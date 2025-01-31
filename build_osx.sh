@@ -33,6 +33,7 @@ cmake \
   -DVCPKG_MANIFEST_MODE=OFF^ \
   ..
 
-cmake --build . --config Release -j 12 || cmake --build . --config Release -j 12 || cmake --build . --config Release -j 12
+# Same as in Linux. TODO: Fix this
+cmake --build . --config Release -j 12 || cmake --build . --config Release -j 12 || cmake --build . --config Release -j 12 || cmake --build . --config Release -j 12
 
 cd ..
