@@ -76,9 +76,6 @@ void InitializeDriverIfNeeded() {
   std::lock_guard<std::mutex> lock(s_driverLock);
   if (s_driver == nullptr) {
     s_driver = CreateDriver();
-    s_driver->RegisterLog();
-
-    LOG_DEBUG("Driver initialized");
   }
 }
 }
