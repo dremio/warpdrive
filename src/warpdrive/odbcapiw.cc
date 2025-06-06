@@ -504,31 +504,24 @@ SQLForeignKeysW(HSTMT			hstmt,
 {
   SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLForeignKeysW";
-	RETCODE	ret;
-	c_ptr	ctName, scName, tbName, fkctName, fkscName, fktbName;
-	SQLLEN	nmlen1, nmlen2, nmlen3, nmlen4, nmlen5, nmlen6;
-	BOOL	lower_id = FALSE;
-
 	MYLOG(0, "Entering\n");
-        return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
-          ctName.reset(wcs_to_utf8(szPkCatalogName, cbPkCatalogName, &nmlen1, lower_id));
-          scName.reset(wcs_to_utf8(szPkSchemaName, cbPkSchemaName, &nmlen2, lower_id));
-          tbName.reset(wcs_to_utf8(szPkTableName, cbPkTableName, &nmlen3, lower_id));
-          fkctName.reset(
-              wcs_to_utf8(szFkCatalogName, cbFkCatalogName, &nmlen4, lower_id));
-          fkscName.reset(wcs_to_utf8(szFkSchemaName, cbFkSchemaName, &nmlen5, lower_id));
-          fktbName.reset(wcs_to_utf8(szFkTableName, cbFkTableName, &nmlen6, lower_id));
-          throw driver::odbcabstraction::DriverException("Unsupported function", "HYC00");
-          /*		ret = WD_ForeignKeys(hstmt,
-                                                                          (SQLCHAR *)
-             ctName, (SQLSMALLINT) nmlen1, (SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
-                                                                          (SQLCHAR *)
-             tbName, (SQLSMALLINT) nmlen3, (SQLCHAR *) fkctName, (SQLSMALLINT) nmlen4,
-                                                                          (SQLCHAR *)
-             fkscName, (SQLSMALLINT) nmlen5, (SQLCHAR *) fktbName, (SQLSMALLINT)
-             nmlen6);*/
-          return ret;
-              });
+  return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+      c_ptr	ctName, scName, tbName, fkctName, fkscName, fktbName;
+      SQLLEN	nmlen1, nmlen2, nmlen3, nmlen4, nmlen5, nmlen6;
+      BOOL	lower_id = FALSE;
+
+      ctName.reset(wcs_to_utf8(szPkCatalogName, cbPkCatalogName, &nmlen1, lower_id));
+      scName.reset(wcs_to_utf8(szPkSchemaName, cbPkSchemaName, &nmlen2, lower_id));
+      tbName.reset(wcs_to_utf8(szPkTableName, cbPkTableName, &nmlen3, lower_id));
+      fkctName.reset(
+          wcs_to_utf8(szFkCatalogName, cbFkCatalogName, &nmlen4, lower_id));
+      fkscName.reset(wcs_to_utf8(szFkSchemaName, cbFkSchemaName, &nmlen5, lower_id));
+      fktbName.reset(wcs_to_utf8(szFkTableName, cbFkTableName, &nmlen6, lower_id));
+
+        return WD_ForeignKeys(hstmt, (SQLCHAR *) ctName.get(), nmlen1, (SQLCHAR *) scName.get(), (SQLSMALLINT) nmlen2,
+                              (SQLCHAR *) tbName.get(), (SQLSMALLINT) nmlen3, (SQLCHAR *) fkctName.get(), (SQLSMALLINT) nmlen4,
+                              (SQLCHAR *) fkscName.get(), (SQLSMALLINT) nmlen5, (SQLCHAR *) fktbName.get(), (SQLSMALLINT) nmlen6);
+  });
 }
 
 WD_EXPORT_SYMBOL
@@ -593,7 +586,8 @@ SQLPrimaryKeysW(HSTMT			hstmt,
 {
   SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLPrimaryKeysW";
-        return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+	MYLOG(0, "Entering\n");
+  return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
           RETCODE ret;
           c_ptr ctName, scName, tbName;
           SQLLEN nmlen1, nmlen2, nmlen3;
@@ -603,16 +597,9 @@ SQLPrimaryKeysW(HSTMT			hstmt,
           ctName.reset(wcs_to_utf8(szCatalogName, cbCatalogName, &nmlen1, lower_id));
           scName.reset(wcs_to_utf8(szSchemaName, cbSchemaName, &nmlen2, lower_id));
           tbName.reset(wcs_to_utf8(szTableName, cbTableName, &nmlen3, lower_id));
-          throw driver::odbcabstraction::DriverException("Unsupported function", "HYC00");
-          /*else
-                  ret = WD_PrimaryKeys(hstmt,
-                                                                  (SQLCHAR *) ctName,
-             (SQLSMALLINT) nmlen1, (SQLCHAR *) scName, (SQLSMALLINT) nmlen2,
-                                                                  (SQLCHAR *) tbName,
-             (SQLSMALLINT) nmlen3, 0);*/
-          ;
-          return ret;
-              });
+    return WD_PrimaryKeys(hstmt, (SQLCHAR *) ctName.get(), cbCatalogName,
+                          (SQLCHAR *) scName.get(), cbSchemaName, (SQLCHAR *) tbName.get(), cbTableName, 0);
+  });
 }
 
 WD_EXPORT_SYMBOL

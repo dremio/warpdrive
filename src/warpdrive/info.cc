@@ -690,6 +690,48 @@ WD_Columns(HSTMT hstmt,
 	return SQL_SUCCESS;
 }
 
+RETCODE		SQL_API
+WD_ForeignKeys(HSTMT hstmt,
+			   const SQLCHAR *szPkCatalogName,
+			   SQLSMALLINT cbPkCatalogName,
+			   const SQLCHAR *szPkSchemaName,
+			   SQLSMALLINT cbPkSchemaName,
+			   const SQLCHAR *szPkTableName,
+			   SQLSMALLINT cbPkTableName,
+			   const SQLCHAR *szFkCatalogName,
+			   SQLSMALLINT cbFkCatalogName,
+			   const SQLCHAR *szFkSchemaName,
+			   SQLSMALLINT cbFkSchemaName,
+			   const SQLCHAR *szFkTableName,
+			   SQLSMALLINT cbFkTableName)
+{
+	CSTR func = "WD_ForeignKeys";
+	ODBCStatement* statement = reinterpret_cast<ODBCStatement*>(hstmt);
+
+	MYLOG(0, "Entering\n");
+	statement->GetForeignKeys(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+
+	return SQL_SUCCESS;
+}
+
+RETCODE		SQL_API
+WD_PrimaryKeys(HSTMT hstmt,
+			   const SQLCHAR *szCatalogName,
+			   SQLSMALLINT cbCatalogName,
+			   const SQLCHAR *szSchemaName,
+			   SQLSMALLINT cbSchemaName,
+			   const SQLCHAR *szTableName,
+			   SQLSMALLINT cbTableName,
+			   OID reloid)
+{
+	CSTR func = "WD_PrimaryKeys";
+	ODBCStatement* statement = reinterpret_cast<ODBCStatement*>(hstmt);
+
+	MYLOG(0, "Entering\n");
+	statement->GetPrimaryKeys(nullptr, nullptr, nullptr);
+
+	return SQL_SUCCESS;
+}
 
 RETCODE		SQL_API
 WD_SpecialColumns(HSTMT hstmt,

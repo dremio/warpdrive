@@ -819,95 +819,13 @@ SQLForeignKeys(HSTMT hstmt,
 {
   SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLForeignKeys";
-        return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
-          throw DriverException("Unsupported function", "HYC00");
-          RETCODE ret;
-          StatementClass *stmt = (StatementClass *)hstmt;
-          SQLCHAR *pkctName = szPkCatalogName, *pkscName = szPkSchemaName,
-                  *pktbName = szPkTableName, *fkctName = szFkCatalogName,
-                  *fkscName = szFkSchemaName, *fktbName = szFkTableName;
+  return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+    MYLOG(0, "Entering\n");
+    return WD_ForeignKeys(hstmt, szPkCatalogName, cbPkCatalogName, szPkSchemaName, cbPkSchemaName,
+                         szPkTableName, cbPkTableName, szFkCatalogName, cbFkCatalogName,
+                         szFkSchemaName, cbFkSchemaName, szFkTableName, cbFkTableName);
 
-          MYLOG(0, "Entering\n");
-          if (SC_connection_lost_check(stmt, __FUNCTION__))
-            return SQL_ERROR;
-
-          ENTER_STMT_CS(stmt);
-          SC_clear_error(stmt);
-          StartRollbackState(stmt);
-          if (SC_opencheck(stmt, func))
-            ret = SQL_ERROR;
-          /*	else
-                          ret = WD_ForeignKeys(hstmt, pkctName, cbPkCatalogName,
-                                  pkscName, cbPkSchemaName, pktbName, cbPkTableName,
-                                  fkctName, cbFkCatalogName, fkscName, cbFkSchemaName,
-                                  fktbName, cbFkTableName);*/
-          if (SQL_SUCCESS == ret && theResultIsEmpty(stmt)) {
-            BOOL ifallupper = TRUE, reexec = FALSE;
-            SQLCHAR *newPkct = NULL, *newPksc = NULL, *newPktb = NULL,
-                    *newFkct = NULL, *newFksc = NULL, *newFktb = NULL;
-            ConnectionClass *conn = SC_get_conn(stmt);
-
-            if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier */
-              ifallupper = FALSE;
-            if (newPkct = make_lstring_ifneeded(conn, szPkCatalogName,
-                                                cbPkCatalogName, ifallupper),
-                NULL != newPkct) {
-              pkctName = newPkct;
-              reexec = TRUE;
-            }
-            if (newPksc = make_lstring_ifneeded(conn, szPkSchemaName, cbPkSchemaName,
-                                                ifallupper),
-                NULL != newPksc) {
-              pkscName = newPksc;
-              reexec = TRUE;
-            }
-            if (newPktb = make_lstring_ifneeded(conn, szPkTableName, cbPkTableName,
-                                                ifallupper),
-                NULL != newPktb) {
-              pktbName = newPktb;
-              reexec = TRUE;
-            }
-            if (newFkct = make_lstring_ifneeded(conn, szFkCatalogName,
-                                                cbFkCatalogName, ifallupper),
-                NULL != newFkct) {
-              fkctName = newFkct;
-              reexec = TRUE;
-            }
-            if (newFksc = make_lstring_ifneeded(conn, szFkSchemaName, cbFkSchemaName,
-                                                ifallupper),
-                NULL != newFksc) {
-              fkscName = newFksc;
-              reexec = TRUE;
-            }
-            if (newFktb = make_lstring_ifneeded(conn, szFkTableName, cbFkTableName,
-                                                ifallupper),
-                NULL != newFktb) {
-              fktbName = newFktb;
-              reexec = TRUE;
-            }
-            if (reexec) {
-              /*	ret = WD_ForeignKeys(hstmt, pkctName, cbPkCatalogName,
-                      pkscName, cbPkSchemaName, pktbName, cbPkTableName,
-                      fkctName, cbFkCatalogName, fkscName, cbFkSchemaName,
-                      fktbName, cbFkTableName);*/
-              if (newPkct)
-                free(newPkct);
-              if (newPksc)
-                free(newPksc);
-              if (newPktb)
-                free(newPktb);
-              if (newFkct)
-                free(newFkct);
-              if (newFksc)
-                free(newFksc);
-              if (newFktb)
-                free(newFktb);
-            }
-          }
-          ret = DiscardStatementSvp(stmt, ret, FALSE);
-          LEAVE_STMT_CS(stmt);
-          return SQL_ERROR;
-              });
+        });
 }
 #endif /* UNICODE_SUPPORTXX */
 
@@ -966,66 +884,11 @@ SQLPrimaryKeys(HSTMT hstmt,
 {
   SQLRETURN rc = SQL_SUCCESS;
 	CSTR func = "SQLPrimaryKeys";
-        return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
-          RETCODE ret;
-          throw DriverException("Unsupported function.", "HYC00");
-          StatementClass *stmt = (StatementClass *)hstmt;
-          SQLCHAR *ctName = szCatalogName, *scName = szSchemaName,
-                  *tbName = szTableName;
-
-          MYLOG(0, "Entering\n");
-          if (SC_connection_lost_check(stmt, __FUNCTION__))
-            return SQL_ERROR;
-
-          ENTER_STMT_CS(stmt);
-          SC_clear_error(stmt);
-          StartRollbackState(stmt);
-          if (SC_opencheck(stmt, func))
-            ret = SQL_ERROR;
-          /*else
-                  ret = WD_PrimaryKeys(hstmt, ctName, cbCatalogName,
-                          scName, cbSchemaName, tbName, cbTableName, 0);*/
-          ;
-          if (SQL_SUCCESS == ret && theResultIsEmpty(stmt)) {
-            BOOL ifallupper = TRUE, reexec = FALSE;
-            SQLCHAR *newCt = NULL, *newSc = NULL, *newTb = NULL;
-            ConnectionClass *conn = SC_get_conn(stmt);
-
-            if (SC_is_lower_case(stmt, conn)) /* case-insensitive identifier */
-              ifallupper = FALSE;
-            if (newCt = make_lstring_ifneeded(conn, szCatalogName, cbCatalogName,
-                                              ifallupper),
-                NULL != newCt) {
-              ctName = newCt;
-              reexec = TRUE;
-            }
-            if (newSc = make_lstring_ifneeded(conn, szSchemaName, cbSchemaName,
-                                              ifallupper),
-                NULL != newSc) {
-              scName = newSc;
-              reexec = TRUE;
-            }
-            if (newTb =
-                    make_lstring_ifneeded(conn, szTableName, cbTableName, ifallupper),
-                NULL != newTb) {
-              tbName = newTb;
-              reexec = TRUE;
-            }
-            if (reexec) {
-              /*	ret = WD_PrimaryKeys(hstmt, ctName, cbCatalogName,
-                      scName, cbSchemaName, tbName, cbTableName, 0);*/
-              if (newCt)
-                free(newCt);
-              if (newSc)
-                free(newSc);
-              if (newTb)
-                free(newTb);
-            }
-          }
-          ret = DiscardStatementSvp(stmt, ret, FALSE);
-          LEAVE_STMT_CS(stmt);
-          return SQL_ERROR;
-              });
+	MYLOG(0, "Entering\n");
+  return ODBCStatement::ExecuteWithDiagnostics(hstmt, rc, [&]() -> SQLRETURN {
+    return WD_PrimaryKeys(hstmt, szCatalogName, cbCatalogName,
+                          szSchemaName, cbSchemaName, szTableName, cbTableName, 0);
+  });
 }
 
 WD_EXPORT_SYMBOL
