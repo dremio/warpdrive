@@ -201,7 +201,7 @@ TEST_F(CatalogFunctionsTest, GetInfoTest){
   EXPECT_STREQ("table", buf);
 }
 
-TEST_F(CatalogFunctionsTest, DISABLED_PrimaryKeysTest){
+TEST_F(CatalogFunctionsTest, PrimaryKeysTest){
   rc_ = SQLPrimaryKeys(hstmt_,
                        NULL, 0,
                        (SQLCHAR *) "postgres.tpch", SQL_NTS,
@@ -212,14 +212,14 @@ TEST_F(CatalogFunctionsTest, DISABLED_PrimaryKeysTest){
                                 "TABLE_SCHEM: WVARCHAR(1024) digits: 0, nullable\n"
                                 "TABLE_NAME: WVARCHAR(1024) digits: 0, not nullable\n"
                                 "COLUMN_NAME: WVARCHAR(1024) digits: 0, not nullable\n"
-                                "KEY_SEQ: SMALLINT(5) digits: 0, not nullable\n"
+                                "KEY_SEQ: SMALLINT(2) digits: 0, not nullable\n"
                                 "PK_NAME: WVARCHAR(1024) digits: 0, nullable\n";
   std::string exp_result = "";
   EXPECT_EQ(exp_result_meta, print_result_meta(hstmt_, &err_msg).value());
   EXPECT_EQ(exp_result, get_result(hstmt_, &err_msg).value());
 }
 
-TEST_F(CatalogFunctionsTest, DISABLED_ForeignKeysTest){
+TEST_F(CatalogFunctionsTest, ForeignKeysTest){
   rc_ = SQLForeignKeys(hstmt_,
                        NULL, 0,
                        (SQLCHAR *) "postgres.tpch", SQL_NTS,
@@ -229,7 +229,20 @@ TEST_F(CatalogFunctionsTest, DISABLED_ForeignKeysTest){
                        (SQLCHAR *) "lineitem", SQL_NTS);
   CHECK_STMT_RESULT(rc_, "SQLForeignKeys failed", hstmt_);
   std::string err_msg;
-  std::string exp_result_meta = "PKTABLE_CAT: WVARCHAR(1024) digits: 0, nullable\nPKTABLE_SCHEM: WVARCHAR(1024) digits: 0, nullable\nPKTABLE_NAME: WVARCHAR(1024) digits: 0, not nullable\nPKCOLUMN_NAME: WVARCHAR(1024) digits: 0, not nullable\nFKTABLE_CAT: WVARCHAR(1024) digits: 0, nullable\nFKTABLE_SCHEM: WVARCHAR(1024) digits: 0, nullable\nFKTABLE_NAME: WVARCHAR(1024) digits: 0, not nullable\nFKCOLUMN_NAME: WVARCHAR(1024) digits: 0, not nullable\nKEY_SEQ: SMALLINT(5) digits: 0, not nullable\nUPDATE_RULE: SMALLINT(5) digits: 0, nullable\nDELETE_RULE: SMALLINT(5) digits: 0, nullable\nFK_NAME: WVARCHAR(1024) digits: 0, nullable\nPK_NAME: WVARCHAR(1024) digits: 0, nullable\nDEFERRABILITY: SMALLINT(5) digits: 0, nullable\n";
+  std::string exp_result_meta = "PKTABLE_CAT: WVARCHAR(1024) digits: 0, nullable\n"
+                              "PKTABLE_SCHEM: WVARCHAR(1024) digits: 0, nullable\n"
+                              "PKTABLE_NAME: WVARCHAR(1024) digits: 0, not nullable\n"
+                              "PKCOLUMN_NAME: WVARCHAR(1024) digits: 0, not nullable\n"
+                              "FKTABLE_CAT: WVARCHAR(1024) digits: 0, nullable\n"
+                              "FKTABLE_SCHEM: WVARCHAR(1024) digits: 0, nullable\n"
+                              "FKTABLE_NAME: WVARCHAR(1024) digits: 0, not nullable\n"
+                              "FKCOLUMN_NAME: WVARCHAR(1024) digits: 0, not nullable\n"
+                              "KEY_SEQ: SMALLINT(2) digits: 0, not nullable\n"
+                              "UPDATE_RULE: SMALLINT(2) digits: 0, nullable\n"
+                              "DELETE_RULE: SMALLINT(2) digits: 0, nullable\n"
+                              "FK_NAME: WVARCHAR(1024) digits: 0, nullable\n"
+                              "PK_NAME: WVARCHAR(1024) digits: 0, nullable\n"
+                              "DEFERRABILITY: SMALLINT(2) digits: 0, nullable\n";
   std::string exp_result = "";
   EXPECT_EQ(exp_result_meta, print_result_meta(hstmt_, &err_msg).value());
   EXPECT_EQ(exp_result, get_result(hstmt_, &err_msg).value());
