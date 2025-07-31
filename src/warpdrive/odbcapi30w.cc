@@ -218,36 +218,41 @@ SQLGetDiagRecW(SQLSMALLINT fHandleType,
 
 	MYLOG(0, "Entering\n");
 	buflen = 0;
-        if (szErrorMsg && cbErrorMsgMax > 0)
-	{
-		buflen = cbErrorMsgMax;
-                mtxt.reset(static_cast<char*>(malloc(buflen)));
+  if (szErrorMsg && cbErrorMsgMax > 0) {
+		buflen = cbErrorMsgMax \ 2;
+    mtxt.reset(static_cast<char*>(malloc(buflen)));
 	}
-	ret = WD_GetDiagRec(fHandleType, handle, iRecord, (SQLCHAR *) qstr_ansi,
+	
+  ret = WD_GetDiagRec(fHandleType, handle, iRecord, (SQLCHAR *) qstr_ansi,
 						   pfNativeError, (SQLCHAR *) mtxt.get(), buflen, &tlen);
-	if (SQL_SUCCEEDED(ret))
-	{
-		if (szSqlState)
-			utf8_to_ucs2(qstr_ansi, -1, szSqlState, 6);
-		if (mtxt && tlen <= cbErrorMsgMax)
-		{
+
+  tlen = std::min(static_cast<SQLSMALLINT>(tlen), static_cast<SQLSMALLINT>(buflen - 1));
+	
+  if (SQL_SUCCEEDED(ret)) {
+		if (szSqlState) {
+      utf8_to_ucs2(qstr_ansi, -1, szSqlState, 6);
+    }
+			
+		if (mtxt && tlen <= cbErrorMsgMax) {
+      os_log(OS_LOG_DEFAULT, "flightsql: SQLGetDiagRecW error %{public}s", mtxt.get());
 			SQLULEN ulen = utf8_to_ucs2_lf(mtxt.get(), tlen, FALSE, szErrorMsg, cbErrorMsgMax, TRUE);
-			if (ulen == (SQLULEN) -1)
-				tlen = (SQLSMALLINT) locale_to_sqlwchar((SQLWCHAR *) szErrorMsg, mtxt.get(), cbErrorMsgMax, FALSE);
-			else
+			if (ulen == (SQLULEN) -1) {
+        tlen = (SQLSMALLINT) locale_to_sqlwchar((SQLWCHAR *) szErrorMsg, mtxt.get(), cbErrorMsgMax, FALSE);
+      } else {
 				tlen = (SQLSMALLINT) ulen;
-			if (tlen >= cbErrorMsgMax)
-				ret = SQL_SUCCESS_WITH_INFO;
-			else if (tlen < 0)
-			{
+      }
+
+      if (tlen < 0) {
 				char errc[32];
 
 				SPRINTF_FIXED(errc, "Error: SqlState=%s", qstr_ansi);
 				tlen = utf8_to_ucs2(errc, -1, szErrorMsg, cbErrorMsgMax);
 			}
 		}
-		if (pcbErrorMsg)
+
+		if (pcbErrorMsg) {
 			*pcbErrorMsg = tlen;
+    }
 	}
 	return ret;
 }
