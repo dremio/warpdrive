@@ -913,7 +913,7 @@ SQLLEN	QR_move_cursor_to_last(QResultClass *self, StatementClass *stmt)
 	if (!QR_command_maybe_successful(res))
 	{
 		QR_Destructor(res);
-		SC_set_error(stmt, STMT_EXEC_ERROR, "move error occured", __FUNCTION__);
+		SC_set_error(stmt, STMT_EXEC_ERROR, "move error occurred", __FUNCTION__);
 		return (-1);
 	}
 	moved = (-1);
